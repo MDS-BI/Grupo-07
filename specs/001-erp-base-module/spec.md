@@ -11,6 +11,8 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 
 ## Escenarios de Usuario y Pruebas *(obligatorio)*
 
+### Historia de Usuario 0 - Ejemplo
+
 ### Historia de Usuario 1 - Crear y organizar entidades (Prioridad: P1)
 Como usuario de negocio, quiero crear entradas de entidad con detalles claros para poder construir y mantener los datos maestros del módulo.
 
