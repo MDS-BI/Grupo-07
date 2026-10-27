@@ -27,20 +27,39 @@ Como usuario de negocio, quiero crear entradas de entidad con detalles claros pa
 
 ---
 
-### Historia de Usuario 2 - Editar y eliminar entidades (Prioridad: P1)
-Como usuario de negocio, quiero actualizar o eliminar entidades cuando cambien los datos maestros para que los registros se mantengan precisos.
+### Historia de Usuario 2 - Editar y eliminar productos (Prioridad: P1)
 
-**Por qué esta prioridad**: Mantener los registros actualizados es esencial para la confianza en la herramienta y para soportar las operaciones comerciales diarias.
+Como jefe de planta, quiero poder corregir o modificar los datos de un producto o borrarlo
+cuando ya no lo usamos, para que el catálogo siempre esté al día.
 
-**Prueba Independiente**: Un usuario puede seleccionar una entidad existente, cambiar su información o eliminarla, y la lista refleja el cambio.
+**Por qué esta prioridad**: Si el catálogo tiene datos viejos o productos que ya
+no existen, alguien puede emitir una orden de producción con información
+equivocada o inexistente, y eso se arrastra a todo lo demás.
+
+**Prueba Independiente**: Un usuario cambia el stock de un producto y ve el
+cambio en la lista; después elimina otro producto y comprueba que ya no aparece
+ni en la lista ni al buscarlo.
 
 **Escenarios de Aceptación**:
 
-1. **Dada** una entidad que ya existe en la lista, **cuando** el usuario edita sus detalles, **entonces** la información actualizada se guarda y se muestra en la lista.
-2. **Dada** una entidad que ya no es relevante, **cuando** el usuario la elimina, **entonces** desaparece de la lista y deja de aparecer en los resultados de búsqueda.
-3. **Dadas** cientos de entidades almacenadas, **cuando** el usuario edita o elimina una, **entonces** la lista se actualiza correctamente y sigue siendo ágil.
-
----
+1. **Dado** un producto que ya existe, **cuando** el usuario cambia sus datos
+   (por ejemplo, el stock o el proveedor) y guarda, **entonces** los cambios se
+   guardan y se ven reflejados en la lista.
+2. **Dado** un producto que se está editando, **cuando** el usuario borra el
+   nombre, el código, el tipo de ítem o la unidad de medida y trata de guardar,
+   **entonces** el sistema no lo deja y explica qué dato falta.
+3. **Dado** un producto que se está editando, **cuando** el usuario escribe un
+   valor no válido en el stock o en el plazo de reposición (por ejemplo, un
+   número negativo), **entonces** el sistema no guarda y avisa cuál es el error.
+4. **Dado** un producto que ya no se usa y no tiene órdenes, **cuando** el
+   usuario lo elimina, **entonces** desaparece de la lista y deja de salir en
+   los resultados de búsqueda.
+5. **Dado** un producto que tiene órdenes de producción, **cuando** el usuario
+   intenta eliminarlo, **entonces** el sistema le avisa que también se borrarán
+   esas órdenes y pide confirmación antes de hacerlo.
+6. **Dado** el aviso del escenario anterior, **cuando** el usuario confirma,
+   **entonces** se elimina el producto junto con todas sus órdenes; si cancela,
+   no se borra nada.
 
 ### Historia de Usuario 3 - Panel de inicio con acciones rápidas y estadísticas de registros (Prioridad: P1)
 
