@@ -83,22 +83,23 @@ ni en la lista ni al buscarlo.
    **entonces** se elimina el producto junto con todas sus órdenes; si cancela,
    no se borra nada.
 
-### Historia de Usuario 3 - Panel de inicio con acciones rápidas y estadísticas de registros (Prioridad: P1)
+### Historia de Usuario 3 - Administrar el catalogo de stock, ubicaciones, proveedores, plazos de reposicion, controlar cuanto hay en bodega y que el minimo no deba bajar (Prioridad: P1)
 
-Como usuario de negocio, quiero aterrizar en un panel estilo ERP con botones de acción rápida claramente etiquetados para las tareas clave y totales de registros de un vistazo al abrir la aplicación, para poder empezar a trabajar de inmediato.
+Como encargado de bodega y logistica, quiero administrar el catalogo de stock de materias primas, insumo y productos terminados, la ubicacion, los proveedores y plazos de reposicion, para asi saber cuanto hay en bodega y reponer si esta bajo el minimo de stock.
 
-**Por qué esta prioridad**: El panel es el punto de entrada de la aplicación. Nada más puede alcanzarse sin él, y las acciones rápidas son la ruta más rápida hacia cada flujo de trabajo central.
+**Por qué esta prioridad**: Sin un control de stock ni un catalogo actualizado, la planta no puede planificar ni producir ordenes. Si se realiza una actualizacion y mandencion del stock y cantidades en bodega se puede llevar un buen proceso de manofactura.
 
-**Prueba Independiente**: Un usuario abre la aplicación, ve un panel con múltiples botones de acción rápida y estadísticas de registros, inicia una nueva entidad o documento con un solo clic y ve estadísticas que reflejan los datos almacenados.
+**Prueba Independiente**: Un usuario registra un item con nombre, stock actual, stock minimo, ubicacion, proveedor y plazo de reposicion; se ve en la lista, edita su stock, comprueba si queda señalado por estar bajo el minimo y lo elimina.
 
 **Escenarios de Aceptación**:
 
-1. **Dado** que el usuario abre la aplicación, **cuando** la aplicación carga, **entonces** se muestra el panel de inicio con al menos cuatro botones de acción rápida claramente etiquetados que cubren las tareas ERP clave: crear una nueva entidad, crear un nuevo documento, abrir la gestión de entidades y buscar registros.
-2. **Dado** que se muestra el panel, **cuando** el usuario activa la acción de nueva entidad, **entonces** la aplicación abre el área de gestión de entidades con un formulario vacío listo para introducir datos.
-3. **Dado** que se muestra el panel, **cuando** el usuario activa la acción de nuevo documento, **entonces** la aplicación abre el área de gestión de documentos con un formulario vacío listo para introducir datos.
-4. **Dado** que se muestra el panel, **cuando** el usuario activa la acción de buscar registros, **entonces** la aplicación abre la pantalla de búsqueda con el campo de búsqueda enfocado.
-5. **Dadas** entidades y documentos almacenados, **cuando** el usuario ve el panel, **entonces** las tarjetas de estadísticas muestran el recuento actual de entidades y documentos.
-6. **Dado** que el usuario crea o elimina registros en otra parte de la aplicación, **cuando** vuelve al panel, **entonces** las estadísticas reflejan el cambio.
+1. **Dado** que un usuario esta viendo en la lista de items, **cuando** crea un nuebvo item con nombre, codigo, tipo (Materia prima, Insumo o Producto terminado), stock actual, stock minimo, proveeder, plazo de reposicion y ubicacion, **entonces** el nuevo item se guarda y aparece en la lista con esos datos.
+2. **Dado** que un usuario esta creando un item, **cuando** deja algun espacio o dato sin rellenar, **entonces** el sistema no lo guarda y le explica lo que falta para guardar correctamente.
+3. **Dado** un campo personalizado tipo numerico (stock actual, stock minimo o plazo de reposicion), **cuando** un usuario ingresa un valor que no es un numero, **entonces** el sistema no lo guarda y explica el error.
+4. **Dado** un item ya existente en la lista, **cuando** un usuario edita su stock actual, stock minimo, plazo de reposicion, ubicacion o proveedor, **entonces** la informacion se actualiza en la lista correctamente.
+5. **Dado** un item con stock actual bajo el stock minimo, **cuando** el usuario ve la lista, **entonces** le aparece que el item se encuentra con "stock bajo el minimo". 
+6. **Dado** que un usuario deja el sock minimo o stock actual en blanco, **cuando** guarde el item en la lista, **entonces** quedara guardado igualmente y la lista mostrara en ese apartado "sin datos".
+7. **Dado** un item que ya no se utiliza **cuando** el usuario lo elimina **entonces** desaparecera de la lista y no aparecera en los resultados de busqueda.
 
 ---
 
