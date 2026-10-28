@@ -13,17 +13,39 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 
 ### Historia de Usuario 0 - Ejemplo
 
-### Historia de Usuario 1 - Crear y organizar entidades (Prioridad: P1)
-Como usuario de negocio, quiero crear entradas de entidad con detalles claros para poder construir y mantener los datos maestros del módulo.
+### Historia de Usuario 1 - Evaluar el pedido desde el módulo de ventas, confirmarlo o rechazarlo y supervisar indicadpres y costos. (Prioridad: P1)
+Como jefe de planta o gerente de operaciones, quiero evaluar si la planta es capaz de producir el pedido que llega de Ventas, confirmarlo o rechazarlo, y supervisar los indicadores y costos de las órdenes, para no afecrar a la planta con pedidos que no puede cumplir y para tener control de cómo está funcionando la operación.
 
-**Por qué esta prioridad**: Este es el valor central del producto porque, sin crear entidades, el resto de la experiencia no puede aportar valor.
+**Por qué esta prioridad**: Es la puerta de entrada al recorrido de toda orden: nada se fabrica hasta que alguien decide que la planta puede hacerlo. Aceptar un pedido sin evaluarlo genera atrasos, sobrecarga de máquinas y problemas con el cliente; rechazarlo por error significa perder una venta. Además, sin una forma de supervisar indicadores y costos, la decisión se toma a ciegas y no se puede saber si la planta está cumpliendo.
 
-**Prueba Independiente**: Un usuario puede abrir el módulo, añadir una nueva entidad y verla aparecer en la lista.
+**Prueba Independiente**:  Un usuario abre la lista de órdenes y ubica un pedido pendiente de decisión; revisa su detalle y la carga actual de la planta; confirma el pedido y comprueba que pasa a liberada; rechaza otro y comprueba que pasa a cancelada y ya no se puede avanzar; por último, abre la vista de indicadores y costos y ve los datos reflejando las órdenes almacenadas.
 
 **Escenarios de Aceptación**:
 
-1. **Dado** que un usuario está viendo la lista de entidades, **cuando** crea una nueva entidad con un nombre y un código, **entonces** la nueva entidad se guarda y aparece en la lista.
-2. **Dado** que un usuario está creando una entidad, **cuando** deja la información obligatoria en blanco, **entonces** el sistema impide guardar y explica qué se necesita.
+1. **Dado** que Ventas ha enviado pedidos a la planta, **cuando** el usuario abre la lista de órdenes y filtra las que están en estado *planificada*, **entonces** ve los pedidos pendientes de decisión, cada uno con su número (serie y folio), producto, cantidad, fecha de inicio, fecha de entrega y estado.
+2. **Dada** una orden pendiente de decisión, **cuando** el usuario abre su detalle, **entonces** ve todos los datos del pedido, incluidos los importes registrados
+y las notas, para poder evaluarlo.
+3. **Dado** que el usuario está evaluando un pedido, **cuando** consulta las órdenes que están *en producción*, **entonces** ve qué se está fabricando en ese momento y en qué máquina, para juzgar si la planta tiene capacidad.
+4. **Dado** que el usuario está evaluando un pedido, **cuando** consulta el producto del pedido, **entonces** ve su stock actual junto al stock mínimo; si el producto no tiene stock registrado, se indica "sin dato" y no cero.
+*Confirmar el pedido*
+ 
+6. **Dada** una orden *planificada*, **cuando** el usuario la confirma, **entonces** la orden pasa a *liberada*, el cambio se refleja en la lista y la orden queda disponible para continuar con su ejecución.
+7. **Dada** una orden confirmada, **cuando** el usuario vuelve a la lista, **entonces** la orden aparece como *liberada* y deja de figurar entre los pedidos pendientes de decisión.
+*Rechazar el pedido*
+ 
+8. **Dada** una orden *planificada*, **cuando** el usuario la rechaza, **entonces** la orden pasa a *cancelada* y el cambio se refleja en la lista.
+9. **Dado** que el usuario rechaza un pedido, **cuando** quiere dejar constancia del motivo, **entonces** puede anotarlo en las notas de la orden; el motivo es opcional.
+10. **Dada** una orden *cancelada*, **cuando** el usuario intenta cambiar su estado (por ejemplo, volver a liberarla), **entonces** el sistema indica que es un
+estado final y no lo permite.
+11. **Dado** que se intenta una transición no permitida por cualquier vía (por ejemplo, de *planificada* directamente a *en producción*), **cuando** se envía, **entonces** el sistema la rechaza con una explicación clara.
+*Supervisar indicadores y costos*
+ 
+12. **Dadas** órdenes en distintos estados, **cuando** el usuario abre la vista de indicadores, **entonces** ve cuántas órdenes hay en cada estado.
+13. **Dada** una orden cuya fecha de entrega ya pasó y cuyo estado no es *terminada* ni *cancelada*, **cuando** el usuario consulta los indicadores, **entonces** la orden se identifica como retrasada y se muestra cuántas hay.
+14. **Dada** una orden con cantidad producida y merma registradas, **cuando** el usuario consulta los indicadores, **entonces** ve el porcentaje de merma de la orden, calculado como la merma dividida por la cantidad producida.
+15. **Dadas** órdenes con subtotal, descuento, impuesto y total registrados, **cuando** el usuario consulta los costos, **entonces** ve esos importes por orden, con su moneda.
+16. **Dadas** órdenes en distintas monedas, **cuando** el usuario consulta los costos totales, **entonces** el sistema muestra un total por cada moneda y no los suma entre sí.
+17. **Dado** que no hay órdenes almacenadas, **cuando** el usuario abre la vista de indicadores y costos, **entonces** se muestran valores en cero y un estado vacío claro, sin errores.
 
 ---
 
