@@ -103,25 +103,26 @@ Como encargado de bodega y logistica, quiero administrar el catalogo de stock de
 
 ---
 
-### Historia de Usuario 4 - Gestionar entidades y documentos en una pantalla dedicada (Prioridad: P1)
+### Historia de Usuario 4 - Supervisar la ejecución de las órdenes de producción durante el turno (Prioridad: P1)
 
-Como usuario de negocio, quiero una pantalla dedicada donde pueda añadir, editar y eliminar entidades y sus documentos, para poder gestionar los datos del módulo en un lugar enfocado.
+Como supervisor de producción o jefe de turno, quiero consultar las órdenes liberadas, asignar la máquina y registrar la etapa del proceso, el lote y las cantidades producidas, para coordinar el trabajo del turno y enviar los lotes fabricados a control de calidad.
 
-**Por qué esta prioridad**: Esto preserva el valor central de las capacidades de gestión del módulo, presentado como una única pantalla de gestión accesible desde la barra lateral y las acciones rápidas del panel.
+**Por qué esta prioridad**: Una vez que el jefe de planta confirma un pedido, es necesario organizar y supervisar su fabricación. Mantener actualizada la información permite saber qué se está produciendo, en qué máquina y en qué etapa se encuentra cada orden, facilitando la continuidad entre turnos y la posterior inspección de calidad.
 
-**Prueba Independiente**: Un usuario puede navegar a la pantalla de gestión mediante la barra lateral o una acción rápida, alternar entre la gestión de entidades y documentos, y volver al panel, añadiendo, editando y eliminando con éxito una entidad y un documento.
+**Prueba Independiente**: Un usuario consulta las órdenes liberadas, selecciona una, registra la máquina y el lote e inicia su producción. Luego actualiza la etapa del proceso y la cantidad producida, registra una incidencia en las notas y envía la orden a control de calidad. Al abrirla nuevamente, comprueba que los datos y el estado quedaron guardados.
 
 **Escenarios de Aceptación**:
 
-1. **Dado** que el usuario está en la pantalla de gestión, **cuando** mira la navegación, **entonces** la barra lateral del espacio de trabajo ofrece botones de módulo para Entidades, Documentos y Panel con el módulo activo resaltado.
-2. **Dada** la barra lateral visible, **cuando** el usuario activa el botón Entidades, **entonces** se muestra el contenido de gestión de entidades.
-3. **Dada** la barra lateral visible, **cuando** el usuario activa el botón Documentos, **entonces** se muestra el contenido de gestión de documentos.
-4. **Dado** que el usuario está en la pantalla de gestión, **cuando** mira la pantalla, **entonces** la lista de entidades no se muestra.
-5. **Dado** que el usuario está en la pantalla de gestión, **cuando** crea una nueva entidad, **entonces** la entidad se guarda.
-6. **Dada** una entidad existente, **cuando** el usuario edita sus detalles, **entonces** la información actualizada se guarda.
-7. **Dada** una entidad que ya no es relevante, **cuando** el usuario la elimina, **entonces** se elimina junto con sus documentos.
-8. **Dada** una entidad existente, **cuando** el usuario añade, edita o elimina un documento, **entonces** los cambios del documento se guardan y quedan asociados a esa entidad.
-9. **Dado** que el usuario está en la pantalla de gestión, **cuando** activa el botón Panel en la barra lateral, **entonces** vuelve al panel de inicio.
+1. **Dado** que existen órdenes confirmadas por el jefe de planta, **cuando** el usuario consulta las órdenes en estado liberada, **entonces** puede identificar su número, producto, cantidad solicitada, prioridad y fechas de inicio y entrega.
+2. **Dada** una orden liberada, **cuando** el usuario abre su detalle, **entonces** puede consultar las instrucciones y registrar o actualizar la máquina asignada, el lote y la etapa del proceso.
+3. **Dada** una orden liberada, **cuando** el usuario inicia su fabricación, **entonces** la orden cambia a en producción y el cambio se refleja en su detalle y en la lista.
+4. **Dado** una orden en producción, **cuando** el usuario actualiza la etapa del proceso y la cantidad producida y guarda los cambios, **entonces** el sistema conserva la información y la muestra al volver a consultar la orden.
+5. **Dado** una orden en producción que presenta una detención, falla de máquina u otra incidencia, **cuando** el usuario describe lo ocurrido en las notas y guarda, **entonces** la observación queda asociada a la orden para informar al siguiente turno y al inspector de calidad.
+6. **Dada** que el usuario registra una cantidad producida o una merma, **cuando** introduce un valor negativo o no numérico, **entonces** el sistema impide guardar e indica qué valor debe corregirse.
+7. **Dada** una orden cuya fabricación ha concluido, **cuando** el usuario cambia su estado de en producción a en control de calidad, **entonces** la orden queda disponible para la inspección, conservando el producto, la máquina, el lote, las cantidades y las notas registradas.
+8. **Dada** una orden devuelta por el inspector de calidad a en producción, **cuando** el supervisor abre su detalle, **entonces** puede consultar las observaciones de calidad y actualizar los datos de fabricación para realizar la corrección solicitada.
+9. **Dado** una orden corregida que se encuentra en producción, **cuando** el supervisor la envía nuevamente a en control de calidad, **entonces** el sistema conserva los datos actualizados para una nueva revisión del inspector.
+10. **Dado** una orden planificada, terminada o cancelada, **cuando** se intenta una transición no permitida para iniciar o retomar su producción, **entonces** el sistema rechaza el cambio y muestra una explicación clara.
 
 ---
 
