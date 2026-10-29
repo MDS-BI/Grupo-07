@@ -125,20 +125,26 @@ Como usuario de negocio, quiero una pantalla dedicada donde pueda añadir, edita
 
 ---
 
-### Historia de Usuario 5 - Definir un perfil de configuración del módulo (Prioridad: P1)
+### Historia de Usuario 5 - Inspeccionar los lotes fabricados, registrar la merma y determinadad del producto (Prioridad: P1-P2)
 
-Como desarrollador de módulos, quiero declarar un único archivo de configuración que defina la identidad, terminología, campos personalizados y reglas de mi módulo, para adaptar el módulo base en un módulo específico sin modificar su código central.
+Como inspector de calidad (QA), quiero poder inspeccionar y registrar: 
+1.-  El lote fabricado, contra las especificaiones que solicita mi entrada.
+2.-  La cantidad producida de producto ('CantidadQA').
+3.- La merma del producto ('MermaQA').
+4.- La calidad del producto ('CalidadQA').
+Además de poder aprobar el cierre de la orden 'Aprobada' (dejarla como termianda), devolverla a producción si no se cumple alguno de los estandares de calidad, para la corrección del producto 'Corrección' además de dejar una nota ('nota') o un si es necesario solicitar un nuevo lote por defectos incorregibles 'Rechazado'.
 
-**Por qué esta prioridad**: La adaptación mediante configuración es lo que convierte este proyecto de una aplicación fija en una base reutilizable. Sin ella, cada módulo personalizado requeriría editar archivos fuente centrales, lo que frustra el propósito de la plantilla; todas las historias de personalización posteriores dependen de que este mecanismo exista primero.
+**Por qué esta prioridad**: ES EL ÚLTIMO FILTRO para dar por finalizado una orden de un lote de cualquier orden que esté produciendo la planta, además de verificar que los productos cumplan al menos con la calidad mínima requerida y si no lo hace, corregir o solicitar un nuevo lote, cuantificar las perdidas (mermas).
 
-**Prueba Independiente**: Un desarrollador proporciona un archivo de configuración que define un perfil de Ventas (nombre del módulo, mapeos Entidad→Cliente, campos personalizados, ciclo de vida), y la aplicación se presenta plenamente como un módulo de Ventas; al quitar el archivo se restauran los valores predeterminados de la base sin errores.
+**Prueba Independiente**: El usuario selecciona la orden de producción que se encuentra en estado 'en control de calidad', ingresa la cantidad producida y la merma, selecciona si cumple con la calidad la aprueba 'Aprobada', redirige a corrección si no cumple 'Corrección' o solicita que se rehaga el lote 'Rechazado'.
 
 **Escenarios de Aceptación**:
 
-1. **Dado** que un archivo de configuración define el nombre del módulo, **cuando** la aplicación carga, **entonces** el panel de inicio y el marco del espacio de trabajo muestran el nombre configurado.
-2. **Dada** una configuración completa (nombre, mapeos de términos, campos personalizados, ciclo de vida), **cuando** la aplicación carga, **entonces** el módulo se presenta plenamente bajo la identidad configurada sin que se vean términos del módulo base en ningún sitio.
-3. **Dado** que no se proporciona configuración, **cuando** la aplicación carga, **entonces** la aplicación retrocede a los valores predeterminados integrados Entidad/Documento sin errores.
-4. **Dada** una configuración con valores inválidos o conflictivos, **cuando** la aplicación carga, **entonces** el sistema informa del problema con claridad en lugar de fallar silenciosamente.
+1. **Dada** la orden de producción que finalizo su estapa de fabricación y pasó a 'en control de calidad', **Cuando** el inspector de calidad abre la orden para su revisión, **entonces** puede comparar el lote contra las especificaciónes de entrada, registrar la cantidad producida de producto ('CantidadQA'), la merma del producto C y La calidad del producto ('CalidadQA': 'Pendiente', 'Aprobado', 'Correción' o 'Rechazado').
+2. **Dada** una orden en estado 'en control de calidad' cuyo lote cumple las espicificaciones de entrada, **Cuando** el inspector registra el resultado ('Aprobado'), guarda los datos 'CantidadQA' y 'MermaQA' y cambia el estado de la orden de 'en control de calidad' a 'finalizada', **entonces** el sistema actualiza la orden y la marca a su fase final. 
+3. **Dada** una orden en estado 'en control de calidad' cuyo lote presenta defectos o discrepancias respecto a las especificaciones de entrada, **Cuando** el inspector registra el resultado ('Correción'), anota las observaciones en ('notas') y cambia el estado de 'en control de calidad' a 'en producción',  **entonces** el sistema actualiza la orden y permite que regrese a producción conservando los datos y enviandolos para que la planta realice la correción, manteniendo el registro de la merma ('MermaQA') para su gestión.
+4. **Dada** una orden en estado 'en control de calidad' con fallas graves o irreparables, **Cuando** el inspector registra el resultado ('Rechazado') y cambia el estado de 'en control de calidad' a 'cancelada',  **entonces** el sistema cierra la orden de en estado final 'cancelada' manteniendo el registro de la merma ('MermaQA') para su gestión.
+5. **Dada**  una orden en estado 'en control de calidad'  **Cuando**  el inspector introduce un valor incorrecto ya sea negativo (<0) o un valor no numérico en 'CantidadQA' o 'MermaQA' o intenta cambiar el estado a otro distinto de 'finalizada', 'en producción' o 'cancelada'  **entonces** el sistema impide guardar y muestra un mensaje explicando el error cometido.
 
 ---
 
