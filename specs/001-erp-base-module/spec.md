@@ -126,26 +126,26 @@ Como supervisor de producción o jefe de turno, quiero consultar las órdenes li
 
 ---
 
-### Historia de Usuario 5 - Inspeccionar los lotes fabricados, registrar la merma y determinadad del producto (Prioridad: P1-P2)
+### Historia de Usuario 5 - Inspeccionar los lotes fabricados, registrar la merma y determinar la calidad del producto (Prioridad: P1-P2)
 
 Como inspector de calidad (QA), quiero poder inspeccionar y registrar: 
-1.-  El lote fabricado, contra las especificaiones que solicita mi entrada.
+1.-  El lote fabricado, contra las especificaciones que solicita mi entrada.
 2.-  La cantidad producida de producto ('CantidadQA').
 3.- La merma del producto ('MermaQA').
 4.- La calidad del producto ('CalidadQA').
-Además de poder aprobar el cierre de la orden 'Aprobada' (dejarla como termianda), devolverla a producción si no se cumple alguno de los estandares de calidad, para la corrección del producto 'Corrección' además de dejar una nota ('nota') o un si es necesario solicitar un nuevo lote por defectos incorregibles 'Rechazado'.
+Además de poder aprobar el cierre de la orden 'Aprobada' (dejarla como terminada), devolverla a producción si no se cumple alguno de los estándares de calidad, para la corrección del producto 'Corrección' además de dejar una nota ('nota') o, si es necesario, solicitar un nuevo lote por defectos incorregibles 'Rechazado'.
 
-**Por qué esta prioridad**: ES EL ÚLTIMO FILTRO para dar por finalizado una orden de un lote de cualquier orden que esté produciendo la planta, además de verificar que los productos cumplan al menos con la calidad mínima requerida y si no lo hace, corregir o solicitar un nuevo lote, cuantificar las perdidas (mermas).
+**Por qué esta prioridad**: ES EL ÚLTIMO FILTRO para dar por finalizada una orden de un lote de cualquier orden que esté produciendo la planta, además de verificar que los productos cumplan al menos con la calidad mínima requerida y, si no lo hacen, corregir o solicitar un nuevo lote, y cuantificar las pérdidas (mermas).
 
-**Prueba Independiente**: El usuario selecciona la orden de producción que se encuentra en estado 'en control de calidad', ingresa la cantidad producida y la merma, selecciona si cumple con la calidad la aprueba 'Aprobado', redirige a corrección si no cumple 'Corrección' o solicita que se rehaga el lote 'Rechazado'.
+**Prueba Independiente**: El usuario selecciona la orden de producción que se encuentra en estado 'en control de calidad', ingresa la cantidad producida y la merma, selecciona si cumple con la calidad, la aprueba 'Aprobado', redirige a corrección si no cumple 'Corrección' o solicita que se rehaga el lote 'Rechazado'.
 
 **Escenarios de Aceptación**:
 
-1. **Dada** la orden de producción que finalizo su estapa de fabricación y pasó a 'en control de calidad', **Cuando** el inspector de calidad abre la orden para su revisión, **entonces** puede comparar el lote contra las especificaciónes de entrada, registrar la cantidad producida de producto ('CantidadQA'), la merma del producto C y La calidad del producto ('CalidadQA': 'Pendiente', 'Aprobado', 'Correción' o 'Rechazado').
-2. **Dada** una orden en estado 'en control de calidad' cuyo lote cumple las espicificaciones de entrada, **Cuando** el inspector registra el resultado ('Aprobado'), guarda los datos 'CantidadQA' y 'MermaQA' y cambia el estado de la orden de 'en control de calidad' a 'finalizada', **entonces** el sistema actualiza la orden y la marca a su fase final. 
-3. **Dada** una orden en estado 'en control de calidad' cuyo lote presenta defectos o discrepancias respecto a las especificaciones de entrada, **Cuando** el inspector registra el resultado ('Correción'), anota las observaciones en ('nota') y cambia el estado de 'en control de calidad' a 'en producción',  **entonces** el sistema actualiza la orden y permite que regrese a producción conservando los datos y enviandolos para que la planta realice la correción, manteniendo el registro de la merma ('MermaQA') para su gestión.
-4. **Dada** una orden en estado 'en control de calidad' con fallas graves o irreparables, **Cuando** el inspector registra el resultado ('Rechazado') y cambia el estado de 'en control de calidad' a 'cancelada',  **entonces** el sistema cierra la orden de en estado final 'cancelada' manteniendo el registro de la merma ('MermaQA') para su gestión.
-5. **Dada**  una orden en estado 'en control de calidad'  **Cuando**  el inspector introduce un valor incorrecto ya sea negativo (<0) o un valor no numérico en 'CantidadQA' o 'MermaQA' o intenta cambiar el estado a otro distinto de 'finalizada', 'en producción' o 'cancelada'  **entonces** el sistema impide guardar y muestra un mensaje explicando el error cometido.
+1. **Dada** la orden de producción que finalizó su etapa de fabricación y pasó a 'en control de calidad', **cuando** el inspector de calidad abre la orden para su revisión, **entonces** puede comparar el lote contra las especificaciones de entrada, registrar la cantidad producida de producto ('CantidadQA'), la merma del producto ('MermaQA') y la calidad del producto ('CalidadQA': 'Pendiente', 'Aprobado', 'Corrección' o 'Rechazado').
+2. **Dada** una orden en estado 'en control de calidad' cuyo lote cumple las especificaciones de entrada, **cuando** el inspector registra el resultado ('Aprobado'), guarda los datos 'CantidadQA' y 'MermaQA' y cambia el estado de la orden de 'en control de calidad' a 'finalizada', **entonces** el sistema actualiza la orden y la marca a su fase final. 
+3. **Dada** una orden en estado 'en control de calidad' cuyo lote presenta defectos o discrepancias respecto a las especificaciones de entrada, **cuando** el inspector registra el resultado ('Corrección'), anota las observaciones en ('nota') y cambia el estado de 'en control de calidad' a 'en producción',  **entonces** el sistema actualiza la orden y permite que regrese a producción conservando los datos y enviándolos para que la planta realice la corrección, manteniendo el registro de la merma ('MermaQA') para su gestión.
+4. **Dada** una orden en estado 'en control de calidad' con fallas graves o irreparables, **cuando** el inspector registra el resultado ('Rechazado') y cambia el estado de 'en control de calidad' a 'cancelada',  **entonces** el sistema cierra la orden en estado final 'cancelada' manteniendo el registro de la merma ('MermaQA') para su gestión.
+5. **Dada**  una orden en estado 'en control de calidad'  **cuando**  el inspector introduce un valor incorrecto ya sea negativo (<0) o un valor no numérico en 'CantidadQA' o 'MermaQA' o intenta cambiar el estado a otro distinto de 'finalizada', 'en producción' o 'cancelada'  **entonces** el sistema impide guardar y muestra un mensaje explicando el error cometido.
 
 ---
 
