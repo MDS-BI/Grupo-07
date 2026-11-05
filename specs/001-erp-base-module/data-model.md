@@ -118,7 +118,7 @@ Los campos `taxId`, `email`, `phone`, `creditLimit` y `paymentTerms` vienen del 
 | `priority` | Prioridad | select | No | Baja, Media, Alta, Urgente |
 | `producedQty` | Cantidad producida | number | No | |
 | `scrapQty` | Cantidad de merma | number | No | |
-| `qualityResult` | Resultado de calidad | select | No | Pendiente, Aprobado, Aprobado con observaciones, Rechazado |
+| `qualityResult` | Resultado de calidad | select | No | Pendiente, Aprobado, Corrección, Rechazado |
 | `responsible` | Responsable | text | No | |
 
 ### Cómo usamos los campos base
@@ -191,10 +191,11 @@ Una orden nace como *planificada* y avanza paso a paso. Si no pasa la inspecció
 
 ## Configuración
 
-Todo está en `src/module-config.js`:
+Todo está en `src/module-config.js`. `userConfig` permanece en `null` para que la aplicación arranque con los valores predeterminados del módulo base; `manufacturingConfig` documenta el perfil de manufactura de referencia y debe asignarse a `userConfig` cuando se active la Fase 19.
 
-| Propiedad | Valor |
+| Propiedad | Valor en `manufacturingConfig` |
 |---|---|
+| `userConfig` | `null` (perfil de manufactura inactivo hasta la Fase 19) |
 | `moduleName` | Manufactura y Operaciones |
 | `labels` | Producto / Productos, Orden de Producción / Órdenes de Producción |
 | `customFields` | 6 de Producto y 8 de Orden de Producción |
@@ -226,7 +227,7 @@ Hay reglas de negocio que el módulo base no valida y que por ahora quedan fuera
 
 ## Relaciones
 
-- Cada producto se guarda de forma independiente y aparece como una fila en la lista.
+- Cada producto se guarda de forma independiente y aparece en el selector de gestión y en los resultados de búsqueda (la pantalla de gestión no muestra una lista, según FR-016).
 - Cada orden pertenece a un único producto.
 - Si se elimina un producto, se eliminan también todas sus órdenes (cascada).
 - La búsqueda recorre los productos, incluidos sus campos propios.
@@ -250,9 +251,12 @@ Máquina, lote, proveedor y control de calidad quedaron como campos y no como ta
 ## Estado del avance
 
 - [x] Modelo de datos definido y documentado
-- [x] Configuración del módulo escrita (`userConfig`)
-- [ ] Probar la configuración en la aplicación y revisar que no aparezca el aviso de configuración inválida
+- [x] Configuración de referencia escrita (`manufacturingConfig`); `userConfig` queda en `null`
+- [x] Configuración validada en ejecución (aviso visible ante configuración inválida)
+- [x] Pruebas automatizadas del núcleo base en verde (12 archivos, 111 pruebas)
+- [x] Compilación de producción verificada (`npm run build`)
+- [ ] Activar `manufacturingConfig` y revisar los flujos de dominio (Fase 19 de tasks.md)
 - [ ] Cargar datos de ejemplo (productos y órdenes) para probar los flujos
-- [ ] Alertas de stock bajo y detección de órdenes retrasadas
+- [ ] Notificaciones automáticas de stock bajo y de órdenes retrasadas (la identificación en pantalla está cubierta por FR-042/FR-046)
 - [ ] Validar producción + merma frente a la cantidad planificada
 - [ ] Consumo de materia prima por orden

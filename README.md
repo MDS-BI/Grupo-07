@@ -119,7 +119,7 @@ The base module handles identity generation, timestamps, referential integrity b
 
 ### Tailoring via Configuration
 
-All tailoring lives in one place: the `userConfig` object at the top of `src/module-config.js`. Developers edit this single export; no core code changes are required. Available knobs:
+All tailoring lives in one place: `src/module-config.js`. Set `userConfig` to your profile; the file ships with `userConfig = null` so the base defaults are active, and includes `manufacturingConfig` as a complete reference profile. No core code changes are required. Available knobs:
 
 - `moduleName` — display name shown in the top bar, dashboard, and document title; also derives the logo monogram.
 - `labels` — rename Entity/Document terms across every screen, including sidebar buttons, quick actions, forms, and messages. Spanish articles and agreements (el/la, seleccionado/a) are derived from the first word of each configured term.

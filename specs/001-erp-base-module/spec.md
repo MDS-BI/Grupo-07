@@ -2,7 +2,7 @@
 
 **Rama de la funcionalidad**: 001-erp-base-module  
 **Creada**: 2026-07-08  
-**Estado**: Borrador  
+**Estado**: Núcleo base implementado; perfil de manufactura pendiente (Fase 19 de tasks.md)  
 **Entrada**: Descripción del usuario: "Construir un módulo base de software de planificación de recursos empresariales (ERP) que pueda extenderse en módulos ERP personalizados. Debe proporcionar gestión de datos maestros (entidades) y documentos transaccionales vinculados con capacidades de crear/editar/eliminar/buscar."
 
 ## Propósito
@@ -11,10 +11,8 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 
 ## Escenarios de Usuario y Pruebas *(obligatorio)*
 
-### Historia de Usuario 0 - Ejemplo
-
-### Historia de Usuario 1 - Evaluar el pedido desde el módulo de ventas, confirmarlo o rechazarlo y supervisar indicadpres y costos. (Prioridad: P1)
-Como jefe de planta o gerente de operaciones, quiero evaluar si la planta es capaz de producir el pedido que llega de Ventas, confirmarlo o rechazarlo, y supervisar los indicadores y costos de las órdenes, para no afecrar a la planta con pedidos que no puede cumplir y para tener control de cómo está funcionando la operación.
+### Historia de Usuario 1 - Evaluar el pedido desde el módulo de ventas, confirmarlo o rechazarlo y supervisar indicadores y costos. (Prioridad: P1)
+Como jefe de planta o gerente de operaciones, quiero evaluar si la planta es capaz de producir el pedido que llega de Ventas, confirmarlo o rechazarlo, y supervisar los indicadores y costos de las órdenes, para no afectar a la planta con pedidos que no puede cumplir y para tener control de cómo está funcionando la operación.
 
 **Por qué esta prioridad**: Es la puerta de entrada al recorrido de toda orden: nada se fabrica hasta que alguien decide que la planta puede hacerlo. Aceptar un pedido sin evaluarlo genera atrasos, sobrecarga de máquinas y problemas con el cliente; rechazarlo por error significa perder una venta. Además, sin una forma de supervisar indicadores y costos, la decisión se toma a ciegas y no se puede saber si la planta está cumpliendo.
 
@@ -27,6 +25,7 @@ Como jefe de planta o gerente de operaciones, quiero evaluar si la planta es cap
 y las notas, para poder evaluarlo.
 3. **Dado** que el usuario está evaluando un pedido, **cuando** consulta las órdenes que están *en producción*, **entonces** ve qué se está fabricando en ese momento y en qué máquina, para juzgar si la planta tiene capacidad.
 4. **Dado** que el usuario está evaluando un pedido, **cuando** consulta el producto del pedido, **entonces** ve su stock actual junto al stock mínimo; si el producto no tiene stock registrado, se indica "sin dato" y no cero.
+5. **Dada** una orden *planificada* y la carga actual de la planta, **cuando** el usuario revisa la capacidad disponible, **entonces** decide si confirma o rechaza el pedido con la información a la vista.
 *Confirmar el pedido*
  
 6. **Dada** una orden *planificada*, **cuando** el usuario la confirma, **entonces** la orden pasa a *liberada*, el cambio se refleja en la lista y la orden queda disponible para continuar con su ejecución.
@@ -83,23 +82,23 @@ ni en la lista ni al buscarlo.
    **entonces** se elimina el producto junto con todas sus órdenes; si cancela,
    no se borra nada.
 
-### Historia de Usuario 3 - Administrar el catalogo de stock, ubicaciones, proveedores, plazos de reposicion, controlar cuanto hay en bodega y que el minimo no deba bajar (Prioridad: P1)
+### Historia de Usuario 3 - Administrar el catálogo de stock, ubicaciones, proveedores, plazos de reposición, controlar cuánto hay en bodega y que el mínimo no deba bajar (Prioridad: P1)
 
-Como encargado de bodega y logistica, quiero administrar el catalogo de stock de materias primas, insumo y productos terminados, la ubicacion, los proveedores y plazos de reposicion, para asi saber cuanto hay en bodega y reponer si esta bajo el minimo de stock.
+Como encargado de bodega y logística, quiero administrar el catálogo de stock de materias primas, insumos y productos terminados, la ubicación, los proveedores y plazos de reposición, para así saber cuánto hay en bodega y reponer si está bajo el mínimo de stock.
 
-**Por qué esta prioridad**: Sin un control de stock ni un catalogo actualizado, la planta no puede planificar ni producir ordenes. Si se realiza una actualizacion y mandencion del stock y cantidades en bodega se puede llevar un buen proceso de manofactura.
+**Por qué esta prioridad**: Sin un control de stock ni un catálogo actualizado, la planta no puede planificar ni producir órdenes. Si se realiza una actualización y mantención del stock y cantidades en bodega se puede llevar un buen proceso de manufactura.
 
-**Prueba Independiente**: Un usuario registra un item con nombre, stock actual, stock minimo, ubicacion, proveedor y plazo de reposicion; se ve en la lista, edita su stock, comprueba si queda señalado por estar bajo el minimo y lo elimina.
+**Prueba Independiente**: Un usuario registra un ítem con nombre, stock actual, stock mínimo, ubicación, proveedor y plazo de reposición; se ve en la lista, edita su stock, comprueba si queda señalado por estar bajo el mínimo y lo elimina.
 
 **Escenarios de Aceptación**:
 
-1. **Dado** que un usuario esta viendo en la lista de items, **cuando** crea un nuebvo item con nombre, codigo, tipo (Materia prima, Insumo o Producto terminado), stock actual, stock minimo, proveeder, plazo de reposicion y ubicacion, **entonces** el nuevo item se guarda y aparece en la lista con esos datos.
-2. **Dado** que un usuario esta creando un item, **cuando** deja algun espacio o dato sin rellenar, **entonces** el sistema no lo guarda y le explica lo que falta para guardar correctamente.
-3. **Dado** un campo personalizado tipo numerico (stock actual, stock minimo o plazo de reposicion), **cuando** un usuario ingresa un valor que no es un numero, **entonces** el sistema no lo guarda y explica el error.
-4. **Dado** un item ya existente en la lista, **cuando** un usuario edita su stock actual, stock minimo, plazo de reposicion, ubicacion o proveedor, **entonces** la informacion se actualiza en la lista correctamente.
-5. **Dado** un item con stock actual bajo el stock minimo, **cuando** el usuario ve la lista, **entonces** le aparece que el item se encuentra con "stock bajo el minimo". 
-6. **Dado** que un usuario deja el sock minimo o stock actual en blanco, **cuando** guarde el item en la lista, **entonces** quedara guardado igualmente y la lista mostrara en ese apartado "sin datos".
-7. **Dado** un item que ya no se utiliza **cuando** el usuario lo elimina **entonces** desaparecera de la lista y no aparecera en los resultados de busqueda.
+1. **Dado** que un usuario está viendo la lista de ítems, **cuando** crea un nuevo ítem con nombre, código, tipo (Materia prima, Insumo o Producto terminado), stock actual, stock mínimo, proveedor, plazo de reposición y ubicación, **entonces** el nuevo ítem se guarda y aparece en la lista con esos datos.
+2. **Dado** que un usuario está creando un ítem, **cuando** deja algún espacio o dato sin rellenar, **entonces** el sistema no lo guarda y le explica lo que falta para guardar correctamente.
+3. **Dado** un campo personalizado de tipo numérico (stock actual, stock mínimo o plazo de reposición), **cuando** un usuario ingresa un valor que no es un número, **entonces** el sistema no lo guarda y explica el error.
+4. **Dado** un ítem ya existente en la lista, **cuando** un usuario edita su stock actual, stock mínimo, plazo de reposición, ubicación o proveedor, **entonces** la información se actualiza en la lista correctamente.
+5. **Dado** un ítem con stock actual bajo el stock mínimo, **cuando** el usuario ve la lista, **entonces** le aparece que el ítem se encuentra con "stock bajo el mínimo".
+6. **Dado** que un usuario deja el stock mínimo o stock actual en blanco, **cuando** guarde el ítem en la lista, **entonces** quedará guardado igualmente y la lista mostrará en ese apartado "sin datos".
+7. **Dado** un ítem que ya no se utiliza, **cuando** el usuario lo elimina, **entonces** desaparecerá de la lista y no aparecerá en los resultados de búsqueda.
 
 ---
 
@@ -126,26 +125,27 @@ Como supervisor de producción o jefe de turno, quiero consultar las órdenes li
 
 ---
 
-### Historia de Usuario 5 - Inspeccionar los lotes fabricados, registrar la merma y determinadad del producto (Prioridad: P1-P2)
+### Historia de Usuario 5 - Inspeccionar los lotes fabricados, registrar la merma y determinar la calidad del producto (Prioridad: P1-P2)
 
-Como inspector de calidad (QA), quiero poder inspeccionar y registrar: 
-1.-  El lote fabricado, contra las especificaiones que solicita mi entrada.
-2.-  La cantidad producida de producto ('CantidadQA').
+Como inspector de calidad (QA), quiero poder inspeccionar y registrar:
+1.- El lote fabricado, contra las especificaciones que solicita mi entrada.
+2.- La cantidad producida de producto ('CantidadQA').
 3.- La merma del producto ('MermaQA').
 4.- La calidad del producto ('CalidadQA').
-Además de poder aprobar el cierre de la orden 'Aprobada' (dejarla como termianda), devolverla a producción si no se cumple alguno de los estandares de calidad, para la corrección del producto 'Corrección' además de dejar una nota ('nota') o un si es necesario solicitar un nuevo lote por defectos incorregibles 'Rechazado'.
 
-**Por qué esta prioridad**: ES EL ÚLTIMO FILTRO para dar por finalizado una orden de un lote de cualquier orden que esté produciendo la planta, además de verificar que los productos cumplan al menos con la calidad mínima requerida y si no lo hace, corregir o solicitar un nuevo lote, cuantificar las perdidas (mermas).
+Además de poder aprobar el cierre de la orden 'Aprobado' (dejarla como terminada), devolverla a producción si no se cumple alguno de los estándares de calidad, para la corrección del producto 'Corrección', además de dejar una nota ('nota') o, si es necesario, solicitar un nuevo lote por defectos incorregibles 'Rechazado'.
+
+**Por qué esta prioridad**: ES EL ÚLTIMO FILTRO para dar por cerrada una orden de un lote de cualquier orden que esté produciendo la planta, además de verificar que los productos cumplan al menos con la calidad mínima requerida y, si no lo hace, corregir o solicitar un nuevo lote, cuantificar las pérdidas (mermas).
 
 **Prueba Independiente**: El usuario selecciona la orden de producción que se encuentra en estado 'en control de calidad', ingresa la cantidad producida y la merma, selecciona si cumple con la calidad la aprueba 'Aprobado', redirige a corrección si no cumple 'Corrección' o solicita que se rehaga el lote 'Rechazado'.
 
 **Escenarios de Aceptación**:
 
-1. **Dada** la orden de producción que finalizo su estapa de fabricación y pasó a 'en control de calidad', **Cuando** el inspector de calidad abre la orden para su revisión, **entonces** puede comparar el lote contra las especificaciónes de entrada, registrar la cantidad producida de producto ('CantidadQA'), la merma del producto C y La calidad del producto ('CalidadQA': 'Pendiente', 'Aprobado', 'Correción' o 'Rechazado').
-2. **Dada** una orden en estado 'en control de calidad' cuyo lote cumple las espicificaciones de entrada, **Cuando** el inspector registra el resultado ('Aprobado'), guarda los datos 'CantidadQA' y 'MermaQA' y cambia el estado de la orden de 'en control de calidad' a 'finalizada', **entonces** el sistema actualiza la orden y la marca a su fase final. 
-3. **Dada** una orden en estado 'en control de calidad' cuyo lote presenta defectos o discrepancias respecto a las especificaciones de entrada, **Cuando** el inspector registra el resultado ('Correción'), anota las observaciones en ('nota') y cambia el estado de 'en control de calidad' a 'en producción',  **entonces** el sistema actualiza la orden y permite que regrese a producción conservando los datos y enviandolos para que la planta realice la correción, manteniendo el registro de la merma ('MermaQA') para su gestión.
-4. **Dada** una orden en estado 'en control de calidad' con fallas graves o irreparables, **Cuando** el inspector registra el resultado ('Rechazado') y cambia el estado de 'en control de calidad' a 'cancelada',  **entonces** el sistema cierra la orden de en estado final 'cancelada' manteniendo el registro de la merma ('MermaQA') para su gestión.
-5. **Dada**  una orden en estado 'en control de calidad'  **Cuando**  el inspector introduce un valor incorrecto ya sea negativo (<0) o un valor no numérico en 'CantidadQA' o 'MermaQA' o intenta cambiar el estado a otro distinto de 'finalizada', 'en producción' o 'cancelada'  **entonces** el sistema impide guardar y muestra un mensaje explicando el error cometido.
+1. **Dada** la orden de producción que finalizó su etapa de fabricación y pasó a 'en control de calidad', **cuando** el inspector de calidad abre la orden para su revisión, **entonces** puede comparar el lote contra las especificaciones de entrada, registrar la cantidad producida de producto ('CantidadQA'), la merma del producto ('MermaQA') y la calidad del producto ('CalidadQA': 'Pendiente', 'Aprobado', 'Corrección' o 'Rechazado').
+2. **Dada** una orden en estado 'en control de calidad' cuyo lote cumple las especificaciones de entrada, **cuando** el inspector registra el resultado ('Aprobado'), guarda los datos 'CantidadQA' y 'MermaQA' y cambia el estado de la orden de 'en control de calidad' a 'terminada', **entonces** el sistema actualiza la orden y la marca a su fase final.
+3. **Dada** una orden en estado 'en control de calidad' cuyo lote presenta defectos o discrepancias respecto a las especificaciones de entrada, **cuando** el inspector registra el resultado ('Corrección'), anota las observaciones en ('nota') y cambia el estado de 'en control de calidad' a 'en producción', **entonces** el sistema actualiza la orden y permite que regrese a producción conservando los datos y enviándolos para que la planta realice la corrección, manteniendo el registro de la merma ('MermaQA') para su gestión.
+4. **Dada** una orden en estado 'en control de calidad' con fallas graves o irreparables, **cuando** el inspector registra el resultado ('Rechazado') y cambia el estado de 'en control de calidad' a 'cancelada', **entonces** el sistema cierra la orden en estado final 'cancelada' manteniendo el registro de la merma ('MermaQA') para su gestión.
+5. **Dada** una orden en estado 'en control de calidad', **cuando** el inspector introduce un valor incorrecto, ya sea negativo (<0) o no numérico, en 'CantidadQA' o 'MermaQA', o intenta cambiar el estado a otro distinto de 'terminada', 'en producción' o 'cancelada', **entonces** el sistema impide guardar y muestra un mensaje explicando el error cometido.
 
 ---
 
@@ -153,7 +153,7 @@ Además de poder aprobar el cierre de la orden 'Aprobada' (dejarla como termiand
 
 Como desarrollador de módulos, quiero que todas las etiquetas visibles para el usuario deriven de la configuración, para que un módulo adaptado hable su idioma de dominio de forma consistente en todo momento.
 
-**Por qué esta prioridad**: Los usuarios confían en un módulo que dice consistentemente "Cliente" y "Pedido de Venta" en lugar de dejar filtrarse una "Entidad" genérica por media interfaz; la terminología inconsistente hace que los módulos adaptados parezcan rotos. Esta historia depende del perfil de configuración (Historia de Usuario 5).
+**Por qué esta prioridad**: Los usuarios confían en un módulo que dice consistentemente "Cliente" y "Pedido de Venta" en lugar de dejar filtrarse una "Entidad" genérica por media interfaz; la terminología inconsistente hace que los módulos adaptados parezcan rotos. Esta historia depende del perfil de configuración (FR-023 a FR-025).
 
 **Prueba Independiente**: Un desarrollador mapea Entidad→Cliente y Documento→Pedido de Venta en la configuración, y cada pestaña, botón, etiqueta de formulario, encabezado y mensaje en las tres pantallas usa los términos mapeados.
 
@@ -169,7 +169,7 @@ Como desarrollador de módulos, quiero que todas las etiquetas visibles para el 
 
 Como desarrollador de módulos, quiero declarar campos adicionales para entidades y documentos en la configuración, para que aparezcan automáticamente en formularios, listas, validación y búsqueda sin escribir código de interfaz.
 
-**Por qué esta prioridad**: Los módulos personalizados existen porque sus registros contienen datos específicos del dominio (el límite de crédito de un cliente, la fecha de vencimiento de una factura). Si añadir campos requiere editar formularios y validación a mano, la adaptación es propensa a errores y no escala. Esta historia depende del perfil de configuración (Historia de Usuario 5).
+**Por qué esta prioridad**: Los módulos personalizados existen porque sus registros contienen datos específicos del dominio (el límite de crédito de un cliente, la fecha de vencimiento de una factura). Si añadir campos requiere editar formularios y validación a mano, la adaptación es propensa a errores y no escala. Esta historia depende del perfil de configuración (FR-023 a FR-025).
 
 **Prueba Independiente**: Un desarrollador declara un campo numérico obligatorio personalizado en las entidades; se muestra como entrada numérica en el formulario, bloquea el guardado cuando está en blanco, muestra los valores guardados en las listas y coincide en las búsquedas.
 
@@ -249,7 +249,7 @@ Como usuario de negocio, quiero una pantalla de búsqueda dedicada para encontra
 
 Como desarrollador de módulos, quiero definir los estados permitidos de los documentos y las transiciones permitidas, para que los documentos sigan el ciclo de vida del dominio en lugar de aceptar texto de estado arbitrario.
 
-**Por qué esta prioridad**: Los módulos reales necesitan ciclos de vida controlados (p. ej., cotización → pedido → facturado), pero el estado de texto libre sigue siendo aceptable para extensiones simples, así que esto mejora la base sin ser necesario para la adaptación básica. Esta historia depende del perfil de configuración (Historia de Usuario 5).
+**Por qué esta prioridad**: Los módulos reales necesitan ciclos de vida controlados (p. ej., cotización → pedido → facturado), pero el estado de texto libre sigue siendo aceptable para extensiones simples, así que esto mejora la base sin ser necesario para la adaptación básica. Esta historia depende del perfil de configuración (FR-023 a FR-025).
 
 **Prueba Independiente**: Un desarrollador configura un ciclo de vida cotización→pedido→facturado; el control de estado ofrece solo estados siguientes válidos, las transiciones inválidas se rechazan con una explicación, y el estado es visible de un vistazo en las listas.
 
@@ -266,7 +266,7 @@ Como desarrollador de módulos, quiero definir los estados permitidos de los doc
 
 Como usuario de negocio, quiero un espacio de trabajo estilo ERP consistente, con una barra superior con marca y una barra lateral de módulos presentes en cada pantalla, para que la aplicación se sienta como un sistema empresarial coherente en lugar de páginas sueltas.
 
-**Por qué esta prioridad**: El marco aporta la marca y la navegación de todas las demás pantallas; construirlo como envoltorio evita tocar cada historia por separado y da al módulo su identidad ERP. Depende del perfil de configuración (Historia de Usuario 5) para el nombre del módulo y la terminología, y reestructura la navegación antes proporcionada por los botones de bienvenida y las pestañas de gestión (Historias de Usuario 3 y 4).
+**Por qué esta prioridad**: El marco aporta la marca y la navegación de todas las demás pantallas; construirlo como envoltorio evita tocar cada historia por separado y da al módulo su identidad ERP. Depende del perfil de configuración (FR-023 a FR-025) para el nombre del módulo y la terminología, y reestructura la navegación antes proporcionada por los botones de bienvenida y las pestañas de gestión (FR-010 a FR-018).
 
 **Prueba Independiente**: En cada pantalla, una barra superior muestra un logotipo derivado del nombre del módulo junto al nombre del módulo, una barra lateral ofrece botones de módulo para Panel, Entidades, Documentos y Buscar con el módulo activo resaltado visualmente, y navegar entre módulos nunca pierde datos.
 
@@ -344,6 +344,21 @@ Como usuario de negocio, quiero un espacio de trabajo estilo ERP consistente, co
 - **FR-038**: La configuración PUEDE definir un color de acento; el sistema DEBE aplicarlo consistentemente en todo el marco y retroceder de forma segura a los valores integrados cuando esté ausente o sea inválido.
 - **FR-039**: En ventanas gráficas estrechas, la barra lateral DEBE contraerse a una columna de iconos manteniéndose operable.
 
+### Requisitos Funcionales de los Perfiles de Dominio (Manufactura)
+
+Estos requisitos describen el perfil de manufactura que se construye sobre el módulo base mediante configuración. El módulo base aporta la infraestructura (entidades, documentos, campos personalizados, ciclo de vida, búsqueda y marco); la lógica de capacidad, inventario y calidad pertenece al perfil de dominio y se implementa en una etapa posterior.
+
+- **FR-040**: El perfil DEBE permitir evaluar pedidos en estado *planificada* y confirmarlos (a *liberada*) o rechazarlos (a *cancelada*).
+- **FR-041**: El perfil DEBE mostrar, por pedido, número (serie y folio), producto, cantidad, fechas, importes, notas y estado.
+- **FR-042**: El perfil DEBE identificar pedidos retrasados (fecha de entrega vencida y estado distinto de *terminada* o *cancelada*) y contar órdenes por estado.
+- **FR-043**: El perfil DEBE calcular y mostrar la merma por orden como la merma dividida entre la cantidad producida.
+- **FR-044**: El perfil DEBE mostrar costos por orden y totales separados por moneda, sin sumar monedas distintas.
+- **FR-045**: El perfil DEBE permitir editar y eliminar productos, validando nombre, código, tipo de ítem, unidad de medida, stock y plazo de reposición.
+- **FR-046**: El perfil DEBE mantener stock actual, stock mínimo, ubicación, proveedor y plazo de reposición, señalando los ítems con stock bajo el mínimo y mostrando "sin dato" cuando falte un valor.
+- **FR-047**: El perfil DEBE permitir asignar máquina, lote y etapa del proceso a una orden liberada, registrar cantidades producidas y merma, y enviarla a control de calidad.
+- **FR-048**: El perfil DEBE permitir al inspector de calidad registrar `CantidadQA`, `MermaQA`, `CalidadQA` y notas, y mover la orden a *terminada*, de vuelta a *en producción* o a *cancelada* según el resultado.
+- **FR-049**: El perfil DEBE rechazar valores negativos o no numéricos en cantidades y merma, y transiciones de estado no permitidas, con una explicación clara.
+
 ### Requisitos de Extensibilidad *(obligaciones del módulo base)*
 
 Los módulos personalizados construidos sobre esta base DEBEN poder:
@@ -374,6 +389,10 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **SC-008**: Un desarrollador puede producir un módulo adaptado usando solo el archivo de configuración, con cero modificaciones en archivos fuente centrales.
 - **SC-009**: Cada pantalla presenta el mismo marco con marca, y los usuarios pueden identificar en qué módulo están de un vistazo.
 - **SC-010**: Las estadísticas de registros mostradas en el panel siempre coinciden con el número de entidades y documentos almacenados.
+- **SC-011**: Un usuario puede evaluar y confirmar o rechazar un pedido en menos de 3 minutos.
+- **SC-012**: Los indicadores de órdenes por estado, retrasos, merma y costos coinciden con los datos almacenados.
+- **SC-013**: Un usuario puede localizar y corregir un producto con stock bajo el mínimo en menos de 2 minutos.
+- **SC-014**: Un inspector puede completar la inspección de calidad de una orden en menos de 5 minutos.
 
 ## Suposiciones
 

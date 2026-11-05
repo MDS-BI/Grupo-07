@@ -3,6 +3,8 @@
 **Entrada**: Documentos de diseño desde `/specs/001-erp-base-module/`
 **Prerrequisitos**: plan.md (obligatorio), spec.md (obligatorio para las historias de usuario), research.md, data-model.md, contracts/
 
+> **Trazabilidad**: las Fases 1-18 cubren el núcleo base (FR-001 a FR-039, XR-001 a XR-005) y las Historias de Usuario 6-13 de la especificación. Las Historias de Usuario 1-5 describen el perfil de manufactura y se planifican en la Fase 19; están pendientes. Las etiquetas `[BASE-E]`, `[LEGACY]`, `[CFG]` y `[DASH]` identifican trabajo base/histórico para no confundirlo con las historias de dominio.
+
 ## Formato: `[ID] [P?] [Historia] Descripción`
 
 ## Fase 1: Configuración (Infraestructura Compartida)
@@ -26,43 +28,43 @@
 
 ---
 
-## Fase 3: Historia de Usuario 1 - Crear y organizar entidades (Prioridad: P1) 🎯 MVP
+## Fase 3: Historia Base 1 - Crear y organizar entidades (FR-001, FR-005 a FR-007) 🎯 MVP
 
-**Objetivo**: Permitir a los usuarios añadir entidades y verlas en la lista.
+**Objetivo**: Permitir a los usuarios añadir entidades y verlas en el selector de gestión y en la búsqueda.
 
-**Prueba Independiente**: Un usuario puede abrir la aplicación, enviar un formulario de entidad y ver la nueva entidad aparecer.
+**Prueba Independiente**: Un usuario puede abrir la aplicación, enviar un formulario de entidad y ver la nueva entidad aparecer en el selector de gestión.
 
 ### Pruebas para la Historia de Usuario 1
 
-- [X] T008 [P] [US1] Añadir pruebas unitarias para la validación de entidades en tests/unit/storage.test.js
-- [X] T009 [P] [US1] Añadir pruebas de integración para crear una entidad en tests/integration/create-entity.test.js
+- [X] T008 [P] [BASE-E] Añadir pruebas unitarias para la validación de entidades en tests/unit/storage.test.js
+- [X] T009 [P] [BASE-E] Añadir pruebas de integración para crear una entidad en tests/integration/create-entity.test.js
 
 ### Implementación de la Historia de Usuario 1
 
-- [X] T010 [P] [US1] Crear la interfaz del formulario de entidad en src/components/entity-form.js
-- [X] T011 [US1] Conectar el envío del formulario para crear y persistir una nueva entidad en src/app.js
-- [X] T012 [US1] Renderizar la lista de entidades y mostrar retroalimentación de validación en src/components/entity-list.js
+- [X] T010 [P] [BASE-E] Crear el marcado del formulario de entidad en index.html y el renderizado de campos personalizados en src/components/custom-fields.js
+- [X] T011 [BASE-E] Conectar el envío del formulario para crear y persistir una nueva entidad en src/app.js
+- [X] T012 [BASE-E] Mostrar retroalimentación de validación y refrescar el selector de entidades sin mostrar una lista de entidades en src/app.js (FR-016)
 
 **Punto de control**: La Historia de Usuario 1 debe estar completamente funcional y ser comprobable de forma independiente.
 
 ---
 
-## Fase 4: Historia de Usuario 2 - Editar y eliminar entidades (Prioridad: P1)
+## Fase 4: Historia Base 2 - Editar y eliminar entidades (FR-002, FR-003, FR-007)
 
 **Objetivo**: Permitir a los usuarios actualizar o eliminar entidades almacenadas, manteniendo la capacidad de respuesta con conjuntos de datos grandes.
 
-**Prueba Independiente**: Un usuario puede editar una entidad existente o eliminarla, y la lista se actualiza correctamente.
+**Prueba Independiente**: Un usuario puede editar una entidad existente o eliminarla, y el selector de gestión se actualiza correctamente.
 
 ### Pruebas para la Historia de Usuario 2
 
-- [X] T013 [P] [US2] Añadir pruebas unitarias para actualizar y eliminar entidades en tests/unit/storage.test.js
-- [X] T014 [P] [US2] Añadir pruebas de integración para editar y eliminar una entidad en tests/integration/edit-delete-entity.test.js
+- [X] T013 [P] [BASE-E] Añadir pruebas unitarias para actualizar y eliminar entidades en tests/unit/storage.test.js
+- [X] T014 [P] [BASE-E] Añadir pruebas de integración para editar y eliminar una entidad en tests/integration/edit-delete-entity.test.js
 
 ### Implementación de la Historia de Usuario 2
 
-- [X] T015 [P] [US2] Añadir controles de edición y eliminación a la interfaz de la lista de entidades en src/components/entity-list.js
-- [X] T016 [US2] Conectar las acciones de edición para poblar el formulario y actualizar los datos persistidos en src/app.js
-- [X] T017 [US2] Gestionar las acciones de eliminación y quitar registros del almacenamiento y la interfaz en src/app.js
+- [X] T015 [P] [BASE-E] Añadir controles de edición y eliminación mediante selector de entidades en index.html y src/app.js
+- [X] T016 [BASE-E] Conectar las acciones de edición para poblar el formulario y actualizar los datos persistidos en src/app.js
+- [X] T017 [BASE-E] Gestionar las acciones de eliminación y quitar registros del almacenamiento y la interfaz en src/app.js
 
 **Punto de control**: Las Historias de Usuario 1 y 2 deben funcionar de forma independiente.
 
@@ -76,8 +78,8 @@
 
 ### Implementación de la Historia de Usuario 3
 
-- [x] T018 [P] [US3] [SUPERSEDIDA por Fase 17] Añadir una vista de pantalla de bienvenida con dos botones de navegación claramente etiquetados en index.html
-- [x] T019 [P] [US3] [SUPERSEDIDA por Fase 17] Añadir lógica de cambio de vista para las pantallas de bienvenida, gestión y búsqueda en src/app.js
+- [x] T018 [P] [LEGACY] [SUPERSEDIDA por Fase 17] Añadir una vista de pantalla de bienvenida con dos botones de navegación claramente etiquetados en index.html
+- [x] T019 [P] [LEGACY] [SUPERSEDIDA por Fase 17] Añadir lógica de cambio de vista para las pantallas de bienvenida, gestión y búsqueda en src/app.js
 
 **Punto de control**: La Historia de Usuario 3 debe estar completamente funcional y ser comprobable de forma independiente.
 
@@ -91,31 +93,31 @@
 
 ### Implementación de la Historia de Usuario 4
 
-- [x] T020 [P] [US4] [SUPERSEDIDA por Fase 16] Añadir una pestaña de navegación horizontal con botones Entidades, Documentos e Inicio a la vista de gestión en index.html
-- [x] T021 [P] [US4] [SUPERSEDIDA por Fase 16] Organizar la vista de gestión en paneles de entidades y documentos y eliminar la lista de entidades en index.html
-- [x] T022 [US4] [SUPERSEDIDA por Fase 16] Añadir lógica de cambio de pestaña y navegación a Inicio desde la pantalla de gestión en src/app.js
-- [x] T023 [US4] [SUPERSEDIDA por Fase 16] Añadir edición y eliminación mediante selectores para entidades y documentos en src/app.js
-- [x] T024 [P] [US4] [SUPERSEDIDA por Fase 16] Añadir pruebas de integración para la pestaña de navegación de gestión en tests/integration/manage-tabs.test.js
-- [x] T025 [P] [US4] [SUPERSEDIDA por Fase 16] Añadir estilos para la pestaña de navegación horizontal en src/styles.css
+- [x] T020 [P] [LEGACY] [SUPERSEDIDA por Fase 16] Añadir una pestaña de navegación horizontal con botones Entidades, Documentos e Inicio a la vista de gestión en index.html
+- [x] T021 [P] [LEGACY] [SUPERSEDIDA por Fase 16] Organizar la vista de gestión en paneles de entidades y documentos y eliminar la lista de entidades en index.html
+- [x] T022 [LEGACY] [SUPERSEDIDA por Fase 16] Añadir lógica de cambio de pestaña y navegación a Inicio desde la pantalla de gestión en src/app.js
+- [x] T023 [LEGACY] [SUPERSEDIDA por Fase 16] Añadir edición y eliminación mediante selectores para entidades y documentos en src/app.js
+- [x] T024 [P] [LEGACY] [SUPERSEDIDA por Fase 16] Añadir pruebas de integración para la pestaña de navegación de gestión en tests/integration/manage-tabs.test.js
+- [x] T025 [P] [LEGACY] [SUPERSEDIDA por Fase 16] Añadir estilos para la pestaña de navegación horizontal en src/styles.css
 
 **Punto de control**: Las Historias de Usuario 1-4 deben estar completamente funcionales y ser comprobables de forma independiente.
 
 ---
 
-## Fase 7: Historia de Usuario 5 - Definir un perfil de configuración del módulo (Prioridad: P1)
+## Fase 7: Historia Base 3 - Definir un perfil de configuración del módulo (FR-023 a FR-025)
 
 **Objetivo**: Introducir `src/module-config.js` para que los desarrolladores puedan adaptar la identidad del módulo sin editar el código central, con valores predeterminados seguros e informes de error claros.
 
-**Prueba Independiente**: Un desarrollador suministra una configuración de Ventas; la aplicación carga mostrándola. Al quitar el archivo se restauran los valores predeterminados Entity/Document sin errores.
+**Prueba Independiente**: Un desarrollador suministra una configuración de Ventas; la aplicación carga mostrándola. Al quitar el archivo se restauran los valores predeterminados Entidad/Documento sin errores.
 
-### Pruebas para la Historia de Usuario 5
+### Pruebas para la Historia Base 3
 
-- [X] T026 [P] [US5] Añadir pruebas unitarias para carga de configuración, retroceso a predeterminados e informes de configuración inválida en tests/unit/module-config.test.js
+- [X] T026 [P] [CFG] Añadir pruebas unitarias para carga de configuración, retroceso a predeterminados e informes de configuración inválida en tests/unit/module-config.test.js
 
-### Implementación de la Historia de Usuario 5
+### Implementación de la Historia Base 3
 
-- [X] T027 [US5] Crear el cargador de configuración con valores predeterminados, validación e informes de error claros en src/module-config.js
-- [X] T028 [US5] Cargar la configuración al arrancar y pasarla a todas las vistas en src/main.js y src/app.js
+- [X] T027 [CFG] Crear el cargador de configuración con valores predeterminados, validación e informes de error claros en src/module-config.js
+- [X] T028 [CFG] Cargar la configuración al arrancar y pasarla a todas las vistas en src/main.js y src/app.js
 
 **Punto de control**: La configuración aún no impulsa nada visible, pero carga de forma fiable y valida limpiamente.
 
@@ -152,7 +154,7 @@
 
 ### Implementación de la Historia de Usuario 7
 
-- [X] T033 [P] [US7] Renderizar dinámicamente los campos personalizados declarados en los formularios de entidad y documento en src/components/entity-form.js y src/components/document-form.js
+- [X] T033 [P] [US7] Renderizar dinámicamente los campos personalizados declarados en los formularios de entidad y documento en src/components/custom-fields.js
 - [X] T034 [US7] Incluir los campos personalizados en validación, persistencia, listas y búsqueda en src/storage.js y src/app.js
 
 **Punto de control**: Los datos específicos del módulo requieren cero cambios de código de interfaz.
@@ -172,7 +174,7 @@
 
 ### Implementación de la Historia de Usuario 8
 
-- [X] T037 [P] [US8] Crear la interfaz de la barra de búsqueda en src/components/search-bar.js
+- [X] T037 [P] [US8] Crear la interfaz de la pantalla de búsqueda dedicada en index.html
 - [X] T038 [US8] Conectar la entrada de búsqueda al filtrado y al comportamiento de estado vacío en src/app.js
 - [X] T039 [US8] Asegurar que los resultados de búsqueda permanecen sincronizados con las acciones de crear, editar y eliminar en src/app.js
 
@@ -195,7 +197,7 @@
 - [X] T041 [P] [US9] Añadir la entrada de fecha objetivo al formulario de entidad en index.html
 - [X] T042 [US9] Incluir targetDate en la lógica de validación, creación, actualización y búsqueda en src/storage.js
 - [X] T043 [US9] Conectar targetDate al envío del formulario, poblado de edición y visualización de errores en src/app.js
-- [X] T044 [US9] Mostrar la fecha objetivo en la lista de entidades en src/app.js
+- [X] T044 [US9] Exponer la fecha objetivo en el formulario de edición y en la búsqueda de entidades en src/app.js
 
 **Punto de control**: La Historia de Usuario 9 debe estar completamente funcional y ser comprobable de forma independiente.
 
@@ -215,8 +217,8 @@
 
 ### Implementación de la Historia de Usuario 10
 
-- [X] T048 [P] [US10] Crear la interfaz del formulario de documento en src/components/document-form.js
-- [X] T049 [P] [US10] Crear la interfaz de la lista de documentos en src/components/document-list.js
+- [X] T048 [P] [US10] Crear el marcado del formulario de documento en index.html y reutilizar src/components/custom-fields.js
+- [X] T049 [P] [US10] Añadir el selector de documentos para edición y eliminación en index.html y src/app.js
 - [X] T050 [US10] Conectar las acciones de crear, editar y eliminar documentos para persistirlos en src/app.js
 - [X] T051 [US10] Añadir entity_id a la creación de entidades y mostrar los documentos con su entidad en src/app.js
 - [X] T052 [US10] Eliminar en cascada los documentos cuando se elimina una entidad en src/storage.js
@@ -253,7 +255,7 @@
 
 ### Implementación de la Historia de Usuario 12
 
-- [X] T057 [US12] Restringir las opciones de estado de documento a las transiciones permitidas y aplicarlas al guardar en src/components/document-form.js y src/storage.js
+- [X] T057 [US12] Restringir las opciones de estado de documento a las transiciones permitidas y aplicarlas al guardar en src/app.js y src/storage.js
 
 **Punto de control**: La cadena de personalización (HU5 → HU6/HU7/HU12) está completa de extremo a extremo.
 
@@ -297,22 +299,22 @@
 
 ---
 
-## Fase 17: Historia de Usuario 3 (revisada) - Panel de inicio con acciones rápidas y estadísticas (Prioridad: P1)
+## Fase 17: Historia Base 4 - Panel de inicio con acciones rápidas y estadísticas (FR-010, FR-033 a FR-035)
 
 **Objetivo**: Reemplazar la vista de bienvenida de dos botones por un panel ERP que ofrece múltiples botones de acción rápida y estadísticas de registros en vivo.
 
 **Prueba Independiente**: La aplicación abre en un panel con acciones rápidas para nueva entidad, nuevo documento, gestión de entidades y buscar registros; activarlas aterriza en el lugar correcto listo para introducir datos, y las tarjetas de estadísticas coinciden con los registros almacenados.
 
-### Pruebas para la Historia de Usuario 3
+### Pruebas para la Historia Base 4
 
-- [X] T073 [P] [US3] Añadir pruebas de integración para las acciones rápidas del panel y las estadísticas en vivo en tests/integration/dashboard.test.js
+- [X] T073 [P] [DASH] Añadir pruebas de integración para las acciones rápidas del panel y las estadísticas en vivo en tests/integration/dashboard.test.js
 
-### Implementación de la Historia de Usuario 3
+### Implementación de la Historia Base 4
 
-- [X] T074 [P] [US3] Añadir el marcado del panel (encabezado, cuadrícula de acciones rápidas, tarjetas de estadísticas) a index.html reemplazando la vista de bienvenida de dos botones
-- [X] T075 [US3] Conectar los botones de acción rápida para abrir la gestión de entidades, la gestión de documentos (formularios limpiados) y la búsqueda (entrada enfocada) en src/app.js
-- [X] T076 [US3] Renderizar y refrescar los recuentos de entidades/documentos desde el almacenamiento cada vez que se muestra el panel en src/components/dashboard.js
-- [X] T077 [P] [US3] Dar estilo al encabezado del panel, las tarjetas de acción rápida y los mosaicos de estadísticas en src/styles.css
+- [X] T074 [P] [DASH] Añadir el marcado del panel (encabezado, cuadrícula de acciones rápidas, tarjetas de estadísticas) a index.html reemplazando la vista de bienvenida de dos botones
+- [X] T075 [DASH] Conectar los botones de acción rápida para abrir la gestión de entidades, la gestión de documentos (formularios limpiados) y la búsqueda (entrada enfocada) en src/app.js
+- [X] T076 [DASH] Renderizar y refrescar los recuentos de entidades/documentos desde el almacenamiento cada vez que se muestra el panel en src/components/dashboard.js
+- [X] T077 [P] [DASH] Dar estilo al encabezado del panel, las tarjetas de acción rápida y los mosaicos de estadísticas en src/styles.css
 
 **Punto de control**: La aplicación abre en un panel funcional; cada tarea ERP clave está a un clic.
 
@@ -329,17 +331,38 @@
 
 ---
 
+## Fase 19: Perfil de dominio de manufactura - Historias de Usuario 1-5 (Prioridad: P1-P2)
+
+**Estado**: Pendiente. El módulo base ya entrega entidades, documentos, campos personalizados, ciclo de vida, búsqueda, panel y marco. Estas tareas implementan la lógica de dominio que la especificación atribuye a las Historias de Usuario 1-5; no forman parte del núcleo base entregado.
+
+**Prueba Independiente**: Con `userConfig = manufacturingConfig`, un usuario evalúa y confirma/rechaza un pedido, corrige stock bajo mínimo, registra máquina/lote/etapa y completa una inspección de calidad con sus transiciones.
+
+- [X] T082 [US1] Definir el perfil `manufacturingConfig` (etiquetas, 14 campos personalizados y ciclo de vida de 6 estados) en src/module-config.js
+- [ ] T083 [US1] Crear la vista de evaluación con órdenes por estado, pedidos retrasados, merma y costos por moneda (FR-042 a FR-044)
+- [ ] T084 [US1] Implementar confirmar/rechazar pedidos con transiciones *planificada* → *liberada*/*cancelada* (FR-040)
+- [ ] T085 [US2] Implementar la edición/eliminación de productos con validación de tipo de ítem, unidad de medida, stock y plazo de reposición, y cascada de órdenes (FR-045)
+- [ ] T086 [US3] Implementar el indicador de stock bajo el mínimo y el valor "sin dato" cuando falte stock (FR-046)
+- [ ] T087 [US3] Exponer ubicación, proveedor, plazo de reposición y stocks como campos del perfil de producto (FR-046)
+- [ ] T088 [US4] Implementar la asignación de máquina, lote y etapa, el registro de cantidades y el envío a control de calidad (FR-047)
+- [ ] T089 [US4] Rechazar cantidades producidas o merma negativas/no numéricas y transiciones no permitidas (FR-049)
+- [ ] T090 [US5] Implementar el registro de `CantidadQA`, `MermaQA`, `CalidadQA` y las transiciones de calidad a *terminada*, *en producción* o *cancelada* (FR-048)
+- [ ] T091 [US5] Añadir pruebas de integración del perfil de manufactura (evaluación, inventario, ejecución y calidad)
+
+**Punto de control**: El perfil de manufactura cumple los requisitos FR-040 a FR-049 y los criterios SC-011 a SC-014.
+
+---
+
 ## Dependencias y Orden de Ejecución
 
 ### Dependencias entre Fases
 
 - Configuración (Fase 1): Sin dependencias
 - Fundacional (Fase 2): Depende de completar Configuración
-- Historia de Usuario 1 (Fase 3): Depende de completar Fundacional
-- Historia de Usuario 2 (Fase 4): Depende de completar la implementación de la Historia de Usuario 1
-- Historia de Usuario 3 (Fase 5): Depende de completar Fundacional
-- Historia de Usuario 4 (Fase 6): Depende de completar la Historia de Usuario 3 y se beneficia de que los formularios de las Historias de Usuario 1-2 estén disponibles
-- Historia de Usuario 5 (Fase 7): Depende de completar Fundacional; desbloquea HU6, HU7, HU12
+- Historia Base 1 (Fase 3): Depende de completar Fundacional
+- Historia Base 2 (Fase 4): Depende de completar la implementación de la Historia Base 1
+- Legado de bienvenida (Fase 5): Depende de completar Fundacional; fue sustituido por el panel
+- Legado de pestañas (Fase 6): Depende del legado de bienvenida y de los formularios de las Historias Base 1-2
+- Historia Base 3 (Fase 7): Depende de completar Fundacional; desbloquea HU6, HU7, HU12
 - Historia de Usuario 6 (Fase 8): Depende de completar la Historia de Usuario 5
 - Historia de Usuario 7 (Fase 9): Depende de completar la Historia de Usuario 5
 - Historia de Usuario 8 (Fase 10): Depende de completar Fundacional y puede proceder después de la Historia de Usuario 1
@@ -349,8 +372,9 @@
 - Historia de Usuario 12 (Fase 14): Depende de la Historia de Usuario 5 (configuración) y la Historia de Usuario 10 (documentos)
 - Pulido (Fase 15): Depende de que todas las historias de usuario deseadas estén completas
 - Historia de Usuario 13 (Fase 16): Depende de que las Fases 1-15 estén completas; reestructura la navegación entregada por HU3/HU4 dentro del marco
-- Historia de Usuario 3 revisada (Fase 17): Depende de la Fase 16 (el enrutamiento por barra lateral debe existir antes de que las acciones del panel lo usen)
+- Historia Base 4 - Panel (Fase 17): Depende de la Fase 16 (el enrutamiento por barra lateral debe existir antes de que las acciones del panel lo usen)
 - Pulido Aspecto ERP (Fase 18): Depende de que las Fases 16 y 17 estén completas
+- Perfil de manufactura (Fase 19): Depende de las Fases 1-18 y de activar `manufacturingConfig`; sus tareas están pendientes
 
 ### Oportunidades Paralelas
 

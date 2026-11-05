@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Módulo Base ERP</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <span id="logo-mark" class="logo-mark" aria-hidden="true"></span>
+          <span id="brand-name" class="brand-name">Módulo Base ERP</span>
+        </div>
+        <div id="config-banner" class="config-banner" hidden></div>
+      </header>
+
+      <div class="workspace">
+        <nav class="sidebar" aria-label="Módulos">
+          <button id="nav-dashboard" class="nav-module" data-module="dashboard" type="button" aria-current="page">
+            <span class="nav-icon" aria-hidden="true">▤</span>
+            <span id="nav-dashboard-label" class="nav-label">Panel</span>
+          </button>
+          <button id="nav-entities" class="nav-module" data-module="entities" type="button">
+            <span class="nav-icon" aria-hidden="true">▦</span>
+            <span id="nav-entities-label" class="nav-label">Entidades</span>
+          </button>
+          <button id="nav-documents" class="nav-module" data-module="documents" type="button">
+            <span class="nav-icon" aria-hidden="true">▥</span>
+            <span id="nav-documents-label" class="nav-label">Documentos</span>
+          </button>
+          <button id="nav-search" class="nav-module" data-module="search" type="button">
+            <span class="nav-icon" aria-hidden="true">⌕</span>
+            <span id="nav-search-label" class="nav-label">Búsqueda</span>
+          </button>
+        </nav>
+
+        <main class="content">
+          <section id="view-dashboard" class="view">
+            <h1 id="dashboard-heading">Módulo Base ERP</h1>
+            <p class="view-subtitle">Accesos rápidos y estado del módulo.</p>
+
+            <div class="quick-actions">
+              <button id="action-new-entity" class="action-card" type="button">
+                <span id="action-new-entity-title" class="action-title">Nueva Entidad</span>
+                <span class="action-description">Crear un nuevo registro maestro</span>
+              </button>
+              <button id="action-new-document" class="action-card" type="button">
+                <span id="action-new-document-title" class="action-title">Nuevo Documento</span>
+                <span class="action-description">Registrar un documento transaccional</span>
+              </button>
+              <button id="action-open-entities" class="action-card" type="button">
+                <span id="action-open-entities-title" class="action-title">Entidades</span>
+                <span class="action-description">Gestionar los registros existentes</span>
+              </button>
+              <button id="action-find" class="action-card" type="button">
+                <span id="action-find-title" class="action-title">Buscar registros</span>
+                <span class="action-description">Encontrar registros por cualquier dato</span>
+              </button>
+            </div>
+
+            <div class="stats">
+              <div class="stat-card">
+                <span id="stat-entities" class="stat-value">0</span>
+                <span id="stat-entities-label" class="stat-label">Entidades</span>
+              </div>
+              <div class="stat-card">
+                <span id="stat-documents" class="stat-value">0</span>
+                <span id="stat-documents-label" class="stat-label">Documentos</span>
+              </div>
+            </div>
+          </section>
+
+          <section id="view-entities" class="view" hidden>
+            <h1 id="entities-view-heading">Entidades</h1>
+
+            <div class="panel">
+              <h2 id="entity-form-heading">Agregar / Editar Entidad</h2>
+              <form id="entity-form" novalidate>
+                <input type="hidden" id="entity-id" />
+
+                <div class="field">
+                  <label for="name">Nombre</label>
+                  <input id="name" name="name" type="text" autocomplete="off" />
+                  <span class="error" id="error-name"></span>
+                </div>
+
+                <div class="field">
+                  <label for="code">Código</label>
+                  <input id="code" name="code" type="text" autocomplete="off" />
+                  <span class="error" id="error-code"></span>
+                </div>
+
+                <div class="field">
+                  <label for="taxId">Identificación fiscal</label>
+                  <input id="taxId" name="taxId" type="text" autocomplete="off" />
+                  <span class="error" id="error-taxId"></span>
+                </div>
+
+                <div class="field">
+                  <label for="email">Correo electrónico</label>
+                  <input id="email" name="email" type="email" autocomplete="off" />
+                  <span class="error" id="error-email"></span>
+                </div>
+
+                <div class="field">
+                  <label for="phone">Teléfono</label>
+                  <input id="phone" name="phone" type="text" autocomplete="off" />
+                  <span class="error" id="error-phone"></span>
+                </div>
+
+                <div class="field">
+                  <label for="address">Dirección</label>
+                  <input id="address" name="address" type="text" autocomplete="off" />
+                  <span class="error" id="error-address"></span>
+                </div>
+
+                <div class="field">
+                  <label for="category">Categoría</label>
+                  <input id="category" name="category" type="text" autocomplete="off" />
+                  <span class="error" id="error-category"></span>
+                </div>
+
+                <div class="field">
+                  <label for="description">Descripción</label>
+                  <input id="description" name="description" type="text" autocomplete="off" />
+                  <span class="error" id="error-description"></span>
+                </div>
+
+                <div class="field">
+                  <label for="targetDate">Fecha objetivo</label>
+                  <input id="targetDate" name="targetDate" type="date" />
+                  <span class="error" id="error-targetDate"></span>
+                </div>
+
+                <div class="field">
+                  <label for="creditLimit">Límite de crédito</label>
+                  <input id="creditLimit" name="creditLimit" type="number" step="any" />
+                  <span class="error" id="error-creditLimit"></span>
+                </div>
+
+                <div class="field">
+                  <label for="paymentTerms">Condiciones de pago</label>
+                  <input id="paymentTerms" name="paymentTerms" type="text" autocomplete="off" />
+                  <span class="error" id="error-paymentTerms"></span>
+                </div>
+
+                <div id="entity-custom-fields" class="custom-fields" hidden></div>
+
+                <button id="submit-button" class="primary" type="submit">Guardar</button>
+              </form>
+            </div>
+
+            <div class="panel">
+              <h2 id="edit-entity-heading">Editar o eliminar la entidad</h2>
+              <div class="field">
+                <label for="edit-entity">Seleccionar entidad</label>
+                <select id="edit-entity">
+                  <option value="">-- Seleccionar --</option>
+                </select>
+              </div>
+              <button id="delete-entity" class="danger" type="button">Eliminar la entidad seleccionada</button>
+            </div>
+          </section>
+
+          <section id="view-documents" class="view" hidden>
+            <h1 id="documents-view-heading">Documentos</h1>
+
+            <div class="panel">
+              <h2 id="document-form-heading">Agregar / Editar Documento</h2>
+              <form id="document-form" novalidate>
+                <input type="hidden" id="document-id" />
+
+                <div class="field">
+                  <label for="document-entity">Entidad</label>
+                  <select id="document-entity">
+                    <option value="">-- Seleccionar --</option>
+                  </select>
+                  <span class="error" id="error-document-entity"></span>
+                </div>
+
+                <div class="field">
+                  <label for="series">Serie</label>
+                  <input id="series" name="series" type="text" autocomplete="off" />
+                  <span class="error" id="error-series"></span>
+                </div>
+
+                <div class="field">
+                  <label for="folio">Folio</label>
+                  <input id="folio" name="folio" type="number" step="1" />
+                  <span class="error" id="error-folio"></span>
+                </div>
+
+                <div class="field">
+                  <label for="startDate">Fecha de inicio</label>
+                  <input id="startDate" name="startDate" type="date" />
+                  <span class="error" id="error-startDate"></span>
+                </div>
+
+                <div class="field">
+                  <label for="endDate">Fecha de fin</label>
+                  <input id="endDate" name="endDate" type="date" />
+                  <span class="error" id="error-endDate"></span>
+                </div>
+
+                <div class="field">
+                  <label for="quantity">Cantidad</label>
+                  <input id="quantity" name="quantity" type="number" step="1" />
+                  <span class="error" id="error-quantity"></span>
+                </div>
+
+                <div class="field">
+                  <label for="subtotal">Subtotal</label>
+                  <input id="subtotal" name="subtotal" type="number" step="any" />
+                  <span class="error" id="error-subtotal"></span>
+                </div>
+
+                <div class="field">
+                  <label for="discount">Descuento</label>
+                  <input id="discount" name="discount" type="number" step="any" />
+                  <span class="error" id="error-discount"></span>
+                </div>
+
+                <div class="field">
+                  <label for="taxAmount">Impuesto</label>
+                  <input id="taxAmount" name="taxAmount" type="number" step="any" />
+                  <span class="error" id="error-taxAmount"></span>
+                </div>
+
+                <div class="field">
+                  <label for="totalAmount">Total</label>
+                  <input id="totalAmount" name="totalAmount" type="number" step="any" />
+                  <span class="error" id="error-totalAmount"></span>
+                </div>
+
+                <div class="field">
+                  <label for="currency">Moneda</label>
+                  <input id="currency" name="currency" type="text" autocomplete="off" />
+                  <span class="error" id="error-currency"></span>
+                </div>
+
+                <div class="field">
+                  <label for="docPaymentTerms">Condiciones de pago</label>
+                  <input id="docPaymentTerms" name="docPaymentTerms" type="text" autocomplete="off" />
+                  <span class="error" id="error-paymentTerms"></span>
+                </div>
+
+                <div class="field">
+                  <label for="notes">Notas</label>
+                  <input id="notes" name="notes" type="text" autocomplete="off" />
+                  <span class="error" id="error-notes"></span>
+                </div>
+
+                <div class="field">
+                  <label for="status">Estado</label>
+                  <div id="status-container"></div>
+                  <span class="error" id="error-status"></span>
+                </div>
+
+                <div id="document-custom-fields" class="custom-fields" hidden></div>
+
+                <button id="document-submit-button" class="primary" type="submit">Guardar Documento</button>
+              </form>
+            </div>
+
+            <div class="panel">
+              <h2 id="edit-document-heading">Editar o eliminar el documento</h2>
+              <div class="field">
+                <label for="edit-document">Seleccionar documento</label>
+                <select id="edit-document">
+                  <option value="">-- Seleccionar --</option>
+                </select>
+              </div>
+              <button id="delete-document" class="danger" type="button">Eliminar el documento seleccionado</button>
+            </div>
+          </section>
+
+          <section id="view-search" class="view" hidden>
+            <h1 id="search-view-heading">Buscar Entidades</h1>
+            <div class="field">
+              <label for="search-input">Término de búsqueda</label>
+              <input id="search-input" type="search" autocomplete="off" placeholder="Nombre, código, categoría..." />
+            </div>
+            <div id="search-empty" class="empty-state">No hay coincidencias con la búsqueda.</div>
+            <div id="search-results-list" class="results"></div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

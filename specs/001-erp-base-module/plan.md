@@ -56,6 +56,7 @@ specs/001-erp-base-module/
 ### Código Fuente (raíz del repositorio)
 
 ```text
+index.html            (punto de entrada único; contiene el marcado del marco, panel, formularios y selectores)
 src/
 ├── main.js
 ├── styles.css
@@ -63,10 +64,9 @@ src/
 ├── app.js
 ├── module-config.js
 └── components/
-    ├── shell.js        (marco del espacio de trabajo: barra superior, logotipo SVG, barra lateral, estado de módulo activo)
-    ├── dashboard.js    (vista de inicio: cuadrícula de acciones rápidas + tarjetas de estadísticas en vivo)
-    ├── entity-form.js  (formulario de creación/edición de productos con campos personalizados)
-    └── document-form.js (formulario de creación/edición de órdenes con campos personalizados y ciclo de vida de estados)
+    ├── shell.js          (marco del espacio de trabajo: barra superior, logotipo SVG, barra lateral, estado de módulo activo)
+    ├── dashboard.js      (vista de inicio: cuadrícula de acciones rápidas + tarjetas de estadísticas en vivo)
+    └── custom-fields.js  (renderizado, recolección y relleno de campos personalizados de entidad y documento)
 
 tests/
 ├── unit/
@@ -82,15 +82,13 @@ tests/
 flowchart LR
     CFG["module-config.js<br/>(userConfig)"] --> SHELL["shell.js"]
     CFG --> DASH["dashboard.js"]
-    CFG --> EF["entity-form.js"]
-    CFG --> DF["document-form.js"]
-    EF --> ST[("storage.js<br/>localStorage")]
-    DF --> ST
+    CFG --> CF["custom-fields.js"]
+    CF --> ST[("storage.js<br/>localStorage")]
     DASH --> ST
     APP["app.js"] --> SHELL
     APP --> DASH
-    APP --> EF
-    APP --> DF
+    APP --> CF
+    APP --> ST
 ```
 
 ## Seguimiento de Complejidad
@@ -119,7 +117,9 @@ Este plan no introdujo violaciones de la constitución. La adaptación a manufac
 
 **Incluido**: gestión de productos y órdenes de producción, búsqueda, validación, persistencia local y espacio de trabajo con panel de inicio.
 
-**Fuera de alcance**: lista de materiales y consumo de insumos por orden; máquinas, lotes y proveedores como registros independientes; alertas automáticas de stock bajo y de órdenes retrasadas; backend, autenticación y múltiples usuarios.
+**Incluido como campos personalizados**: máquina, lote, proveedor, etapa del proceso, prioridad, cantidades producidas, merma y resultado de calidad; también la identificación de pedidos retrasados y de ítems bajo el stock mínimo (FR-042, FR-046).
+
+**Fuera de alcance**: lista de materiales y consumo de insumos por orden; máquinas, lotes y proveedores como registros independientes con su propio ciclo de vida; alertas automáticas (notificaciones) de stock bajo o de órdenes retrasadas; backend, autenticación y múltiples usuarios.
 
 ## Estado del avance
 
@@ -127,26 +127,28 @@ Este plan no introdujo violaciones de la constitución. La adaptación a manufac
 |---|---|
 | Especificación funcional | Completado |
 | Modelo de datos documentado | Completado |
-| Configuración del módulo (`userConfig`) | Completado, pendiente de validación en la aplicación |
-| Validación de la configuración en ejecución | Pendiente |
-| Revisión de concordancia gramatical en la interfaz | Pendiente |
+| Configuración del módulo (`userConfig = null`, valores predeterminados activos; `manufacturingConfig` de ejemplo) | Completado |
+| Validación de la configuración en ejecución | Completado (aviso visible ante configuración inválida) |
+| Revisión de concordancia gramatical en la interfaz | Completado para el núcleo base; el perfil de manufactura se revisa en la Fase 19 |
 | Datos de ejemplo (productos y órdenes) | Pendiente |
-| Pruebas automatizadas de los flujos principales | Pendiente |
-| Alertas de stock bajo y órdenes retrasadas | Pendiente |
+| Pruebas automatizadas de los flujos principales | Completado (12 archivos, 111 pruebas en verde) |
+| Compilación de producción | Completado (`npm run build`) |
+| Alertas automáticas de stock bajo y órdenes retrasadas | Pendiente (la identificación en pantalla está cubierta por FR-042/FR-046) |
+| Lógica de dominio de manufactura (HU1-HU5) | Pendiente (Fase 19 de tasks.md) |
 
 ## Riesgos y consideraciones
 
 | Riesgo | Mitigación |
 |---|---|
-| Los artículos en español se derivan de la primera palabra del término; "Orden de Producción" es femenino pero "Orden" no termina en "a", lo que podría producir textos como "el orden seleccionado" | Revisar en la interfaz y, de ser necesario, ajustar la función de derivación |
+| Los artículos en español se derivan de la primera palabra del término; "Orden de Producción" es femenino pero "Orden" no termina en "a", lo que podría producir textos como "el orden seleccionado" | Mitigado en `shell.js`: `isFeminine` trata "orden" como femenino y `lowerLabel` normaliza la etiqueta completa |
 | `quantity` solo admite enteros positivos | Usar un campo propio numérico para cantidades con decimales |
 | El módulo base maneja un único par entidad/documento | Extender el modelo con un segundo par si se requiere trazabilidad completa de máquinas, lotes y proveedores |
 | Reglas de negocio no cubiertas por el módulo base (producción más merma frente a lo planificado; terminar solo con calidad aprobada) | Implementar validaciones adicionales en una etapa posterior |
 
 ## Próximos pasos
 
-1. Ejecutar la aplicación con la nueva configuración y confirmar que no se muestra el aviso de configuración inválida.
-2. Revisar la concordancia gramatical de los textos de la interfaz.
-3. Cargar datos de ejemplo y verificar los flujos completos de producto y orden.
-4. Implementar y ejecutar las pruebas automatizadas de crear, editar, eliminar y buscar.
-5. Evaluar alertas de stock bajo y detección de órdenes retrasadas.
+1. Cambiar `userConfig` a `manufacturingConfig` cuando se valide el perfil de manufactura y confirmar que no aparece el aviso de configuración inválida.
+2. Revisar la concordancia gramatical del perfil de manufactura (artículos, género y etiquetas).
+3. Cargar datos de ejemplo de productos y órdenes para probar los flujos de dominio.
+4. Implementar las tareas pendientes de la Fase 19 (evaluación de pedidos, inventario, ejecución y calidad).
+5. Evaluar notificaciones automáticas de stock bajo y de órdenes retrasadas.
