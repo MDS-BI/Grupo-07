@@ -6,7 +6,10 @@ const VIEWS = {
 };
 
 export function monogram(name) {
-  const words = String(name ?? '').trim().split(/\s+/).filter(Boolean);
+  const words = String(name ?? '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
   const first = words[0] ? words[0][0] : '';
   const second = words[1] ? words[1][0] : '';
   return `${first}${second}`.toUpperCase();
@@ -35,7 +38,10 @@ export function lowerLabel(value) {
 }
 
 export function isFeminine(term) {
-  const first = String(term ?? '').trim().split(/\s+/)[0].toLowerCase();
+  const first = String(term ?? '')
+    .trim()
+    .split(/\s+/)[0]
+    .toLowerCase();
   if (first === '' || first.startsWith('entidad') || first === 'orden') {
     return true;
   }

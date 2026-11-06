@@ -302,6 +302,279 @@ button.danger {
   font-weight: 600;
 }
 
+.domain-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.panel-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.list-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  align-items: center;
+}
+
+.filter-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.filter-control select,
+.filter-control input[type='text'] {
+  padding: 0.3rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  font: inherit;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.document-list {
+  overflow-x: auto;
+  margin-top: 0.75rem;
+}
+
+.document-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.document-table th,
+.document-table td {
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.document-table th {
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.document-row {
+  cursor: pointer;
+}
+
+.document-row:hover,
+.document-row:focus-visible {
+  background: color-mix(in srgb, var(--accent) 7%, white);
+}
+
+.document-row.selected {
+  background: color-mix(in srgb, var(--accent) 13%, white);
+}
+
+.document-detail {
+  margin-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.detail-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.detail-section {
+  margin-top: 0.85rem;
+}
+
+.detail-section h4,
+.document-actions h4 {
+  margin: 0 0 0.35rem;
+  font-size: 0.9rem;
+}
+
+.detail-list,
+.cost-list {
+  display: grid;
+  grid-template-columns: minmax(9rem, 0.4fr) 1fr;
+  gap: 0.25rem 0.75rem;
+  margin: 0;
+  font-size: 0.86rem;
+}
+
+.detail-list dt,
+.cost-list dt {
+  color: var(--muted);
+}
+
+.detail-list dd,
+.cost-list dd {
+  margin: 0;
+}
+
+.document-actions {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.document-actions h4 {
+  flex-basis: 100%;
+}
+
+.action-button {
+  padding: 0.45rem 0.8rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.action-button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.action-button:disabled,
+.action-button.is-blocked {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.badge,
+.badge-row {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.badge {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.badge-info {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.badge-warning {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fde68a;
+}
+
+.badge-danger {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.indicator-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.indicator-card,
+.cost-card {
+  border: 1px solid var(--border);
+  border-radius: 0.65rem;
+  padding: 0.75rem 0.9rem;
+  background: var(--surface);
+}
+
+.indicator-title,
+.cost-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.indicator-value {
+  display: block;
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+
+.indicator-note {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.indicator-groups {
+  list-style: none;
+  margin: 0.45rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.82rem;
+}
+
+.indicator-groups li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.cost-summary {
+  margin-top: 1rem;
+}
+
+.cost-summary h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+.cost-card + .cost-card {
+  margin-top: 0.6rem;
+}
+
+.domain-form-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.6rem;
+}
+
+.action-note {
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 720px) {
+  .detail-list,
+  .cost-list {
+    grid-template-columns: 1fr;
+  }
+}
+
 [hidden] {
   display: none !important;
 }

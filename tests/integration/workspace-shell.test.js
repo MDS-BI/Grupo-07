@@ -9,7 +9,9 @@ const html = fs.readFileSync(fileURLToPath(new URL('../../index.html', import.me
 
 let dom;
 
-function qs(id){ return document.getElementById(id); }
+function qs(id) {
+  return document.getElementById(id);
+}
 
 const brandedConfig = {
   moduleName: 'Sales Suite',
@@ -32,7 +34,7 @@ afterEach(() => {
   dom.window.close();
 });
 
-async function bootWith(configOverride){
+async function bootWith(configOverride) {
   vi.resetModules();
   const { initApp } = await import('../../src/app.js');
   await initApp(normalizeConfig(configOverride));
@@ -79,7 +81,7 @@ describe('User Story 13 - branded ERP workspace shell', () => {
 
   it('keeps every module button labeled for accessible icon-rail collapse', async () => {
     await bootWith(undefined);
-    document.querySelectorAll('.nav-module').forEach(btn => {
+    document.querySelectorAll('.nav-module').forEach((btn) => {
       expect(btn.querySelector('.nav-label')).not.toBeNull();
       expect(btn.querySelector('.nav-label').textContent.length).toBeGreaterThan(0);
     });

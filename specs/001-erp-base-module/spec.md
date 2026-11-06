@@ -2,12 +2,22 @@
 
 **Rama de la funcionalidad**: 001-erp-base-module  
 **Creada**: 2026-07-08  
-**Estado**: Núcleo base implementado; perfil de manufactura pendiente (Fase 19 de tasks.md)  
+**Estado**: Núcleo base implementado; perfil de manufactura pendiente (Fases 1-16 de `tasks.md`)  
 **Entrada**: Descripción del usuario: "Construir un módulo base de software de planificación de recursos empresariales (ERP) que pueda extenderse en módulos ERP personalizados. Debe proporcionar gestión de datos maestros (entidades) y documentos transaccionales vinculados con capacidades de crear/editar/eliminar/buscar."
 
 ## Propósito
 
 Este proyecto sirve como módulo base reutilizable para construir módulos ERP personalizados. Establece los patrones comunes que todo módulo ERP necesita: gestionar registros de datos maestros (**Entidades**) y sus **Documentos** transaccionales asociados, con navegación, validación, persistencia y búsqueda ya implementadas, de modo que los módulos personalizados solo necesiten definir sus campos y reglas específicos del dominio.
+
+## Clarifications
+
+### Session 2026-11-05
+
+- Q: ¿El requisito de que un módulo adaptado se construya "solo con el archivo de configuración, con cero modificaciones en archivos fuente centrales" debe aplicar también a las Historias de Usuario 1-5 de manufactura, o solo a la adaptación básica del módulo base? (SC-008) → A: SC-008 aplica también a las Historias de Usuario 1-5; todo el perfil de manufactura debe implementarse mediante configuración y puntos de extensión, sin modificar archivos fuente centrales.
+- Q: ¿Dónde debe vivir la lista de órdenes con filtros por estado y el detalle de la orden que exigen las Historias de Usuario 1 y 4? (HU1, HU4, FR-014) → A: El módulo Documentos incluye una vista configurable de lista con filtros y detalle de la orden; la barra lateral mantiene sus cuatro módulos.
+- Q: ¿La sanitización del contenido introducido por el usuario debe quedar como un requisito funcional formal y verificable, o basta con mantenerla como una suposición de implementación? (sanitización XSS) → A: Se añade FR-050 para escapar todo valor introducido por el usuario antes de insertarlo en el DOM, incluidos campos base, campos personalizados y notas, verificado con pruebas de payloads XSS.
+- Q: Cuando las Historias de Usuario 2 y 3 dicen que el usuario "ve el cambio en la lista" o que el producto "ya no aparece en la lista", ¿a qué lista se refieren si la pantalla de gestión tiene prohibido mostrar la lista de entidades? (HU2, HU3, FR-016) → A: "La lista" significa los resultados de la pantalla Buscar; la pantalla de gestión sigue sin mostrar la lista de entidades y se corrigen las HU2/HU3.
+- Q: ¿Cuándo debe marcarse un producto como "stock bajo el mínimo" cuando sus valores de stock están incompletos? (FR-046) → A: Se marca stock bajo solo cuando ambos valores existen y el stock actual es estrictamente menor que el mínimo; si falta cualquiera de los dos, se muestra "sin dato" sin insignia de stock bajo.
 
 ## Escenarios de Usuario y Pruebas *(obligatorio)*
 
@@ -58,14 +68,14 @@ no existen, alguien puede emitir una orden de producción con información
 equivocada o inexistente, y eso se arrastra a todo lo demás.
 
 **Prueba Independiente**: Un usuario cambia el stock de un producto y ve el
-cambio en la lista; después elimina otro producto y comprueba que ya no aparece
-ni en la lista ni al buscarlo.
+cambio en los resultados de la pantalla Buscar; después elimina otro producto y
+comprueba que ya no aparece en los resultados de búsqueda.
 
 **Escenarios de Aceptación**:
 
 1. **Dado** un producto que ya existe, **cuando** el usuario cambia sus datos
    (por ejemplo, el stock o el proveedor) y guarda, **entonces** los cambios se
-   guardan y se ven reflejados en la lista.
+   guardan y se ven reflejados en los resultados de la pantalla Buscar.
 2. **Dado** un producto que se está editando, **cuando** el usuario borra el
    nombre, el código, el tipo de ítem o la unidad de medida y trata de guardar,
    **entonces** el sistema no lo deja y explica qué dato falta.
@@ -73,8 +83,7 @@ ni en la lista ni al buscarlo.
    valor no válido en el stock o en el plazo de reposición (por ejemplo, un
    número negativo), **entonces** el sistema no guarda y avisa cuál es el error.
 4. **Dado** un producto que ya no se usa y no tiene órdenes, **cuando** el
-   usuario lo elimina, **entonces** desaparece de la lista y deja de salir en
-   los resultados de búsqueda.
+   usuario lo elimina, **entonces** desaparece de los resultados de búsqueda.
 5. **Dado** un producto que tiene órdenes de producción, **cuando** el usuario
    intenta eliminarlo, **entonces** el sistema le avisa que también se borrarán
    esas órdenes y pide confirmación antes de hacerlo.
@@ -88,17 +97,17 @@ Como encargado de bodega y logística, quiero administrar el catálogo de stock 
 
 **Por qué esta prioridad**: Sin un control de stock ni un catálogo actualizado, la planta no puede planificar ni producir órdenes. Si se realiza una actualización y mantención del stock y cantidades en bodega se puede llevar un buen proceso de manufactura.
 
-**Prueba Independiente**: Un usuario registra un ítem con nombre, stock actual, stock mínimo, ubicación, proveedor y plazo de reposición; se ve en la lista, edita su stock, comprueba si queda señalado por estar bajo el mínimo y lo elimina.
+**Prueba Independiente**: Un usuario registra un ítem con nombre, stock actual, stock mínimo, ubicación, proveedor y plazo de reposición; aparece en los resultados de la pantalla Buscar, edita su stock, comprueba si queda señalado por estar bajo el mínimo y lo elimina.
 
 **Escenarios de Aceptación**:
 
-1. **Dado** que un usuario está viendo la lista de ítems, **cuando** crea un nuevo ítem con nombre, código, tipo (Materia prima, Insumo o Producto terminado), stock actual, stock mínimo, proveedor, plazo de reposición y ubicación, **entonces** el nuevo ítem se guarda y aparece en la lista con esos datos.
+1. **Dado** que un usuario está viendo los resultados de la pantalla Buscar, **cuando** crea un nuevo ítem con nombre, código, tipo (Materia prima, Insumo o Producto terminado), stock actual, stock mínimo, proveedor, plazo de reposición y ubicación, **entonces** el nuevo ítem se guarda y aparece en los resultados de búsqueda con esos datos.
 2. **Dado** que un usuario está creando un ítem, **cuando** deja algún espacio o dato sin rellenar, **entonces** el sistema no lo guarda y le explica lo que falta para guardar correctamente.
 3. **Dado** un campo personalizado de tipo numérico (stock actual, stock mínimo o plazo de reposición), **cuando** un usuario ingresa un valor que no es un número, **entonces** el sistema no lo guarda y explica el error.
-4. **Dado** un ítem ya existente en la lista, **cuando** un usuario edita su stock actual, stock mínimo, plazo de reposición, ubicación o proveedor, **entonces** la información se actualiza en la lista correctamente.
-5. **Dado** un ítem con stock actual bajo el stock mínimo, **cuando** el usuario ve la lista, **entonces** le aparece que el ítem se encuentra con "stock bajo el mínimo".
-6. **Dado** que un usuario deja el stock mínimo o stock actual en blanco, **cuando** guarde el ítem en la lista, **entonces** quedará guardado igualmente y la lista mostrará en ese apartado "sin datos".
-7. **Dado** un ítem que ya no se utiliza, **cuando** el usuario lo elimina, **entonces** desaparecerá de la lista y no aparecerá en los resultados de búsqueda.
+4. **Dado** un ítem ya existente, **cuando** un usuario edita su stock actual, stock mínimo, plazo de reposición, ubicación o proveedor, **entonces** la información se actualiza correctamente en los resultados de la pantalla Buscar.
+5. **Dado** un ítem con stock actual estrictamente menor que el stock mínimo y ambos valores registrados, **cuando** el usuario consulta los resultados de la pantalla Buscar, **entonces** le aparece que el ítem se encuentra con "stock bajo el mínimo".
+6. **Dado** que un usuario deja el stock mínimo o stock actual en blanco, **cuando** guarde el ítem, **entonces** quedará guardado igualmente, los resultados de búsqueda mostrarán en ese apartado "sin datos" y no se marcará stock bajo.
+7. **Dado** un ítem que ya no se utiliza, **cuando** el usuario lo elimina, **entonces** desaparecerá de los resultados de búsqueda.
 
 ---
 
@@ -308,7 +317,7 @@ Como usuario de negocio, quiero un espacio de trabajo estilo ERP consistente, co
 - **FR-002**: El sistema DEBE permitir a los usuarios editar los detalles de un registro de entidad existente.
 - **FR-003**: El sistema DEBE permitir a los usuarios eliminar un registro de entidad existente.
 - **FR-004**: El sistema DEBE permitir a los usuarios buscar registros de entidad por nombre, código, categoría u otras palabras clave descriptivas.
-- **FR-005**: El sistema DEBE mostrar una lista clara de entidades e indicar cuándo ningún resultado coincide con una búsqueda.
+- **FR-005**: El sistema DEBE mostrar en la pantalla de búsqueda una lista clara de entidades e indicar cuándo ningún resultado coincide con una búsqueda.
 - **FR-006**: El sistema DEBE presentar retroalimentación clara cuando falta información obligatoria o no se puede completar una acción.
 - **FR-007**: El sistema DEBE mantener los datos de entidad consistentes tras operaciones de creación, edición y eliminación.
 - **FR-008**: El sistema DEBE permitir a los usuarios añadir, editar y eliminar detalles de documentos de una entidad.
@@ -317,7 +326,7 @@ Como usuario de negocio, quiero un espacio de trabajo estilo ERP consistente, co
 - **FR-011**: El sistema DEBE envolver cada pantalla en un marco de espacio de trabajo persistente compuesto por una barra superior con marca y una barra lateral de navegación de módulos.
 - **FR-012**: La barra lateral DEBE proporcionar botones de módulo para Panel, Entidades, Documentos y Buscar, etiquetados desde la configuración del módulo.
 - **FR-013**: El botón de módulo Entidades DEBE mostrar el contenido de gestión de entidades.
-- **FR-014**: El botón de módulo Documentos DEBE mostrar el contenido de gestión de documentos en la pantalla de gestión.
+- **FR-014**: El botón de módulo Documentos DEBE mostrar el contenido de gestión de documentos, incluida una vista configurable de lista con filtros y el detalle del documento cuando el perfil de dominio lo declare.
 - **FR-015**: El botón de módulo Panel DEBE devolver al usuario al panel de inicio.
 - **FR-016**: La pantalla de gestión NO DEBE mostrar la lista de entidades.
 - **FR-017**: La pantalla de gestión DEBE proporcionar la funcionalidad de crear, editar y eliminar entidades.
@@ -346,7 +355,7 @@ Como usuario de negocio, quiero un espacio de trabajo estilo ERP consistente, co
 
 ### Requisitos Funcionales de los Perfiles de Dominio (Manufactura)
 
-Estos requisitos describen el perfil de manufactura que se construye sobre el módulo base mediante configuración. El módulo base aporta la infraestructura (entidades, documentos, campos personalizados, ciclo de vida, búsqueda y marco); la lógica de capacidad, inventario y calidad pertenece al perfil de dominio y se implementa en una etapa posterior.
+Estos requisitos describen el perfil de manufactura que se construye sobre el módulo base mediante configuración. El módulo base aporta la infraestructura (entidades, documentos, campos personalizados, ciclo de vida, búsqueda y marco); la lógica de capacidad, inventario y calidad pertenece al perfil de dominio y se implementa en una etapa posterior. Todos estos requisitos DEBEN satisfacerse mediante configuración y puntos de extensión del módulo base, sin modificar archivos fuente centrales (SC-008).
 
 - **FR-040**: El perfil DEBE permitir evaluar pedidos en estado *planificada* y confirmarlos (a *liberada*) o rechazarlos (a *cancelada*).
 - **FR-041**: El perfil DEBE mostrar, por pedido, número (serie y folio), producto, cantidad, fechas, importes, notas y estado.
@@ -354,10 +363,14 @@ Estos requisitos describen el perfil de manufactura que se construye sobre el m�
 - **FR-043**: El perfil DEBE calcular y mostrar la merma por orden como la merma dividida entre la cantidad producida.
 - **FR-044**: El perfil DEBE mostrar costos por orden y totales separados por moneda, sin sumar monedas distintas.
 - **FR-045**: El perfil DEBE permitir editar y eliminar productos, validando nombre, código, tipo de ítem, unidad de medida, stock y plazo de reposición.
-- **FR-046**: El perfil DEBE mantener stock actual, stock mínimo, ubicación, proveedor y plazo de reposición, señalando los ítems con stock bajo el mínimo y mostrando "sin dato" cuando falte un valor.
+- **FR-046**: El perfil DEBE mantener stock actual, stock mínimo, ubicación, proveedor y plazo de reposición, señalando como "stock bajo el mínimo" solo los ítems en que ambos valores existen y el stock actual es estrictamente menor que el mínimo; cuando falte cualquiera de los dos valores, DEBE mostrar "sin dato" sin insignia de stock bajo.
 - **FR-047**: El perfil DEBE permitir asignar máquina, lote y etapa del proceso a una orden liberada, registrar cantidades producidas y merma, y enviarla a control de calidad.
 - **FR-048**: El perfil DEBE permitir al inspector de calidad registrar `CantidadQA`, `MermaQA`, `CalidadQA` y notas, y mover la orden a *terminada*, de vuelta a *en producción* o a *cancelada* según el resultado.
 - **FR-049**: El perfil DEBE rechazar valores negativos o no numéricos en cantidades y merma, y transiciones de estado no permitidas, con una explicación clara.
+
+### Requisitos Funcionales de Seguridad
+
+- **FR-050**: El sistema DEBE escapar todo valor introducido por el usuario antes de insertarlo en el DOM —incluidos campos base, campos personalizados, descripciones y notas— y DEBE rechazar o neutralizar payloads de scripts inyectados.
 
 ### Requisitos de Extensibilidad *(obligaciones del módulo base)*
 
@@ -368,12 +381,13 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **XR-003**: Añadir reglas de validación específicas del módulo junto a las reglas de validación base.
 - **XR-004**: Apoyarse en el módulo base para generación de identidad, marcas de tiempo, integridad referencial entre entidades y documentos, y eliminación en cascada.
 - **XR-005**: Remarcar el espacio de trabajo —nombre del módulo, logotipo derivado y color de acento— únicamente mediante configuración.
+- **XR-006**: Implementar la lógica de dominio de las Historias de Usuario 1-5 (evaluación de pedidos, inventario, ejecución y calidad) mediante configuración y puntos de extensión declarativos, sin modificar archivos fuente centrales.
 
 ### Entidades Clave *(incluir si la funcionalidad implica datos)*
 
 - **Entidad**: Un registro de datos maestros gestionado por el módulo, que incluye su nombre, código de negocio, detalles descriptivos, categoría de clasificación, una fecha objetivo opcional y un entity_id autogenerado. Los módulos personalizados definen qué representa una Entidad en el mundo real (p. ej., cliente, producto, activo).
 - **Documento**: Detalles transaccionales adjuntos a una entidad, vinculados a ella por el entity_id de la entidad. Los módulos personalizados definen qué representa un Documento (p. ej., pedido, factura, contrato).
-- **ModuleConfig**: El objeto de adaptación cargado al arrancar que define el nombre del módulo, las etiquetas de terminología, las definiciones de campos personalizados y el ciclo de vida de estados de documentos. Consulte data-model.md para su forma completa.
+- **ModuleConfig**: El objeto de adaptación cargado al arrancar que define el nombre del módulo, las etiquetas de terminología, las definiciones de campos personalizados, el ciclo de vida de estados de documentos y los puntos de extensión declarativos para vistas, validaciones y reglas de dominio. Consulte data-model.md para su forma completa.
 
 ## Criterios de Éxito *(obligatorio)*
 
@@ -386,7 +400,7 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **SC-005**: Un usuario puede alcanzar las pantallas de gestión y búsqueda desde el panel o la barra lateral en menos de 10 segundos en el primer uso.
 - **SC-006**: Toda la funcionalidad existente de gestión de entidades y documentos sigue operativa tras el rediseño del marco ERP y el panel (sin regresiones).
 - **SC-007**: Los usuarios pueden navegar entre las pantallas de panel, gestión y búsqueda sin perder ninguna entidad ni documento almacenado.
-- **SC-008**: Un desarrollador puede producir un módulo adaptado usando solo el archivo de configuración, con cero modificaciones en archivos fuente centrales.
+- **SC-008**: Un desarrollador puede producir un módulo adaptado —incluido el perfil de manufactura de las Historias de Usuario 1-5— usando solo el archivo de configuración, con cero modificaciones en archivos fuente centrales.
 - **SC-009**: Cada pantalla presenta el mismo marco con marca, y los usuarios pueden identificar en qué módulo están de un vistazo.
 - **SC-010**: Las estadísticas de registros mostradas en el panel siempre coinciden con el número de entidades y documentos almacenados.
 - **SC-011**: Un usuario puede evaluar y confirmar o rechazar un pedido en menos de 3 minutos.
@@ -397,17 +411,17 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 ## Suposiciones
 
 - El módulo base gestiona datos para un único espacio de trabajo en lugar de una base de datos multiinquilino compartida.
-- La adaptación a un módulo específico se realiza mediante un archivo de configuración del módulo en lugar de editando archivos fuente centrales.
+- La adaptación a un módulo específico se realiza mediante un archivo de configuración del módulo en lugar de editando archivos fuente centrales; esto incluye la lógica de dominio de las Historias de Usuario 1-5 (evaluación, inventario, ejecución y calidad).
 - Cada entidad incluye información básica suficiente para identificación y seguimiento; los módulos personalizados aportan los campos específicos del dominio.
 - La versión inicial se centra en la gestión central de datos maestros y documentos en lugar de capacidades ERP avanzadas como flujos de aprobación, períodos de contabilización o informes.
 - La búsqueda se realiza sobre los registros de entidad almacenados.
-- La pantalla de gestión consolida los formularios de añadir/editar entidad y añadir/editar documento en una sola pantalla de gestión.
-- La navegación entre áreas ocurre mediante una barra lateral persistente; la pantalla de gestión aloja ambos paneles de gestión y no muestra la lista de entidades.
+- La pantalla de gestión consolida los formularios de añadir/editar entidad y añadir/editar documento en una sola pantalla de gestión. Las referencias a "la lista" de entidades en las historias de usuario y criterios de éxito corresponden a los resultados de la pantalla Buscar, no a la pantalla de gestión. Las referencias a la "lista de órdenes" corresponden a la vista de lista del módulo Documentos.
+- La navegación entre áreas ocurre mediante una barra lateral persistente; la pantalla de gestión aloja ambos paneles de gestión y no muestra la lista de entidades. La lista con filtros y el detalle de las órdenes se muestran dentro del módulo Documentos mediante una vista configurable, sin añadir un módulo de navegación adicional.
 - El logotipo se genera como un monograma SVG en línea derivado del nombre del módulo; no se requieren recursos de imagen externos.
 - Se puede configurar un color de acento opcional para la marca; el resto de la paleta base permanece fija.
 - Solo se muestra una pantalla a la vez; no hay diseño lado a lado del contenido de gestión y búsqueda.
 - La navegación entre pantallas se maneja dentro de la aplicación (p. ej., cambio de vistas), y el botón atrás del navegador debe comportarse de forma predecible.
 - Los datos siguen persistiéndose en el localStorage del navegador y no se ven afectados por la navegación entre pantallas.
 - La pantalla de búsqueda se centra en encontrar y ver entidades; la edición permanece en la pantalla de gestión.
-- El contenido del usuario introducido por el usuario (nombres, descripciones, notas de documentos) DEBE sanitizarse antes de renderizarse en el DOM para prevenir ataques de inyección de scripts (XSS). El módulo base DEBE escapar HTML y atributos de eventos al mostrar datos de localStorage.
+- El contenido introducido por el usuario (nombres, descripciones, notas de documentos) DEBE sanitizarse antes de renderizarse en el DOM para prevenir ataques de inyección de scripts (XSS), conforme a FR-050. El módulo base DEBE escapar HTML y atributos de eventos al mostrar datos de localStorage.
 

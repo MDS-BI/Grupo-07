@@ -15,11 +15,56 @@ import {
 import { applyShell, showView, articleFor, lowerLabel, selectedSuffix } from './components/shell.js';
 import { applyDashboard, refreshStats } from './components/dashboard.js';
 import { renderCustomFields, collectCustomValues, fillCustomValues } from './components/custom-fields.js';
+import {
+  resolveColumns,
+  resolveFilters,
+  resolveDetailSections,
+  resolveForm,
+  resolveFieldLabels,
+  applyFilters,
+  formatValue
+} from './domain/views.js';
+import { evaluatePredicate } from './domain/rules.js';
+import {
+  renderDocumentList,
+  renderDocumentDetail,
+  renderBadges,
+  renderDomainForm,
+  fillDomainForm,
+  collectDomainForm
+} from './components/document-list.js';
+import { renderIndicators, renderCostSummary } from './components/indicators.js';
 
-const ENTITY_INPUTS = ['name', 'code', 'taxId', 'email', 'phone', 'address', 'category', 'description', 'targetDate', 'creditLimit', 'paymentTerms'];
-const DOCUMENT_INPUTS = ['series', 'folio', 'startDate', 'endDate', 'quantity', 'subtotal', 'discount', 'taxAmount', 'totalAmount', 'currency', 'notes'];
+const ENTITY_INPUTS = [
+  'name',
+  'code',
+  'taxId',
+  'email',
+  'phone',
+  'address',
+  'category',
+  'description',
+  'targetDate',
+  'creditLimit',
+  'paymentTerms'
+];
+const DOCUMENT_INPUTS = [
+  'series',
+  'folio',
+  'startDate',
+  'endDate',
+  'quantity',
+  'subtotal',
+  'discount',
+  'taxAmount',
+  'totalAmount',
+  'currency',
+  'notes'
+];
 
 let currentConfig = null;
+let selectedDocumentId = null;
+const domainFilterState = { values: {}, toggles: {} };
 
 function $(id) {
   return document.getElementById(id);
@@ -33,11 +78,15 @@ function setText(id, text) {
 }
 
 function entityCustomFields() {
-  return (currentConfig && currentConfig.customFields ? currentConfig.customFields : []).filter((field) => field.target === 'entity');
+  return (currentConfig && currentConfig.customFields ? currentConfig.customFields : []).filter(
+    (field) => field.target === 'entity'
+  );
 }
 
 function documentCustomFields() {
-  return (currentConfig && currentConfig.customFields ? currentConfig.customFields : []).filter((field) => field.target === 'document');
+  return (currentConfig && currentConfig.customFields ? currentConfig.customFields : []).filter(
+    (field) => field.target === 'document'
+  );
 }
 
 function clearErrors(root) {
@@ -55,12 +104,18 @@ function applyViewLabels() {
   setText('entities-view-heading', labels.entities);
   setText('entity-form-heading', `Agregar / Editar ${labels.entity}`);
   setText('edit-entity-heading', `Editar o eliminar ${articleFor(labels.entity)} ${lowerLabel(labels.entity)}`);
-  setText('delete-entity', `Eliminar ${articleFor(labels.entity)} ${lowerLabel(labels.entity)} ${selectedSuffix(labels.entity)}`);
+  setText(
+    'delete-entity',
+    `Eliminar ${articleFor(labels.entity)} ${lowerLabel(labels.entity)} ${selectedSuffix(labels.entity)}`
+  );
 
   setText('documents-view-heading', labels.documents);
   setText('document-form-heading', `Agregar / Editar ${labels.document}`);
   setText('edit-document-heading', `Editar o eliminar ${articleFor(labels.document)} ${lowerLabel(labels.document)}`);
-  setText('delete-document', `Eliminar ${articleFor(labels.document)} ${lowerLabel(labels.document)} ${selectedSuffix(labels.document)}`);
+  setText(
+    'delete-document',
+    `Eliminar ${articleFor(labels.document)} ${lowerLabel(labels.document)} ${selectedSuffix(labels.document)}`
+  );
 
   setText('search-view-heading', `Buscar ${labels.entities}`);
   setText('search-empty', `No hay coincidencias con la búsqueda.`);
@@ -188,6 +243,365 @@ function statusValue() {
   return control ? control.value : '';
 }
 
+function domainConfig() {
+  return currentConfig && currentConfig.domain ? currentConfig.domain : null;
+}
+
+function resetDomainState() {
+  selectedDocumentId = null;
+  domainFilterState.values = {};
+  domainFilterState.toggles = {};
+}
+
+function findDocumentById(id) {
+  if (!id) {
+    return null;
+  }
+  return loadDocuments().find((record) => record.id === id) || null;
+}
+
+function findEntityForDocument(record) {
+  if (!record) {
+    return null;
+  }
+  return loadEntities().find((entity) => entity.entity_id === record.entity_id) || null;
+}
+
+function collectPredicateFields(predicate, keys) {
+  if (!predicate || typeof predicate !== 'object') {
+    return;
+  }
+
+  if (Array.isArray(predicate.all)) {
+    predicate.all.forEach((item) => collectPredicateFields(item, keys));
+  }
+
+  if (Array.isArray(predicate.any)) {
+    predicate.any.forEach((item) => collectPredicateFields(item, keys));
+  }
+
+  if (typeof predicate.field === 'string') {
+    keys.add(predicate.field);
+  }
+
+  if (typeof predicate.ref === 'string') {
+    keys.add(predicate.ref);
+  }
+}
+
+function entityBadgeFieldKeys() {
+  const domain = domainConfig();
+  const badges = domain && Array.isArray(domain.badges) ? domain.badges : [];
+  const keys = new Set();
+
+  for (const badge of badges) {
+    if (badge.target === 'entity') {
+      collectPredicateFields(badge.when, keys);
+    }
+  }
+
+  return [...keys];
+}
+
+function showDomainFeedback(message) {
+  setText('domain-feedback', message || '');
+}
+
+function activeDomainFilters(filters) {
+  const active = [];
+
+  filters.forEach((filter, index) => {
+    if (filter.toggle) {
+      if (domainFilterState.toggles[index]) {
+        active.push({ predicate: filter.predicate });
+      }
+      return;
+    }
+
+    const value = domainFilterState.values[index] ?? filter.value ?? '';
+    if (value === '') {
+      return;
+    }
+
+    active.push({ key: filter.key, op: filter.op || 'eq', value });
+  });
+
+  return active;
+}
+
+function renderDomainFilters(filters) {
+  const container = $('document-filters');
+  if (!container) {
+    return;
+  }
+
+  container.innerHTML = '';
+
+  if (!Array.isArray(filters) || filters.length === 0) {
+    container.hidden = true;
+    return;
+  }
+
+  container.hidden = false;
+
+  filters.forEach((filter, index) => {
+    const wrapper = document.createElement('label');
+    wrapper.className = 'filter-control';
+
+    if (filter.toggle) {
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = `document-filter-toggle-${index}`;
+      checkbox.checked = domainFilterState.toggles[index] === true;
+      checkbox.addEventListener('change', () => {
+        domainFilterState.toggles[index] = checkbox.checked;
+        renderDocumentsDomain();
+      });
+
+      const text = document.createElement('span');
+      text.textContent = filter.label;
+      wrapper.appendChild(checkbox);
+      wrapper.appendChild(text);
+      container.appendChild(wrapper);
+      return;
+    }
+
+    const text = document.createElement('span');
+    text.textContent = filter.label;
+    wrapper.appendChild(text);
+
+    let control;
+    if (Array.isArray(filter.options)) {
+      control = document.createElement('select');
+      const all = document.createElement('option');
+      all.value = '';
+      all.textContent = 'Todos';
+      control.appendChild(all);
+
+      for (const optionValue of filter.options) {
+        const option = document.createElement('option');
+        option.value = optionValue;
+        option.textContent = optionValue;
+        control.appendChild(option);
+      }
+    } else {
+      control = document.createElement('input');
+      control.type = 'text';
+      control.autocomplete = 'off';
+    }
+
+    control.id = `document-filter-${index}`;
+    control.value = domainFilterState.values[index] ?? filter.value ?? '';
+    control.addEventListener('change', () => {
+      domainFilterState.values[index] = control.value;
+      renderDocumentsDomain();
+    });
+
+    wrapper.appendChild(control);
+    container.appendChild(wrapper);
+  });
+}
+
+function documentActionsFor(record) {
+  const domain = domainConfig();
+  const actions = domain && Array.isArray(domain.transitionActions) ? domain.transitionActions : [];
+
+  return actions
+    .filter((action) => action.from === record.status)
+    .map((action) => {
+      const blocked = action.requires ? !evaluatePredicate(action.requires, record) : false;
+      return {
+        ...action,
+        blocked,
+        blockedReason: blocked ? action.message || 'Complete los datos requeridos antes de ejecutar esta acción.' : ''
+      };
+    });
+}
+
+function renderDomainForms(record) {
+  for (const name of ['execution', 'quality']) {
+    const panel = $(`document-${name}-panel`);
+    const title = $(`document-${name}-title`);
+    const submit = $(`document-${name}-submit`);
+    const fields = $(`document-${name}-fields`);
+    const formSpec = resolveForm(currentConfig, name);
+
+    if (!formSpec || !record) {
+      if (panel) {
+        panel.hidden = true;
+      }
+      continue;
+    }
+
+    if (panel) {
+      panel.hidden = false;
+    }
+
+    if (title) {
+      title.textContent = formSpec.title;
+    }
+
+    if (submit) {
+      submit.textContent = formSpec.submitLabel;
+    }
+
+    renderDomainForm(fields, formSpec, documentCustomFields(), { idPrefix: `document-${name}` });
+    fillDomainForm(fields, record);
+  }
+}
+
+function selectDocument(id) {
+  selectedDocumentId = id;
+  renderDocumentsDomain();
+}
+
+function renderDocumentsDomain() {
+  const section = $('documents-domain');
+  const domain = domainConfig();
+
+  if (!domain) {
+    if (section) {
+      section.hidden = true;
+    }
+    return;
+  }
+
+  if (section) {
+    section.hidden = false;
+  }
+
+  setText('document-list-heading', currentConfig.labels.documents);
+  setText('document-indicators-heading', 'Indicadores');
+
+  const filters = resolveFilters(currentConfig);
+  renderDomainFilters(filters);
+
+  const entities = loadEntities();
+  const allDocuments = loadDocuments();
+  const visibleDocuments = applyFilters(allDocuments, activeDomainFilters(filters));
+
+  if (selectedDocumentId && !allDocuments.some((record) => record.id === selectedDocumentId)) {
+    selectedDocumentId = null;
+  }
+
+  renderDocumentList($('document-list'), {
+    documents: visibleDocuments,
+    entities,
+    columns: resolveColumns(currentConfig),
+    selectedId: selectedDocumentId,
+    config: currentConfig,
+    emptyLabel: `No hay ${lowerLabel(currentConfig.labels.documents)} para los filtros seleccionados.`,
+    onSelect: selectDocument
+  });
+
+  const selected = findDocumentById(selectedDocumentId);
+
+  renderDocumentDetail($('document-detail'), {
+    documentRecord: selected,
+    entity: findEntityForDocument(selected),
+    sections: resolveDetailSections(currentConfig),
+    config: currentConfig,
+    actions: selected ? documentActionsFor(selected) : [],
+    onAction: runDocumentAction,
+    emptyLabel: `Seleccione ${articleFor(currentConfig.labels.document)} ${lowerLabel(currentConfig.labels.document)} para ver el detalle.`
+  });
+
+  renderDomainForms(selected);
+
+  renderIndicators($('document-indicators'), {
+    indicators: Array.isArray(domain.indicators) ? domain.indicators : [],
+    records: allDocuments
+  });
+
+  renderCostSummary($('document-costs'), {
+    costSummary: domain.costSummary || null,
+    records: allDocuments
+  });
+}
+
+function runDocumentAction(action) {
+  const record = findDocumentById(selectedDocumentId);
+
+  if (!record || !action) {
+    return;
+  }
+
+  if (action.blocked || (action.requires && !evaluatePredicate(action.requires, record))) {
+    showDomainFeedback(
+      action.blockedReason || action.message || 'Complete los datos requeridos antes de ejecutar esta acción.'
+    );
+    return;
+  }
+
+  const noteControl = $('document-action-note');
+  const note = noteControl ? noteControl.value.trim() : '';
+  const updates = { status: action.to };
+
+  if (note !== '') {
+    updates.notes = record.notes ? `${record.notes}\n${note}` : note;
+  }
+
+  try {
+    updateDocument(record.id, updates);
+  } catch (error) {
+    showDomainFeedback(error.message || 'No se pudo actualizar la orden.');
+    return;
+  }
+
+  if (noteControl) {
+    noteControl.value = '';
+  }
+
+  showDomainFeedback('');
+  renderDocumentSelects();
+  refreshStats();
+  renderDocumentsDomain();
+  runSearch();
+}
+
+function saveDomainForm(name) {
+  const record = findDocumentById(selectedDocumentId);
+  const formSpec = resolveForm(currentConfig, name);
+
+  if (!record || !formSpec) {
+    return;
+  }
+
+  const values = collectDomainForm($(`document-${name}-fields`));
+  const merged = { ...record, ...values };
+  const validation = validateDocument(merged);
+
+  if (!validation.valid) {
+    showDomainFeedback(Object.values(validation.errors).join(' '));
+    return;
+  }
+
+  try {
+    updateDocument(record.id, values);
+  } catch (error) {
+    showDomainFeedback(error.message || 'No se pudo guardar la información.');
+    return;
+  }
+
+  showDomainFeedback('');
+  renderDocumentSelects();
+  refreshStats();
+  renderDocumentsDomain();
+  runSearch();
+}
+
+function wireDomainForms() {
+  for (const name of ['execution', 'quality']) {
+    const form = $(`document-${name}-form`);
+    if (form) {
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        saveDomainForm(name);
+      });
+    }
+  }
+}
+
 function resetEntityForm() {
   setText('entity-form-heading', `Agregar / Editar ${currentConfig.labels.entity}`);
   setText('submit-button', 'Guardar');
@@ -285,7 +699,10 @@ function fillDocumentForm(documentRecord) {
   }
 
   if ($('docPaymentTerms')) {
-    $('docPaymentTerms').value = documentRecord.paymentTerms === undefined || documentRecord.paymentTerms === null ? '' : String(documentRecord.paymentTerms);
+    $('docPaymentTerms').value =
+      documentRecord.paymentTerms === undefined || documentRecord.paymentTerms === null
+        ? ''
+        : String(documentRecord.paymentTerms);
   }
 
   buildStatusControl(documentRecord.status || null);
@@ -324,6 +741,19 @@ function showDocumentErrors(errors) {
   }
 }
 
+function matchesQuery(record, query, extraValues = []) {
+  if (query === '') {
+    return false;
+  }
+
+  const values = [...Object.values(record || {}), ...extraValues];
+  return values.some((value) =>
+    String(value ?? '')
+      .toLowerCase()
+      .includes(query)
+  );
+}
+
 function runSearch() {
   const input = $('search-input');
   const list = $('search-results-list');
@@ -333,13 +763,33 @@ function runSearch() {
   }
 
   const term = input.value;
-  const results = searchEntities(term);
+  const query = String(term ?? '')
+    .trim()
+    .toLowerCase();
+  const entities = loadEntities();
   const documents = loadDocuments();
+  const results = searchEntities(term);
+  const labels = resolveFieldLabels(currentConfig);
   const fields = entityCustomFields();
+  const badgeKeys = entityBadgeFieldKeys();
+  const matchedEntityIds = new Set(results.map((entity) => entity.entity_id));
+  const matchedDocuments = [];
+
+  if (query !== '') {
+    for (const record of documents) {
+      const entity = entities.find((item) => item.entity_id === record.entity_id) || null;
+      if (
+        matchedEntityIds.has(record.entity_id) ||
+        matchesQuery(record, query, [entity ? entity.name : '', entity ? entity.code : ''])
+      ) {
+        matchedDocuments.push({ record, entity });
+      }
+    }
+  }
 
   list.innerHTML = '';
 
-  if (String(term).trim() === '' || results.length === 0) {
+  if (query === '' || (results.length === 0 && matchedDocuments.length === 0)) {
     empty.hidden = false;
     return;
   }
@@ -355,6 +805,8 @@ function runSearch() {
     title.textContent = `${entity.name} — ${entity.code}`;
     item.appendChild(title);
 
+    const displayed = new Set();
+
     for (const field of fields) {
       const value = entity[field.key];
       if (value !== undefined && value !== null && value !== '') {
@@ -362,7 +814,33 @@ function runSearch() {
         line.className = 'entity-custom';
         line.textContent = `${field.label}: ${value}`;
         item.appendChild(line);
+        displayed.add(field.key);
       }
+    }
+
+    for (const key of badgeKeys) {
+      if (displayed.has(key)) {
+        continue;
+      }
+      const line = document.createElement('div');
+      line.className = 'entity-custom';
+      line.textContent = `${labels[key] || key}: ${formatValue(entity[key])}`;
+      item.appendChild(line);
+      displayed.add(key);
+    }
+
+    if (entity.targetDate !== undefined && entity.targetDate !== null && entity.targetDate !== '') {
+      const line = document.createElement('div');
+      line.className = 'entity-custom';
+      line.textContent = `${labels.targetDate}: ${formatValue(entity.targetDate)}`;
+      item.appendChild(line);
+    }
+
+    const badgeBox = document.createElement('div');
+    badgeBox.className = 'badge-row';
+    renderBadges(badgeBox, entity, currentConfig, 'entity');
+    if (badgeBox.childNodes.length > 0) {
+      item.appendChild(badgeBox);
     }
 
     for (const documentRecord of documents.filter((document) => document.entity_id === entity.entity_id)) {
@@ -370,6 +848,42 @@ function runSearch() {
       badge.className = 'status-badge';
       badge.textContent = documentRecord.status || '';
       item.appendChild(badge);
+    }
+
+    list.appendChild(item);
+  }
+
+  for (const { record, entity } of matchedDocuments) {
+    const item = document.createElement('div');
+    item.className = 'entity-item document-item';
+    item.dataset.documentId = record.id;
+
+    const title = document.createElement('div');
+    title.className = 'entity-title';
+    const series = record.series ? `${record.series} — ` : '';
+    title.textContent = `${series}${formatValue(record.folio)}`;
+    item.appendChild(title);
+
+    const product = document.createElement('div');
+    product.className = 'entity-custom';
+    product.textContent = `Producto: ${entity ? `${entity.name} — ${entity.code}` : formatValue(record.entity_id)}`;
+    item.appendChild(product);
+
+    const status = document.createElement('div');
+    status.className = 'entity-custom';
+    status.textContent = `Estado: ${formatValue(record.status)}`;
+    item.appendChild(status);
+
+    const dates = document.createElement('div');
+    dates.className = 'entity-custom';
+    dates.textContent = `Fecha de fin: ${formatValue(record.endDate)}`;
+    item.appendChild(dates);
+
+    const badgeBox = document.createElement('div');
+    badgeBox.className = 'badge-row';
+    renderBadges(badgeBox, record, currentConfig, 'document');
+    if (badgeBox.childNodes.length > 0) {
+      item.appendChild(badgeBox);
     }
 
     list.appendChild(item);
@@ -388,6 +902,7 @@ function wireNavigation() {
       if (target === 'documents') {
         renderEntitySelects();
         renderDocumentSelects();
+        renderDocumentsDomain();
       }
 
       showView(target);
@@ -422,6 +937,7 @@ function wireQuickActions() {
       showView('documents');
       renderEntitySelects();
       renderDocumentSelects();
+      renderDocumentsDomain();
       resetDocumentForm();
       if ($('document-entity')) {
         $('document-entity').focus();
@@ -463,15 +979,23 @@ function wireEntityForm() {
       }
 
       const id = $('entity-id') ? $('entity-id').value : '';
-      if (id) {
-        updateEntity(id, data);
-      } else {
-        addEntity(data);
+      try {
+        if (id) {
+          updateEntity(id, data);
+        } else {
+          addEntity(data);
+        }
+      } catch (error) {
+        showEntityErrors(error.errors || { name: error.message || 'No se pudo guardar.' });
+        return;
       }
 
       resetEntityForm();
       renderEntitySelects();
+      renderDocumentSelects();
+      renderDocumentsDomain();
       refreshStats();
+      runSearch();
     });
   }
 
@@ -503,7 +1027,7 @@ function wireEntityForm() {
       if (!entity) {
         return;
       }
-      const message = `¿Eliminar "${entity.name}" y todos sus documentos asociados?`;
+      const message = `¿Eliminar "${entity.name}" y todos sus ${lowerLabel(currentConfig.labels.documents)} asociados?`;
       const confirmed = typeof confirm === 'function' ? confirm(message) : true;
       if (!confirmed) {
         return;
@@ -512,7 +1036,9 @@ function wireEntityForm() {
       resetEntityForm();
       renderEntitySelects();
       renderDocumentSelects();
+      renderDocumentsDomain();
       refreshStats();
+      runSearch();
     });
   }
 }
@@ -546,7 +1072,9 @@ function wireDocumentForm() {
       resetDocumentForm();
       renderDocumentSelects();
       renderEntitySelects();
+      renderDocumentsDomain();
       refreshStats();
+      runSearch();
     });
   }
 
@@ -556,11 +1084,15 @@ function wireDocumentForm() {
       const id = edit.value;
       if (!id) {
         resetDocumentForm();
+        selectedDocumentId = null;
+        renderDocumentsDomain();
         return;
       }
       const documentRecord = loadDocuments().find((item) => item.id === id);
       if (documentRecord) {
         fillDocumentForm(documentRecord);
+        selectedDocumentId = id;
+        renderDocumentsDomain();
       } else {
         resetDocumentForm();
       }
@@ -570,18 +1102,29 @@ function wireDocumentForm() {
   const remove = $('delete-document');
   if (remove) {
     remove.addEventListener('click', () => {
-      const id = ($('document-id') ? $('document-id').value : '') || ($('edit-document') ? $('edit-document').value : '');
+      const id =
+        ($('document-id') ? $('document-id').value : '') || ($('edit-document') ? $('edit-document').value : '');
       if (!id) {
         return;
       }
-      const confirmed = typeof confirm === 'function' ? confirm('¿Eliminar el documento seleccionado?') : true;
+      const confirmed =
+        typeof confirm === 'function'
+          ? confirm(
+              `¿Eliminar ${articleFor(currentConfig.labels.document)} ${lowerLabel(currentConfig.labels.document)} ${selectedSuffix(currentConfig.labels.document)}?`
+            )
+          : true;
       if (!confirmed) {
         return;
       }
       deleteDocument(id);
+      if (selectedDocumentId === id) {
+        selectedDocumentId = null;
+      }
       resetDocumentForm();
       renderDocumentSelects();
+      renderDocumentsDomain();
       refreshStats();
+      runSearch();
     });
   }
 }
@@ -608,6 +1151,7 @@ export async function initApp(result) {
 
   currentConfig = config;
   setActiveConfig(config);
+  resetDomainState();
 
   applyShell(config);
   applyDashboard(config);
@@ -622,10 +1166,12 @@ export async function initApp(result) {
   wireQuickActions();
   wireEntityForm();
   wireDocumentForm();
+  wireDomainForms();
   wireSearch();
 
   renderEntitySelects();
   renderDocumentSelects();
+  renderDocumentsDomain();
   resetEntityForm();
   resetDocumentForm();
   refreshStats();

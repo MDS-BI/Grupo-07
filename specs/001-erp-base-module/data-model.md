@@ -2,11 +2,9 @@
 
 **Grupo 7** · Módulo ERP sobre el módulo base (Vite + JavaScript vanilla)
 
-Este documento explica cómo adaptamos el modelo de datos del módulo base a Manufactura y Operaciones. La idea es no tocar el código central: los campos base se mantienen tal cual y todo lo propio de planta se define en el objeto `userConfig` de `src/module-config.js`.
+Este documento explica cómo adaptamos el modelo de datos del módulo base a Manufactura y Operaciones. La idea es no tocar el código central: los campos base se mantienen tal cual y todo lo propio de planta se define en la configuración de `src/module-config.js`. El perfil de manufactura es completamente declarativo; el motor genérico de `src/domain/` interpreta vistas, métricas, insignias y reglas.
 
 ## Qué representa cada cosa
-
-El módulo base trabaja con dos conceptos, y los usamos así:
 
 | En el módulo base | En nuestro módulo | Qué es |
 |---|---|---|
@@ -65,9 +63,9 @@ Un producto puede tener muchas órdenes de producción, y cada orden pertenece a
 |---|---|---|---|---|
 | `itemType` | Tipo de ítem | select | Sí | Producto terminado, Materia prima, Insumo |
 | `unitOfMeasure` | Unidad de medida | select | Sí | Unidad, Kg, Litro, Metro, Caja |
-| `currentStock` | Stock actual | number | No | |
-| `minStock` | Stock mínimo | number | No | |
-| `leadTimeDays` | Plazo de reposición (días) | number | No | |
+| `currentStock` | Stock actual | number | No | No negativo |
+| `minStock` | Stock mínimo | number | No | No negativo |
+| `leadTimeDays` | Plazo de reposición (días) | number | No | No negativo |
 | `supplier` | Proveedor | text | No | |
 
 ### Cómo usamos los campos base
@@ -106,6 +104,15 @@ Los campos `taxId`, `email`, `phone`, `creditLimit` y `paymentTerms` vienen del 
 
 </details>
 
+### Regla de stock bajo el mínimo
+
+Un producto se marca como **"stock bajo el mínimo"** solo cuando:
+
+- `currentStock` y `minStock` existen, y
+- `currentStock < minStock` (estrictamente menor).
+
+Si falta cualquiera de los dos valores, la interfaz muestra **"sin dato"** y no aplica la insignia de stock bajo. Un valor ausente nunca se trata como cero.
+
 ## Orden de Producción
 
 ### Campos propios del dominio
@@ -116,10 +123,21 @@ Los campos `taxId`, `email`, `phone`, `creditLimit` y `paymentTerms` vienen del 
 | `machine` | Máquina / Recurso | text | No | |
 | `batchCode` | Lote | text | No | |
 | `priority` | Prioridad | select | No | Baja, Media, Alta, Urgente |
-| `producedQty` | Cantidad producida | number | No | |
-| `scrapQty` | Cantidad de merma | number | No | |
+| `producedQty` | Cantidad producida | number | No | No negativo |
+| `scrapQty` | Cantidad de merma | number | No | No negativo |
 | `qualityResult` | Resultado de calidad | select | No | Pendiente, Aprobado, Corrección, Rechazado |
 | `responsible` | Responsable | text | No | |
+
+### Correspondencia con los nombres de calidad de la especificación
+
+| Nombre en la especificación | Clave canónica de datos | Etiqueta de interfaz |
+|---|---|---|
+| `CantidadQA` | `producedQty` | Cantidad QA |
+| `MermaQA` | `scrapQty` | Merma QA |
+| `CalidadQA` | `qualityResult` | Calidad QA |
+| `nota` | `notes` | Nota |
+
+Las claves canónicas se usan en almacenamiento, búsqueda, métricas y reglas. Las etiquetas visibles conservan la terminología de las historias de usuario.
 
 ### Cómo usamos los campos base
 
@@ -130,7 +148,7 @@ Los campos `taxId`, `email`, `phone`, `creditLimit` y `paymentTerms` vienen del 
 | `startDate` | Inicio de producción |
 | `endDate` | Fecha comprometida de entrega |
 | `quantity` | Unidades a fabricar |
-| `notes` | Observaciones de planta |
+| `notes` | Observaciones de planta y notas de calidad |
 | `status` | Estado de la orden (ver ciclo de vida) |
 | `subtotal`, `totalAmount`, `currency` | Costo estimado, si se quiere registrar |
 
@@ -189,20 +207,64 @@ stateDiagram-v2
 
 Una orden nace como *planificada* y avanza paso a paso. Si no pasa la inspección de calidad puede volver a *en producción* (re-trabajo). Se puede cancelar desde cualquier estado antes de terminarla, y tanto *terminada* como *cancelada* son estados finales.
 
-## Configuración
+Las acciones de dominio se declaran como transiciones y guardas:
 
-Todo está en `src/module-config.js`. `userConfig` permanece en `null` para que la aplicación arranque con los valores predeterminados del módulo base; `manufacturingConfig` documenta el perfil de manufactura de referencia y debe asignarse a `userConfig` cuando se active la Fase 19.
+- **Confirmar pedido**: `planificada → liberada`.
+- **Rechazar pedido**: `planificada → cancelada`.
+- **Iniciar producción**: `liberada → en producción`, requiriendo máquina, lote y etapa cuando la configuración lo exija.
+- **Enviar a calidad**: `en producción → en control de calidad`.
+- **Aprobar**: `en control de calidad → terminada`, requiriendo `qualityResult = Aprobado`.
+- **Devolver a producción**: `en control de calidad → en producción`, requiriendo `qualityResult = Corrección`.
+- **Rechazar lote**: `en control de calidad → cancelada`, requiriendo `qualityResult = Rechazado`.
+
+## Vistas y comportamiento de dominio
+
+La lista y el detalle de órdenes viven dentro del **módulo Documentos**. La configuración declara:
+
+- **Columnas de lista**: serie, folio, producto, cantidad, fechas, estado, prioridad y campos de ejecución relevantes.
+- **Filtros**: por estado y por retraso; los estados disponibles provienen del ciclo de vida.
+- **Secciones de detalle**: pedido, ejecución y calidad.
+- **Indicadores**: conteo por estado, conteo de retrasadas, merma por orden y resumen de costos.
+- **Costos**: subtotal, descuento, impuesto y total por orden, con totales separados por moneda; nunca se suman monedas distintas.
+- **Insignias**: stock bajo el mínimo en productos y orden retrasada en documentos.
+- **Estados vacíos**: cero órdenes o cero resultados muestran valores en cero y un mensaje claro.
+
+La pantalla de gestión no muestra la lista de entidades (FR-016). Las referencias a "la lista" de entidades corresponden a los resultados de la pantalla Buscar.
+
+## Configuración declarativa
+
+Todo está en `src/module-config.js`. El perfil está **activo**: `userConfig = manufacturingConfig`. Para volver al módulo base genérico basta con `userConfig = null`; `manufacturingConfig` queda como perfil de referencia completo.
 
 | Propiedad | Valor en `manufacturingConfig` |
 |---|---|
-| `userConfig` | `null` (perfil de manufactura inactivo hasta la Fase 19) |
+| `userConfig` | `manufacturingConfig` (perfil de manufactura activo) |
 | `moduleName` | Manufactura y Operaciones |
 | `labels` | Producto / Productos, Orden de Producción / Órdenes de Producción |
 | `customFields` | 6 de Producto y 8 de Orden de Producción |
 | `statusLifecycle` | Los 6 estados del diagrama |
 | `theme.accentColor` | `#0f766e` |
+| `domain.documentList` | Columnas, filtros y secciones de detalle de la orden |
+| `domain.documentList.forms` | Formularios configurables de ejecución y calidad |
+| `domain.indicators` | Conteo por estado, retrasos y merma por orden |
+| `domain.costSummary` | Agrupación por moneda |
+| `domain.badges` | Stock bajo y orden retrasada |
+| `domain.rules` | Guardas de calidad y transiciones |
+| `domain.transitionActions` | Etiquetas de confirmar, rechazar, iniciar, enviar a calidad, aprobar y devolver |
+| `domain.transitionGuards` | Condiciones declarativas por transición |
+
+La forma completa y las operaciones permitidas están en [contracts/module-extension.md](contracts/module-extension.md).
+
+### Validación de la configuración
 
 Las claves de los campos propios no pueden repetir ningún nombre de campo base (`id`, `entity_id`, `name`, `code`, `taxId`, `email`, `phone`, `address`, `category`, `description`, `targetDate`, `creditLimit`, `paymentTerms`, `series`, `folio`, `startDate`, `endDate`, `quantity`, `subtotal`, `discount`, `taxAmount`, `totalAmount`, `currency`, `notes`, `status`). Si la configuración tiene algún error, la aplicación muestra un aviso y vuelve a los valores por defecto en vez de romperse.
+
+Se rechazan además:
+
+- Operaciones de regla fuera de la lista blanca.
+- Referencias a campos que no existen en los campos base ni en `customFields`.
+- Indicadores o insignias con tipos desconocidos.
+- Filtros que apunten a estados fuera del ciclo de vida configurado.
+- Vistas sin columnas o con secciones de detalle vacías.
 
 ## Reglas de validación
 
@@ -210,9 +272,10 @@ Las claves de los campos propios no pueden repetir ningún nombre de campo base 
 
 - El nombre y el código no pueden estar vacíos.
 - Tipo de ítem y unidad de medida son obligatorios y deben ser una de las opciones.
-- Stock actual, stock mínimo y plazo de reposición, si se completan, tienen que ser números.
+- Stock actual, stock mínimo y plazo de reposición, si se completan, deben ser números no negativos.
 - La fecha de revisión, si se completa, debe ser una fecha válida.
 - El `entity_id` se genera solo y no se repite.
+- La insignia de stock bajo sigue la regla estricta definida arriba.
 
 **Orden de Producción**
 
@@ -221,9 +284,15 @@ Las claves de los campos propios no pueden repetir ningún nombre de campo base 
 - Las fechas de inicio y fin son obligatorias y la de fin no puede ser anterior a la de inicio.
 - La cantidad, si se completa, es un entero positivo.
 - La etapa del proceso es obligatoria.
-- El estado solo puede cambiar siguiendo las transiciones del ciclo de vida.
+- Cantidades producidas y merma, si se completan, deben ser números no negativos; se rechazan valores negativos o no numéricos.
+- El estado solo puede cambiar siguiendo las transiciones del ciclo de vida y las guardas configuradas.
+- En estado *en control de calidad*, el resultado de calidad debe ser uno de los valores declarados antes de pasar a *terminada*, *en producción* o *cancelada*.
 
-Hay reglas de negocio que el módulo base no valida y que por ahora quedan fuera, por ejemplo que producción más merma no supere lo planificado, o que una orden no se pueda terminar sin calidad aprobada.
+Hay reglas de negocio que el módulo base no valida y que por ahora quedan fuera, por ejemplo que producción más merma no supere lo planificado, o que una orden no se pueda terminar sin calidad aprobada cuando la configuración no lo declare. Esas reglas pueden añadirse como guardas declarativas en una etapa posterior.
+
+## Seguridad de renderizado
+
+Los valores de entidades, documentos, campos personalizados y notas se escapan antes de insertarse en el DOM (FR-050). El modelo no almacena HTML: los campos de texto son texto plano y se renderizan con `textContent` o con el ayudante de escape centralizado. Las pruebas usan payloads XSS para verificar que no se ejecutan scripts.
 
 ## Relaciones
 
@@ -231,6 +300,7 @@ Hay reglas de negocio que el módulo base no valida y que por ahora quedan fuera
 - Cada orden pertenece a un único producto.
 - Si se elimina un producto, se eliminan también todas sus órdenes (cascada).
 - La búsqueda recorre los productos, incluidos sus campos propios.
+- La lista y el detalle de órdenes se muestran dentro del módulo Documentos.
 
 ## Cómo quedan las entidades del README
 
@@ -251,12 +321,14 @@ Máquina, lote, proveedor y control de calidad quedaron como campos y no como ta
 ## Estado del avance
 
 - [x] Modelo de datos definido y documentado
-- [x] Configuración de referencia escrita (`manufacturingConfig`); `userConfig` queda en `null`
-- [x] Configuración validada en ejecución (aviso visible ante configuración inválida)
-- [x] Pruebas automatizadas del núcleo base en verde (12 archivos, 111 pruebas)
-- [x] Compilación de producción verificada (`npm run build`)
-- [ ] Activar `manufacturingConfig` y revisar los flujos de dominio (Fase 19 de tasks.md)
-- [ ] Cargar datos de ejemplo (productos y órdenes) para probar los flujos
+- [x] Configuración de referencia escrita (`manufacturingConfig`) y activada en `userConfig`
+- [x] Validación de configuración extendida a vistas, indicadores, insignias, formularios y reglas
+- [x] Motor declarativo implementado (`src/domain/`) sin funciones ni código ejecutable en la configuración
+- [x] Flujos de dominio HU1-HU5 revisados y cubiertos por pruebas (lista/detalle, confirmar/rechazar, ejecución y calidad)
+- [x] Datos de ejemplo sembrados por las pruebas de integración y E2E
+- [x] Pruebas unitarias, de integración y E2E de los recorridos críticos
+- [x] Perfil activo sin aviso de configuración inválida
+- [x] Puerta de calidad: 263 pruebas unitarias/integración, 10 E2E, lint y formato limpios, build correcto
 - [ ] Notificaciones automáticas de stock bajo y de órdenes retrasadas (la identificación en pantalla está cubierta por FR-042/FR-046)
 - [ ] Validar producción + merma frente a la cantidad planificada
 - [ ] Consumo de materia prima por orden

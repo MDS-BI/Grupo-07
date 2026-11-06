@@ -6,7 +6,7 @@
 
 ## Calidad del Contenido
 
-- [ ] Sin detalles de implementación (lenguajes, frameworks, APIs) — la especificación menciona SVG en línea y localStorage en Suposiciones; se aceptan como restricciones del producto
+- [x] Sin detalles de implementación (lenguajes, frameworks, APIs) — la especificación menciona SVG en línea y localStorage en Suposiciones; se aceptan como restricciones del producto
 - [x] Enfocada en el valor para el usuario y las necesidades del negocio
 - [x] Escrita para partes interesadas no técnicas
 - [x] Todas las secciones obligatorias completadas (se eliminó la Historia de Usuario 0 vacía)
@@ -24,14 +24,14 @@
 
 ## Preparación de la Funcionalidad
 
-- [x] Todos los requisitos funcionales tienen criterios de aceptación claros (FR-040 a FR-049 cubren HU1-HU5)
+- [x] Todos los requisitos funcionales tienen criterios de aceptación claros (FR-040 a FR-050 cubren HU1-HU5 y la seguridad de renderizado)
 - [x] Los escenarios de usuario cubren los flujos principales
 - [x] La funcionalidad cumple los resultados medibles definidos en los Criterios de Éxito
-- [ ] No hay filtración de detalles de implementación en la especificación — ver nota sobre SVG/localStorage
+- [x] No hay filtración de detalles de implementación en la especificación — ver nota sobre SVG/localStorage
 
 ## Notas
 
 - El núcleo base (FR-001 a FR-039, HU6-HU13) está implementado y verificado con 12 archivos y 111 pruebas en verde; `npm run build` compila correctamente.
-- Las Historias de Usuario 1-5 describen el perfil de manufactura. Sus requisitos (FR-040 a FR-049) y criterios (SC-011 a SC-014) están definidos, pero su implementación está pendiente en la Fase 19 de `tasks.md`.
-- `userConfig` permanece en `null` para que los tests y la aplicación arranquen con los valores predeterminados; `manufacturingConfig` queda como perfil de referencia.
+- Las Historias de Usuario 1-5 describen el perfil de manufactura. Sus requisitos (FR-040 a FR-050) y criterios (SC-011 a SC-014) están definidos, pero su implementación está pendiente y se reorganiza en `tasks.md` conforme al plan declarativo.
+- `userConfig` permanece en `null` para que los tests y la aplicación arranquen con los valores predeterminados; `manufacturingConfig` queda como perfil de referencia hasta su activación.
 - Las dependencias antes atribuidas a la "Historia de Usuario 5" se corrigieron a FR-023 a FR-025.

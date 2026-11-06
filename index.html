@@ -167,6 +167,44 @@
           <section id="view-documents" class="view" hidden>
             <h1 id="documents-view-heading">Documentos</h1>
 
+            <div id="documents-domain" class="domain-section">
+              <div class="panel">
+                <div class="panel-header">
+                  <h2 id="document-list-heading">Documentos</h2>
+                  <div id="document-filters" class="list-filters"></div>
+                </div>
+                <div id="document-list" class="document-list"></div>
+                <div id="document-detail" class="document-detail"></div>
+                <div class="field action-note">
+                  <label for="document-action-note">Nota de la acción (opcional)</label>
+                  <input id="document-action-note" name="document-action-note" type="text" autocomplete="off" />
+                </div>
+                <div id="domain-feedback" class="error" role="alert"></div>
+              </div>
+
+              <div class="panel">
+                <h2 id="document-indicators-heading">Indicadores</h2>
+                <div id="document-indicators" class="indicator-grid"></div>
+                <div id="document-costs" class="cost-summary"></div>
+              </div>
+
+              <div class="panel" id="document-execution-panel" hidden>
+                <h2 id="document-execution-title">Ejecución</h2>
+                <form id="document-execution-form" novalidate>
+                  <div id="document-execution-fields" class="domain-form-fields"></div>
+                  <button id="document-execution-submit" class="primary" type="submit">Guardar ejecución</button>
+                </form>
+              </div>
+
+              <div class="panel" id="document-quality-panel" hidden>
+                <h2 id="document-quality-title">Control de calidad</h2>
+                <form id="document-quality-form" novalidate>
+                  <div id="document-quality-fields" class="domain-form-fields"></div>
+                  <button id="document-quality-submit" class="primary" type="submit">Guardar inspección</button>
+                </form>
+              </div>
+            </div>
+
             <div class="panel">
               <h2 id="document-form-heading">Agregar / Editar Documento</h2>
               <form id="document-form" novalidate>

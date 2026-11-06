@@ -6,7 +6,7 @@ Aplicación de una sola página (Vite + Vanilla JS) que sirve como módulo base 
 
 Single-page app (Vite + Vanilla JS) serving as an ERP base module focused on **manufacturing & operations**. It provides the common foundation for building custom ERP modules: master data management (Entities) and linked transactional documents (Documents) with create/edit/delete/search, validation, and browser `localStorage` persistence — using Vite and vanilla HTML, CSS, and JavaScript.
 
-La interfaz está totalmente en **español** (términos por defecto: Entidad / Documento; nombre del módulo: Módulo Base ERP), incluyendo etiquetas, mensajes de validación, estados vacíos y diálogos. / The user interface is fully in **Spanish** (default terms: Entidad / Documento; module name: Módulo Base ERP), including labels, validation messages, empty states, and dialogs.
+La interfaz está totalmente en **español** (con el perfil de manufactura activo: Producto / Orden de Producción; nombre del módulo: Manufactura y Operaciones), incluyendo etiquetas, mensajes de validación, estados vacíos y diálogos. / The user interface is fully in **Spanish** (with the manufacturing profile active: Producto / Orden de Producción; module name: Manufactura y Operaciones), including labels, validation messages, empty states, and dialogs.
 
 ## Visión de producto | Product Vision
 
@@ -78,7 +78,7 @@ La app se presenta como un workspace ERP coherente:
 
 The app presents itself as a coherent ERP workspace:
 
-- **Workspace shell** — every screen lives inside a branded chrome: a top bar with a logo (an SVG monogram derived from the module name) and module name, plus a persistent sidebar of module buttons (Panel, Entidades, Documentos, Búsqueda). The active module is highlighted (`aria-current="page"`), and the sidebar collapses to an icon rail on narrow viewports.
+- **Workspace shell** — every screen lives inside a branded chrome: a top bar with a logo (an SVG monogram derived from the module name) and module name, plus a persistent sidebar of module buttons (with the manufacturing profile: Panel, Productos, Órdenes de Producción, Búsqueda). The active module is highlighted (`aria-current="page"`), and the sidebar collapses to an icon rail on narrow viewports.
 - **Home dashboard** — the entry screen offers quick-action buttons for key ERP tasks (new entity, new document, open management areas, find records) and live statistic cards showing record counts.
 - **Design tokens** — styling is driven by CSS custom properties in `src/styles.css`, so branding changes apply globally.
 
@@ -101,11 +101,29 @@ Run the full test suite (unit + integration) with:
 npm test
 ```
 
-Or a one-off run without watch mode:
+Other quality gates:
 
 ```bash
-npx vitest run
+npm run lint          # ESLint over src/ and tests/
+npm run format:check  # Prettier check
+npm run build         # Vite production build
+npm run test:e2e      # Playwright E2E (installs a local Chromium if needed)
 ```
+
+The E2E suite starts Vite on `http://localhost:4173` automatically. Install the browser once with `npx playwright install chromium`.
+
+Current gate result (2026-11-05): `npm test` 35 files / 263 tests green, `npm run lint` clean, `npm run format:check` clean, `npm run build` succeeds, `npm run test:e2e` 10/10 green.
+
+### Manufacturing profile (active by default)
+
+The shipped `userConfig` is `manufacturingConfig`, so the app runs the manufacturing and operations profile with no core changes:
+
+- **Products (Entidades)** — item type, unit of measure, current/minimum stock, storage location, supplier and replenishment lead time. Low stock is flagged only when both stock values exist and `currentStock < minStock`; otherwise the UI shows "sin dato" without a badge.
+- **Production orders (Documentos)** — the order list, filters, detail, indicators and cost summary live inside the Documentos module; the sidebar keeps exactly four modules.
+- **Order workflow** — confirm/reject with optional notes; the configured lifecycle drives which transitions are offered and reject unreachable ones.
+- **Execution** — released orders record stage, machine, batch, produced quantity, scrap, responsible and notes, then move to `en producción` and `en control de calidad`.
+- **Quality** — the inspection uses the labels "Cantidad QA", "Merma QA" and "Calidad QA" over the `producedQty`, `scrapQty` and `qualityResult` keys; approval closes the order, correction returns it to production and rejection cancels it.
+- **Indicators and costs** — order counts by status, overdue orders and scrap ratio, plus subtotal/discount/tax/total summaries grouped by currency (currencies are never mixed).
 
 ### Building Custom Modules
 
@@ -117,9 +135,31 @@ Custom ERP modules built on this base define:
 
 The base module handles identity generation, timestamps, referential integrity between entities and documents, cascade deletion, navigation, and search. See `specs/001-erp-base-module/` for the full specification.
 
+### Domain extension contract
+
+The `domain` section of `src/module-config.js` is a **declarative** contract interpreted by `src/domain/`. It may contain data only — functions, `eval` and arbitrary code are rejected by validation.
+
+| Key | Purpose |
+|---|---|
+| `documentList.columns` | Columns shown in the order list, with `key`, `label`, optional `target: 'document' \| 'entity' \| 'virtual'` and formatting hints. |
+| `documentList.filters` | Select filters for the order list, driven by a field and optional options. |
+| `documentList.detailSections` | Ordered detail sections with a title and fields resolved from the document and its linked product. |
+| `documentList.forms` | Config-driven execution and quality forms (`execution`, `quality`) with field lists and submit labels. |
+| `indicators` | `countByField`, `countWhere` and `ratio` cards computed in one pass. |
+| `costSummary` | Cost fields and the `groupBy` dimension (currency in the manufacturing profile). |
+| `badges` | Conditional labels with `when` predicates and `tone` (`info`, `warning`, `danger`), scoped by `target`. |
+| `rules` | Validation rules enforced by `src/storage.js` before persisting. |
+| `transitionActions` / `transitionGuards` | Labels and guards for lifecycle transitions, including quality-result guards. |
+
+Predicates support `eq`, `neq`, `in`, `notIn`, `lt`, `lte`, `gt`, `gte`, `exists` and `blank`, combined with `all`/`any`/`not`. Unknown operators, fields or lifecycle states fail configuration validation and are reported in the banner.
+
+### Security
+
+All user data is rendered as text or escaped: `src/security.js` provides `escapeHtml`, `setSafeText`, `safeAttribute` and `isSafeUrl`. Persisted payloads such as `<script>alert(1)</script>`, `"><img src=x onerror=alert(1)>` and `javascript:` URLs are displayed as text, never executed or injected (FR-050).
+
 ### Tailoring via Configuration
 
-All tailoring lives in one place: `src/module-config.js`. Set `userConfig` to your profile; the file ships with `userConfig = null` so the base defaults are active, and includes `manufacturingConfig` as a complete reference profile. No core code changes are required. Available knobs:
+All tailoring lives in one place: `src/module-config.js`. The file ships with `userConfig = manufacturingConfig` so the manufacturing profile is active, and includes the base defaults for reference. To return to the generic base module, set `userConfig = null`. No core code changes are required either way. Available knobs:
 
 - `moduleName` — display name shown in the top bar, dashboard, and document title; also derives the logo monogram.
 - `labels` — rename Entity/Document terms across every screen, including sidebar buttons, quick actions, forms, and messages. Spanish articles and agreements (el/la, seleccionado/a) are derived from the first word of each configured term.

@@ -1,9 +1,21 @@
 import { getConfig } from './module-config.js';
+import { evaluateRules, guardTransition } from './domain/rules.js';
 
 const ENTITIES_KEY = 'erp_base_module:entities';
 const DOCUMENTS_KEY = 'erp_base_module:documents';
 
-const ENTITY_TEXT_FIELDS = ['name', 'code', 'taxId', 'email', 'phone', 'address', 'category', 'description', 'targetDate', 'paymentTerms'];
+const ENTITY_TEXT_FIELDS = [
+  'name',
+  'code',
+  'taxId',
+  'email',
+  'phone',
+  'address',
+  'category',
+  'description',
+  'targetDate',
+  'paymentTerms'
+];
 const DOCUMENT_TEXT_FIELDS = ['series', 'startDate', 'endDate', 'currency', 'paymentTerms', 'notes', 'status'];
 const DOCUMENT_NUMBER_FIELDS = ['folio', 'quantity', 'subtotal', 'discount', 'taxAmount', 'totalAmount'];
 
@@ -97,13 +109,42 @@ function validateCustomFields(target, record, errors) {
       continue;
     }
 
-    if (field.type === 'number' && Number.isNaN(Number(value))) {
-      errors[field.key] = `${field.label} debe ser un número.`;
+    if (field.type === 'number') {
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) {
+        errors[field.key] = `${field.label} debe ser un número finito.`;
+      } else if ((field.nonNegative === true || field.min === 0) && numeric < 0) {
+        errors[field.key] = `${field.label} debe ser un número no negativo.`;
+      } else if (typeof field.min === 'number' && numeric < field.min) {
+        errors[field.key] = `${field.label} debe ser mayor o igual a ${field.min}.`;
+      }
     } else if (field.type === 'date' && !isValidDate(String(value))) {
       errors[field.key] = `${field.label} debe ser una fecha válida.`;
     } else if (field.type === 'select' && Array.isArray(field.options) && !field.options.includes(String(value))) {
       errors[field.key] = `${field.label} debe ser uno de: ${field.options.join(', ')}.`;
     }
+  }
+}
+
+function domainViolations(target, record) {
+  return evaluateRules(target, record, getConfig());
+}
+
+function assertPersistable(target, record) {
+  const errors = {};
+  validateCustomFields(target, record, errors);
+
+  for (const violation of domainViolations(target, record)) {
+    if (errors[violation.field] === undefined) {
+      errors[violation.field] = violation.message;
+    }
+  }
+
+  const fields = Object.keys(errors);
+  if (fields.length > 0) {
+    const error = new Error(fields.map((field) => errors[field]).join(' '));
+    error.errors = errors;
+    throw error;
   }
 }
 
@@ -142,6 +183,8 @@ export function addEntity(data = {}) {
 
   entity.createdAt = now();
   entity.updatedAt = entity.createdAt;
+
+  assertPersistable('entity', entity);
 
   const entities = loadEntities();
   entities.push(entity);
@@ -184,6 +227,7 @@ export function updateEntity(id, updates = {}) {
   }
 
   entity.updatedAt = now();
+  assertPersistable('entity', entity);
   saveEntities(entities);
   return entity;
 }
@@ -225,17 +269,29 @@ export function validateEntity(entity = {}) {
 
   validateCustomFields('entity', entity, errors);
 
+  for (const violation of domainViolations('entity', entity)) {
+    if (errors[violation.field] === undefined) {
+      errors[violation.field] = violation.message;
+    }
+  }
+
   return { valid: Object.keys(errors).length === 0, errors };
 }
 
 export function searchEntities(term) {
-  const query = String(term ?? '').trim().toLowerCase();
+  const query = String(term ?? '')
+    .trim()
+    .toLowerCase();
   if (query === '') {
     return [];
   }
 
   return loadEntities().filter((entity) =>
-    Object.values(entity).some((value) => String(value ?? '').toLowerCase().includes(query))
+    Object.values(entity).some((value) =>
+      String(value ?? '')
+        .toLowerCase()
+        .includes(query)
+    )
   );
 }
 
@@ -284,6 +340,7 @@ export function saveDocuments(documents) {
 
 export function addDocument(data = {}) {
   const document = normalizeDocument(data);
+  assertPersistable('document', document);
   const documents = loadDocuments();
   documents.push(document);
   saveDocuments(documents);
@@ -298,17 +355,19 @@ export function updateDocument(id, updates = {}) {
   }
 
   const document = documents[index];
-  const lifecycle = getLifecycle();
 
   if (
-    lifecycle &&
     updates.status !== undefined &&
     String(updates.status) !== String(document.status ?? '') &&
     !isBlank(updates.status)
   ) {
-    const allowed = lifecycle.transitions[document.status] || [];
-    if (!allowed.includes(String(updates.status))) {
-      throw new Error(`Transición de estado inválida: ${document.status} → ${updates.status}.`);
+    const merged = { ...document, ...updates, status: String(updates.status) };
+    const transition = guardTransition(document.status, String(updates.status), merged, getConfig());
+
+    if (!transition.ok) {
+      const error = new Error(transition.message);
+      error.errors = { status: transition.message };
+      throw error;
     }
   }
 
@@ -344,6 +403,7 @@ export function updateDocument(id, updates = {}) {
   }
 
   document.updatedAt = now();
+  assertPersistable('document', document);
   saveDocuments(documents);
   return document;
 }
@@ -390,7 +450,11 @@ export function validateDocument(document = {}) {
     errors.endDate = 'La fecha de fin es obligatoria.';
   } else if (!isValidDate(String(document.endDate))) {
     errors.endDate = 'La fecha de fin no es válida.';
-  } else if (!isBlank(document.startDate) && isValidDate(String(document.startDate)) && String(document.endDate) < String(document.startDate)) {
+  } else if (
+    !isBlank(document.startDate) &&
+    isValidDate(String(document.startDate)) &&
+    String(document.endDate) < String(document.startDate)
+  ) {
     errors.endDate = 'La fecha de fin debe ser igual o posterior a la de inicio.';
   }
 
@@ -417,6 +481,12 @@ export function validateDocument(document = {}) {
   }
 
   validateCustomFields('document', document, errors);
+
+  for (const violation of domainViolations('document', document)) {
+    if (errors[violation.field] === undefined) {
+      errors[violation.field] = violation.message;
+    }
+  }
 
   return { valid: Object.keys(errors).length === 0, errors };
 }
