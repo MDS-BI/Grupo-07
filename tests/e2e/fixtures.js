@@ -58,7 +58,7 @@ export function makeOrder(product, overrides = {}) {
 }
 
 export async function waitForApp(page) {
-  await page.goto('/');
+  await page.goto('/?demo=0');
   await page.waitForSelector('#view-dashboard');
   await page.waitForFunction(() => document.querySelector('#brand-name')?.textContent !== 'Módulo Base ERP');
 }

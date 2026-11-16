@@ -5,7 +5,7 @@ test('keeps the search icon clear of the input and makes demo orders filterable 
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/?demo=1');
+  await page.goto('/');
   await expect(page.locator('#brand-name')).toHaveText('Manufactura y Operaciones');
   await page.locator('#nav-search').click();
 

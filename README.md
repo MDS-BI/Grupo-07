@@ -178,9 +178,10 @@ If the configuration is invalid (unknown types, bad keys, transitions referencin
 ## Datos ficticios para probar los filtros
 
 Desde esta carpeta, ejecuta `npm run dev -- --port 5175 --strictPort` y abre
-[la demo local](http://localhost:5175/?demo=1). Los ejemplos se guardan en el
+[la demo local](http://localhost:5175/). Los ejemplos se guardan en el
 navegador al cargar esa dirección. Volver a abrirla conserva tus cambios y
-evita duplicar los ejemplos.
+evita duplicar los ejemplos. Para abrir la aplicación sin cargar ejemplos
+automáticamente, usa `?demo=0`.
 
 En **Órdenes de Producción**, usa los filtros y compara los folios de la serie DEMO.
 

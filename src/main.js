@@ -1,7 +1,7 @@
 import { boot } from './app.js';
 
 async function start() {
-  if (new URLSearchParams(window.location.search).get('demo') === '1') {
+  if (new URLSearchParams(window.location.search).get('demo') !== '0') {
     const { loadDemoData } = await import('./demo-data.js');
     await loadDemoData();
   }
