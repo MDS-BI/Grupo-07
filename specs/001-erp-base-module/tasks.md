@@ -262,6 +262,37 @@
 
 ---
 
+## Fase 17: Historia de Usuario 14 - Filtrar órdenes por prioridad (Prioridad: P2)
+
+**Objetivo**: Permitir que el jefe de planta consulte las órdenes por prioridad desde Documentos.
+
+**Prueba Independiente**: Seleccionar Urgente, combinarlo con el filtro de estado y limpiar la selección para comprobar que el filtro de estado permanece activo.
+
+- [X] T081 [US14] Declarar el filtro de prioridad en `src/module-config.js` con las opciones del campo personalizado correspondiente.
+- [ ] T082 [US14] Añadir una prueba de integración en `tests/integration/document-list.test.js` que cubra coincidencias, combinación con estado y órdenes sin valor.
+- [X] T083 [US14] Verificar en Documentos la selección y limpieza del filtro de prioridad, y registrar el resultado en `specs/001-erp-base-module/quickstart.md`.
+
+---
+
+## Fase 18: Historia de Usuario 15 - Filtrar órdenes por resultado de calidad (Prioridad: P2)
+
+**Objetivo**: Permitir que el inspector de calidad consulte las órdenes por resultado de calidad desde Documentos.
+
+**Prueba Independiente**: Seleccionar Corrección, combinarlo con el filtro de estado y limpiar la selección para comprobar que el filtro de estado permanece activo.
+
+- [X] T084 [US15] Declarar el filtro de resultado de calidad en `src/module-config.js` con las opciones del campo personalizado correspondiente.
+- [ ] T085 [US15] Añadir una prueba de integración en `tests/integration/document-list.test.js` que cubra coincidencias, combinación con estado y órdenes sin valor.
+- [X] T086 [US15] Verificar en Documentos la selección y limpieza del filtro de resultado de calidad, y registrar el resultado en `specs/001-erp-base-module/quickstart.md`.
+
+---
+
+## Mejoras de la búsqueda de productos
+
+- [X] T087 [US11] Añadir un botón «Limpiar búsqueda» junto al campo. Al activarlo con clic o teclado, restaurar el listado completo y devolver el foco al campo.
+- [X] T088 [US3] Añadir un filtro «Solo stock bajo» en Buscar, combinable con el texto. Reutilizar la regla de stock y comprobar que quedan fuera los productos con valores ausentes o con stock igual al mínimo.
+
+---
+
 ## Dependencias y Orden de Ejecución
 
 ### Dependencias por fase
@@ -273,6 +304,7 @@
   - **HU2, HU3, HU6, HU7, HU8, HU9, HU10, HU11, HU12 y HU13** pueden ejecutarse en paralelo tras la Fase 2.
   - **HU4 y HU5** dependen de la lista/detalle de la HU1.
 - **Fase 16 (Pulido)**: depende de todas las historias deseadas.
+- **Fases 17 y 18 (HU14 y HU15)**: dependen de la lista y los filtros configurables de HU1.
 
 ### Dependencias entre historias
 

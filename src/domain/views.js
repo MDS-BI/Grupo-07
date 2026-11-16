@@ -58,6 +58,11 @@ export function formatValue(value, options = {}) {
   return String(value);
 }
 
+export function formatStatus(value) {
+  const label = formatValue(value, { fallback: '' });
+  return label ? label.charAt(0).toLocaleUpperCase('es') + label.slice(1) : MISSING_VALUE;
+}
+
 export function resolveColumns(config, target) {
   const list = config && config.domain ? config.domain.documentList : null;
   if (!list || !Array.isArray(list.columns)) {

@@ -34,7 +34,7 @@ describe('User Story 1 - indicators and costs', () => {
     const byStatus = indicator('orders-by-status');
     expect(byStatus.querySelector('.indicator-value').textContent).toBe('3');
     const groups = [...byStatus.querySelectorAll('.indicator-groups li')].map((item) => item.textContent);
-    expect(groups).toEqual(['planificada1', 'liberada2']);
+    expect(groups).toEqual(['Planificada1', 'Liberada2']);
 
     expect(indicator('overdue-orders').querySelector('.indicator-value').textContent).toBe('1');
   });

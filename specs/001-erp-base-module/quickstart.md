@@ -123,3 +123,9 @@ Resultado esperado: el texto se muestra literalmente, no se ejecuta ningún scri
 | Cambios en código central para el perfil | Ninguno; todo el perfil es declarativo (SC-008, XR-006) |
 
 Los recorridos manuales de esta guía siguen siendo la referencia para validar la experiencia de usuario; la puerta automatizada debe ejecutarse antes de cerrar cada incremento.
+
+## Validación de la demo de manufactura
+
+- Compilación y lint correctos. Pasaron 263 pruebas unitarias y de integración y 11 recorridos en Chrome.
+- El recorrido de la demo comprueba que la lupa queda fuera del área de texto a 390 px, encuentra los guantes y su orden, y elimina una copia de una orden ficticia al recargar.
+- Los filtros de prioridad y calidad se pueden combinar con el estado y limpiar individualmente. Al limpiar todos los filtros reaparecen los seis folios, incluido el casco con prioridad sin dato.

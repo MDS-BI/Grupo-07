@@ -102,12 +102,13 @@ Como encargado de bodega y logística, quiero administrar el catálogo de stock 
 **Escenarios de Aceptación**:
 
 1. **Dado** que un usuario está viendo los resultados de la pantalla Buscar, **cuando** crea un nuevo ítem con nombre, código, tipo (Materia prima, Insumo o Producto terminado), stock actual, stock mínimo, proveedor, plazo de reposición y ubicación, **entonces** el nuevo ítem se guarda y aparece en los resultados de búsqueda con esos datos.
-2. **Dado** que un usuario está creando un ítem, **cuando** deja algún espacio o dato sin rellenar, **entonces** el sistema no lo guarda y le explica lo que falta para guardar correctamente.
+2. **Dado** que un usuario está creando un ítem, **cuando** deja en blanco el nombre, el código, el tipo de ítem o la unidad de medida, **entonces** el sistema no lo guarda y le explica lo que falta para guardar correctamente.
 3. **Dado** un campo personalizado de tipo numérico (stock actual, stock mínimo o plazo de reposición), **cuando** un usuario ingresa un valor que no es un número, **entonces** el sistema no lo guarda y explica el error.
 4. **Dado** un ítem ya existente, **cuando** un usuario edita su stock actual, stock mínimo, plazo de reposición, ubicación o proveedor, **entonces** la información se actualiza correctamente en los resultados de la pantalla Buscar.
 5. **Dado** un ítem con stock actual estrictamente menor que el stock mínimo y ambos valores registrados, **cuando** el usuario consulta los resultados de la pantalla Buscar, **entonces** le aparece que el ítem se encuentra con "stock bajo el mínimo".
 6. **Dado** que un usuario deja el stock mínimo o stock actual en blanco, **cuando** guarde el ítem, **entonces** quedará guardado igualmente, los resultados de búsqueda mostrarán en ese apartado "sin datos" y no se marcará stock bajo.
 7. **Dado** un ítem que ya no se utiliza, **cuando** el usuario lo elimina, **entonces** desaparecerá de los resultados de búsqueda.
+8. **Dada** una búsqueda de productos, **cuando** el usuario activa «Solo stock bajo», **entonces** la lista muestra únicamente productos coincidentes con stock actual estrictamente menor que el mínimo y ambos valores registrados.
 
 ---
 
@@ -251,6 +252,7 @@ Como usuario de negocio, quiero una pantalla de búsqueda dedicada para encontra
 2. **Dada** una búsqueda sin coincidencias, **cuando** el usuario envía la búsqueda, **entonces** se muestra un estado vacío claro y puede volver a intentarlo.
 3. **Dadas** cientos de entidades almacenadas, **cuando** el usuario busca desde la pantalla de búsqueda, **entonces** los resultados aparecen con prontitud sin retraso perceptible.
 4. **Dado** que el usuario está en la pantalla de búsqueda, **cuando** activa el botón Panel en la barra lateral, **entonces** vuelve al panel de inicio.
+5. **Dada** una búsqueda con texto o con el filtro de stock bajo activo, **cuando** el usuario activa «Limpiar búsqueda», **entonces** reaparecen todos los productos y el foco vuelve al campo.
 
 ---
 
@@ -287,6 +289,38 @@ Como usuario de negocio, quiero un espacio de trabajo estilo ERP consistente, co
 4. **Dado** que la ventana gráfica es estrecha, **cuando** se usa la aplicación en una pantalla pequeña, **entonces** la barra lateral se contrae a una columna de iconos manteniéndose utilizable y etiquetada de forma accesible.
 5. **Dada** una configuración que define un color de acento, **cuando** cualquier pantalla carga, **entonces** el marco lo usa consistentemente para resaltados y controles principales; sin valor configurado o con un valor inválido, se usan los valores predeterminados integrados sin errores.
 6. **Dado** que el usuario navega entre módulos mediante la barra lateral, **cuando** inspecciona sus datos después, **entonces** todas las entidades y documentos almacenados permanecen intactos.
+
+---
+
+### Historia de Usuario 14 - Filtrar órdenes por prioridad (Prioridad: P2)
+
+Como jefe de planta, quiero filtrar las órdenes por prioridad, para organizar la atención de los pedidos más urgentes.
+
+**Por qué esta prioridad**: Agiliza el seguimiento de órdenes desde Documentos una vez disponible la lista de la HU1.
+
+**Prueba Independiente**: Abrir Documentos con órdenes que tengan los valores Urgente y Alta, seleccionar Urgente y comprobar que solo se muestran las órdenes con ese valor.
+
+**Escenarios de Aceptación**:
+
+1. **Dadas** órdenes con distintos valores de prioridad, **cuando** selecciono Urgente, **entonces** la lista muestra únicamente las órdenes que coinciden.
+2. **Dado** que hay un filtro de estado activo, **cuando** selecciono Urgente, **entonces** la lista muestra las órdenes que cumplen ambos filtros.
+3. **Dado** que el filtro de prioridad está activo, **cuando** elijo la opción vacía, **entonces** reaparecen las órdenes que cumplen los demás filtros, incluidas las que carecen de ese dato.
+
+---
+
+### Historia de Usuario 15 - Filtrar órdenes por resultado de calidad (Prioridad: P2)
+
+Como inspector de calidad, quiero filtrar las órdenes por resultado de calidad, para localizar órdenes que requieren seguimiento.
+
+**Por qué esta prioridad**: Agiliza el seguimiento de órdenes desde Documentos una vez disponible la lista de la HU1.
+
+**Prueba Independiente**: Abrir Documentos con órdenes que tengan los valores Corrección y Aprobado, seleccionar Corrección y comprobar que solo se muestran las órdenes con ese valor.
+
+**Escenarios de Aceptación**:
+
+1. **Dadas** órdenes con distintos valores de resultado de calidad, **cuando** selecciono Corrección, **entonces** la lista muestra únicamente las órdenes que coinciden.
+2. **Dado** que hay un filtro de estado activo, **cuando** selecciono Corrección, **entonces** la lista muestra las órdenes que cumplen ambos filtros.
+3. **Dado** que el filtro de resultado de calidad está activo, **cuando** elijo la opción vacía, **entonces** reaparecen las órdenes que cumplen los demás filtros, incluidas las que carecen de ese dato.
 
 ---
 
@@ -367,6 +401,8 @@ Estos requisitos describen el perfil de manufactura que se construye sobre el m�
 - **FR-047**: El perfil DEBE permitir asignar máquina, lote y etapa del proceso a una orden liberada, registrar cantidades producidas y merma, y enviarla a control de calidad.
 - **FR-048**: El perfil DEBE permitir al inspector de calidad registrar `CantidadQA`, `MermaQA`, `CalidadQA` y notas, y mover la orden a *terminada*, de vuelta a *en producción* o a *cancelada* según el resultado.
 - **FR-049**: El perfil DEBE rechazar valores negativos o no numéricos en cantidades y merma, y transiciones de estado no permitidas, con una explicación clara.
+- **FR-051**: El perfil DEBE permitir filtrar la lista de órdenes por prioridad y combinar este filtro con los demás filtros activos.
+- **FR-052**: El perfil DEBE permitir filtrar la lista de órdenes por resultado de calidad y combinar este filtro con los demás filtros activos.
 
 ### Requisitos Funcionales de Seguridad
 

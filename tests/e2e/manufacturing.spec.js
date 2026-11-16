@@ -16,7 +16,7 @@ test('runs the full production and quality workflow and survives a reload', asyn
   await page.locator('#document-list tbody .document-row').first().click();
 
   await page.locator('#document-detail button[data-transition-to="liberada"]').click();
-  await expect(page.locator('#document-detail')).toContainText('liberada');
+  await expect(page.locator('#document-detail')).toContainText('Liberada');
 
   await page.locator('#document-detail button[data-transition-to="en producción"]').click();
   await page.selectOption('#document-execution-processStage', 'Ensamblaje');
@@ -36,7 +36,7 @@ test('runs the full production and quality workflow and survives a reload', asyn
   await page.click('#document-quality-submit');
 
   await page.locator('#document-detail button[data-transition-to="terminada"]').click();
-  await expect(page.locator('#document-detail')).toContainText('terminada');
+  await expect(page.locator('#document-detail')).toContainText('Terminada');
 
   await page.reload();
   await waitForReady(page);
@@ -44,7 +44,7 @@ test('runs the full production and quality workflow and survives a reload', asyn
   await page.locator('#document-list tbody .document-row').first().click();
 
   const detail = page.locator('#document-detail');
-  await expect(detail).toContainText('terminada');
+  await expect(detail).toContainText('Terminada');
   await expect(detail).toContainText('CNC-01');
   await expect(detail).toContainText('LOTE-E2E');
   await expect(detail).toContainText('Aprobado');
@@ -59,13 +59,13 @@ test('rejects a planned order and keeps the rejection after a reload', async ({ 
   await openDocuments(page);
   await page.locator('#document-list tbody .document-row').first().click();
   await page.locator('#document-detail button[data-transition-to="cancelada"]').click();
-  await expect(page.locator('#document-detail')).toContainText('cancelada');
+  await expect(page.locator('#document-detail')).toContainText('Cancelada');
 
   await page.reload();
   await waitForReady(page);
   await openDocuments(page);
   await page.locator('#document-list tbody .document-row').first().click();
-  await expect(page.locator('#document-detail')).toContainText('cancelada');
+  await expect(page.locator('#document-detail')).toContainText('Cancelada');
 });
 
 test('blocks finishing an order until quality is approved', async ({ page }) => {

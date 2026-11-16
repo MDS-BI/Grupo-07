@@ -62,7 +62,7 @@ describe('User Story 1 - order list and detail', () => {
 
     const rows = document.querySelectorAll('#document-list tbody .document-row');
     expect(rows).toHaveLength(1);
-    expect(rows[0].textContent).toContain('planificada');
+    expect(rows[0].textContent).toContain('Planificada');
   });
 
   it('shows the configured sections and stock data in the detail panel', () => {

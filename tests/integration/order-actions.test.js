@@ -44,7 +44,7 @@ describe('User Story 1 - confirm and reject orders', () => {
     expect(saved.notes).toContain('Revisado por el jefe de planta');
     expect(qs('document-action-note').value).toBe('');
     expect(qs('domain-feedback').textContent).toBe('');
-    expect(qs('document-detail').textContent).toContain('liberada');
+    expect(qs('document-detail').textContent).toContain('Liberada');
   });
 
   it('rejects a planned order and moves it to cancelada', () => {
@@ -56,7 +56,7 @@ describe('User Story 1 - confirm and reject orders', () => {
     actionButton('cancelada').click();
 
     expect(storage.loadDocuments()[0].status).toBe('cancelada');
-    expect(qs('document-detail').textContent).toContain('cancelada');
+    expect(qs('document-detail').textContent).toContain('Cancelada');
   });
 
   it('does not add notes when the optional note is blank', () => {

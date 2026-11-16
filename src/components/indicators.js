@@ -1,5 +1,5 @@
 import { computeIndicators, summarizeCosts } from '../domain/metrics.js';
-import { formatValue } from '../domain/views.js';
+import { formatStatus, formatValue } from '../domain/views.js';
 
 function appendText(container, tag, className, text) {
   const element = document.createElement(tag);
@@ -60,7 +60,7 @@ export function renderIndicators(container, options = {}) {
         for (const group of indicator.groups) {
           const item = document.createElement('li');
           const label = document.createElement('span');
-          label.textContent = group.value;
+          label.textContent = indicator.field === 'status' ? formatStatus(group.value) : group.value;
           const value = document.createElement('strong');
           value.textContent = String(group.count);
           item.appendChild(label);

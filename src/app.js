@@ -22,6 +22,7 @@ import {
   resolveForm,
   resolveFieldLabels,
   applyFilters,
+  formatStatus,
   formatValue
 } from './domain/views.js';
 import { evaluatePredicate } from './domain/rules.js';
@@ -209,7 +210,7 @@ function buildStatusControl(current) {
       for (const status of options) {
         const option = document.createElement('option');
         option.value = status;
-        option.textContent = status;
+        option.textContent = formatStatus(status);
         control.appendChild(option);
       }
       control.value = current;
@@ -221,7 +222,7 @@ function buildStatusControl(current) {
       for (const status of lifecycle.statuses) {
         const option = document.createElement('option');
         option.value = status;
-        option.textContent = status;
+        option.textContent = formatStatus(status);
         control.appendChild(option);
       }
     }
@@ -381,7 +382,7 @@ function renderDomainFilters(filters) {
       for (const optionValue of filter.options) {
         const option = document.createElement('option');
         option.value = optionValue;
-        option.textContent = optionValue;
+        option.textContent = filter.key === 'status' ? formatStatus(optionValue) : optionValue;
         control.appendChild(option);
       }
     } else {
@@ -768,14 +769,20 @@ function runSearch() {
     .toLowerCase();
   const entities = loadEntities();
   const documents = loadDocuments();
-  const results = searchEntities(term);
+  const stockFilter = $('search-stock-only');
+  const searchBadge = domainConfig()?.badges?.find((badge) => badge.searchLabel);
+  const stockOnly = stockFilter?.checked && searchBadge;
+  const matchingEntities = query === '' ? entities : searchEntities(term);
+  const results = stockOnly
+    ? matchingEntities.filter((entity) => evaluatePredicate(searchBadge.when, entity))
+    : matchingEntities;
   const labels = resolveFieldLabels(currentConfig);
   const fields = entityCustomFields();
   const badgeKeys = entityBadgeFieldKeys();
   const matchedEntityIds = new Set(results.map((entity) => entity.entity_id));
   const matchedDocuments = [];
 
-  if (query !== '') {
+  if (query !== '' && !stockOnly) {
     for (const record of documents) {
       const entity = entities.find((item) => item.entity_id === record.entity_id) || null;
       if (
@@ -789,7 +796,7 @@ function runSearch() {
 
   list.innerHTML = '';
 
-  if (query === '' || (results.length === 0 && matchedDocuments.length === 0)) {
+  if (results.length === 0 && matchedDocuments.length === 0) {
     empty.hidden = false;
     return;
   }
@@ -846,7 +853,7 @@ function runSearch() {
     for (const documentRecord of documents.filter((document) => document.entity_id === entity.entity_id)) {
       const badge = document.createElement('span');
       badge.className = 'status-badge';
-      badge.textContent = documentRecord.status || '';
+      badge.textContent = documentRecord.status ? formatStatus(documentRecord.status) : '';
       item.appendChild(badge);
     }
 
@@ -871,7 +878,7 @@ function runSearch() {
 
     const status = document.createElement('div');
     status.className = 'entity-custom';
-    status.textContent = `Estado: ${formatValue(record.status)}`;
+    status.textContent = `Estado: ${formatStatus(record.status)}`;
     item.appendChild(status);
 
     const dates = document.createElement('div');
@@ -1131,9 +1138,27 @@ function wireDocumentForm() {
 
 function wireSearch() {
   const input = $('search-input');
-  if (input) {
-    input.addEventListener('input', runSearch);
+  if (!input) {
+    return;
   }
+
+  const stockFilter = $('search-stock-only');
+  const searchBadge = domainConfig()?.badges?.find((badge) => badge.searchLabel);
+  if (searchBadge && stockFilter) {
+    $('search-stock-filter').hidden = false;
+    setText('search-stock-label', searchBadge.searchLabel);
+    stockFilter.addEventListener('change', runSearch);
+  }
+
+  input.addEventListener('input', runSearch);
+  $('search-clear')?.addEventListener('click', () => {
+    input.value = '';
+    if (stockFilter) {
+      stockFilter.checked = false;
+    }
+    runSearch();
+    input.focus();
+  });
 }
 
 export async function initApp(result) {

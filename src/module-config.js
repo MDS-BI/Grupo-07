@@ -330,6 +330,13 @@ export const manufacturingConfig = {
       ],
       filters: [
         { key: 'status', label: 'Estado', op: 'eq', optionsFrom: 'statuses' },
+        { key: 'priority', label: 'Prioridad', op: 'eq', options: ['Baja', 'Media', 'Alta', 'Urgente'] },
+        {
+          key: 'qualityResult',
+          label: 'Resultado de calidad',
+          op: 'eq',
+          options: ['Pendiente', 'Aprobado', 'Corrección', 'Rechazado']
+        },
         {
           label: 'Solo retrasadas',
           toggle: true,
@@ -441,6 +448,7 @@ export const manufacturingConfig = {
           ]
         },
         label: 'Stock bajo el mínimo',
+        searchLabel: 'Solo stock bajo',
         tone: 'warning'
       },
       {

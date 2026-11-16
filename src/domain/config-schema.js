@@ -367,7 +367,11 @@ function normalizeBadges(raw, fields, path, errors) {
       return;
     }
 
-    badges.push({ target: entry.target, when: entry.when, label: entry.label.trim(), tone });
+    const badge = { target: entry.target, when: entry.when, label: entry.label.trim(), tone };
+    if (isNonEmptyString(entry.searchLabel) && entry.target === 'entity') {
+      badge.searchLabel = entry.searchLabel.trim();
+    }
+    badges.push(badge);
   });
 
   return badges;

@@ -167,6 +167,6 @@ describe('User Story 12 - configured document status lifecycle', () => {
     qs('search-input').dispatchEvent(new dom.window.Event('input', { bubbles: true }));
     const badge = qs('search-results-list').querySelector('.status-badge');
     expect(badge).not.toBeNull();
-    expect(badge.textContent).toBe('order');
+    expect(badge.textContent).toBe('Order');
   });
 });

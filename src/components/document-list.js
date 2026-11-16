@@ -1,5 +1,5 @@
 import { evaluatePredicate } from '../domain/rules.js';
-import { formatValue, resolveFieldValue } from '../domain/views.js';
+import { formatStatus, formatValue, resolveFieldValue } from '../domain/views.js';
 
 const TONE_CLASS = {
   info: 'badge-info',
@@ -104,7 +104,8 @@ export function renderDocumentList(container, options = {}) {
 
     for (const column of columns) {
       const cell = document.createElement('td');
-      cell.textContent = formatValue(resolveFieldValue(record, column.key, { entity }), { fallback: 'sin dato' });
+      const fieldValue = resolveFieldValue(record, column.key, { entity });
+      cell.textContent = column.key === 'status' ? formatStatus(fieldValue) : formatValue(fieldValue);
       row.appendChild(cell);
     }
 
@@ -189,9 +190,10 @@ export function renderDocumentDetail(container, options = {}) {
       const term = document.createElement('dt');
       term.textContent = field.label;
       const value = document.createElement('dd');
-      value.textContent = formatValue(resolveFieldValue(documentRecord, field.key, { entity }), {
-        fallback: 'sin dato'
-      });
+      const fieldValue = resolveFieldValue(documentRecord, field.key, { entity });
+      value.textContent = field.key === 'status' || field.key === 'statusLabel'
+        ? formatStatus(fieldValue)
+        : formatValue(fieldValue);
       list.appendChild(term);
       list.appendChild(value);
     }

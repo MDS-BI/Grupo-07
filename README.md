@@ -174,3 +174,27 @@ If the configuration is invalid (unknown types, bad keys, transitions referencin
 - Data is persisted to `localStorage` under the keys `erp_base_module:entities` and `erp_base_module:documents`.
 - Deleting an entity also deletes its documents (cascade).
 - This project intentionally uses vanilla HTML, CSS, and JavaScript for simplicity.
+
+## Datos ficticios para probar los filtros
+
+Desde esta carpeta, ejecuta `npm run dev -- --port 5175 --strictPort` y abre
+[la demo local](http://localhost:5175/?demo=1). Los ejemplos se guardan en el
+navegador al cargar esa dirección. Volver a abrirla conserva tus cambios y
+evita duplicar los ejemplos.
+
+En **Órdenes de Producción**, usa los filtros y compara los folios de la serie DEMO.
+
+| Filtros activos | Folios esperados |
+| --- | --- |
+| Prioridad = Urgente | 9001, 9002 |
+| Resultado de calidad = Corrección | 9002, 9003 |
+| Urgente + Corrección + en control de calidad | 9002 |
+| Solo retrasadas | 9001 |
+| Sin filtros | 9001 a 9006 |
+
+En **Buscar**, el estante industrial muestra stock bajo (5 de 12). El carro
+de traslado tiene stock actual, pero carece de mínimo.
+
+En **Buscar**, marca **Solo stock bajo** para combinar el filtro con el texto.
+**Limpiar búsqueda** quita ambos filtros, muestra todos los productos y devuelve
+el foco al campo.
