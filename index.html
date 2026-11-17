@@ -318,6 +318,75 @@
             </header>
 
             <div id="documents-domain" class="domain-section">
+              <div id="document-tabs" class="document-tabs" role="tablist" aria-label="Secciones de órdenes de producción">
+                <button
+                  id="document-tab-orders"
+                  class="document-tab"
+                  type="button"
+                  role="tab"
+                  data-document-tab="orders"
+                  aria-controls="document-tabpanel-orders"
+                  aria-selected="true"
+                >
+                  <span id="document-tab-orders-label">Órdenes de Producción</span>
+                </button>
+                <button
+                  id="document-tab-indicators"
+                  class="document-tab"
+                  type="button"
+                  role="tab"
+                  data-document-tab="indicators"
+                  aria-controls="document-tabpanel-indicators"
+                  aria-selected="false"
+                  tabindex="-1"
+                >
+                  <span id="document-tab-indicators-label">Indicadores</span>
+                </button>
+                <button
+                  id="document-tab-execution"
+                  class="document-tab"
+                  type="button"
+                  role="tab"
+                  data-document-tab="execution"
+                  aria-controls="document-tabpanel-execution"
+                  aria-selected="false"
+                  tabindex="-1"
+                >
+                  <span id="document-tab-execution-label">Ejecución en planta</span>
+                </button>
+                <button
+                  id="document-tab-quality"
+                  class="document-tab"
+                  type="button"
+                  role="tab"
+                  data-document-tab="quality"
+                  aria-controls="document-tabpanel-quality"
+                  aria-selected="false"
+                  tabindex="-1"
+                >
+                  <span id="document-tab-quality-label">Control de calidad</span>
+                </button>
+                <button
+                  id="document-tab-form"
+                  class="document-tab"
+                  type="button"
+                  role="tab"
+                  data-document-tab="form"
+                  aria-controls="document-tabpanel-form"
+                  aria-selected="false"
+                  tabindex="-1"
+                >
+                  <span id="document-tab-form-label">Agregar / Editar Orden de Producción</span>
+                </button>
+              </div>
+
+              <div
+                id="document-tabpanel-orders"
+                class="document-tabpanel"
+                role="tabpanel"
+                aria-labelledby="document-tab-orders"
+                tabindex="0"
+              >
               <div class="panel">
                 <div class="panel-header">
                   <div class="panel-title-group">
@@ -332,9 +401,17 @@
                   <label for="document-action-note">Nota de la acción (opcional)</label>
                   <input id="document-action-note" name="document-action-note" type="text" autocomplete="off" />
                 </div>
-                <div id="domain-feedback" class="error" role="alert"></div>
+              </div>
               </div>
 
+              <div
+                id="document-tabpanel-indicators"
+                class="document-tabpanel"
+                role="tabpanel"
+                aria-labelledby="document-tab-indicators"
+                tabindex="0"
+                hidden
+              >
               <div class="panel">
                 <div class="panel-title-group">
                   <h2 id="document-indicators-heading">Indicadores</h2>
@@ -343,7 +420,16 @@
                 <div id="document-indicators" class="indicator-grid"></div>
                 <div id="document-costs" class="cost-summary"></div>
               </div>
+              </div>
 
+              <div
+                id="document-tabpanel-execution"
+                class="document-tabpanel"
+                role="tabpanel"
+                aria-labelledby="document-tab-execution"
+                tabindex="0"
+                hidden
+              >
               <div class="panel" id="document-execution-panel" hidden>
                 <div class="panel-title-group">
                   <h2 id="document-execution-title">Ejecución</h2>
@@ -354,7 +440,19 @@
                   <button id="document-execution-submit" class="primary" type="submit">Guardar ejecución</button>
                 </form>
               </div>
+              <p id="document-execution-empty" class="empty-state" hidden>
+                Seleccione una orden de producción para registrar la ejecución.
+              </p>
+              </div>
 
+              <div
+                id="document-tabpanel-quality"
+                class="document-tabpanel"
+                role="tabpanel"
+                aria-labelledby="document-tab-quality"
+                tabindex="0"
+                hidden
+              >
               <div class="panel" id="document-quality-panel" hidden>
                 <div class="panel-title-group">
                   <h2 id="document-quality-title">Control de calidad</h2>
@@ -365,8 +463,22 @@
                   <button id="document-quality-submit" class="primary" type="submit">Guardar inspección</button>
                 </form>
               </div>
+              <p id="document-quality-empty" class="empty-state" hidden>
+                Seleccione una orden de producción para registrar la inspección.
+              </p>
+              </div>
+
+              <div id="domain-feedback" class="error" role="alert"></div>
             </div>
 
+            <div
+              id="document-tabpanel-form"
+              class="document-tabpanel document-form-tabpanel"
+              role="tabpanel"
+              aria-labelledby="document-tab-form"
+              tabindex="0"
+              hidden
+            >
             <div class="panel-grid panel-grid-form">
               <div class="panel">
                 <div class="panel-title-group">
@@ -499,6 +611,7 @@
                 </div>
                 <button id="delete-document" class="danger" type="button">Eliminar el documento seleccionado</button>
               </div>
+            </div>
             </div>
           </section>
 

@@ -5,6 +5,16 @@ const VIEWS = {
   search: 'view-search'
 };
 
+const DOCUMENT_TABS = {
+  orders: 'document-tabpanel-orders',
+  indicators: 'document-tabpanel-indicators',
+  execution: 'document-tabpanel-execution',
+  quality: 'document-tabpanel-quality',
+  form: 'document-tabpanel-form'
+};
+
+export const DOCUMENT_TAB_NAMES = Object.keys(DOCUMENT_TABS);
+
 export function monogram(name) {
   const words = String(name ?? '')
     .trim()
@@ -89,6 +99,28 @@ export function showView(name) {
       button.removeAttribute('aria-current');
     }
   });
+}
+
+/** Muestra una subventana del apartado de documentos y sincroniza sus pestañas. */
+export function showDocumentTab(name) {
+  if (!DOCUMENT_TABS[name]) {
+    return;
+  }
+
+  for (const [tabName, panelId] of Object.entries(DOCUMENT_TABS)) {
+    const panel = document.getElementById(panelId);
+    if (panel) {
+      panel.hidden = tabName !== name;
+    }
+
+    const button = document.getElementById(`document-tab-${tabName}`);
+    if (button) {
+      const selected = tabName === name;
+      button.setAttribute('aria-selected', String(selected));
+      button.tabIndex = selected ? 0 : -1;
+      button.classList.toggle('is-active', selected);
+    }
+  }
 }
 
 function setText(id, text) {

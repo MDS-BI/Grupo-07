@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { makeProduct, makeOrder, seedApp, openDocuments } from './fixtures.js';
+import { makeProduct, makeOrder, seedApp, openDocuments, openDocumentTab } from './fixtures.js';
 
 const BULK_PRODUCTS = 500;
 const BULK_ORDERS = 300;
@@ -94,6 +94,7 @@ test('opens a detail view from a large order list without losing data', async ({
   const openMs = Date.now() - openStart;
 
   await expect(page.locator('#document-detail')).toContainText('Producto de catálogo');
+  await openDocumentTab(page, 'indicators');
   await expect(page.locator('#document-indicators')).not.toHaveText('');
   expect(openMs).toBeLessThan(3_000);
 });

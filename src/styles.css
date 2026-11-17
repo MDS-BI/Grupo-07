@@ -483,6 +483,57 @@ svg {
   margin-bottom: 1.25rem;
 }
 
+.document-tabs {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.35rem;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-soft);
+  box-shadow: var(--shadow-xs);
+}
+
+.document-tab {
+  flex: 0 0 auto;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.document-tab:hover:not(.is-active) {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.document-tab.is-active {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: var(--shadow-xs);
+}
+
+.document-tab:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.document-tabpanel:not([hidden]) {
+  animation: view-in 0.2s ease-out;
+}
+
 form {
   display: flex;
   flex-direction: column;
@@ -1299,6 +1350,11 @@ form > button.primary {
   .nav-module {
     flex: 1 1 calc(50% - 0.5rem);
     flex-direction: row;
+  }
+
+  .document-tab {
+    padding: 0.5rem 0.7rem;
+    font-size: 0.82rem;
   }
 
   .quick-actions,

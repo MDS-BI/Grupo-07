@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { makeProduct, makeOrder, seedApp, openDocuments } from './fixtures.js';
+import { makeProduct, makeOrder, seedApp, openDocuments, openDocumentTab } from './fixtures.js';
 
 async function waitForReady(page) {
   await page.waitForSelector('#view-dashboard');
@@ -19,6 +19,7 @@ test('runs the full production and quality workflow and survives a reload', asyn
   await expect(page.locator('#document-detail')).toContainText('Liberada');
 
   await page.locator('#document-detail button[data-transition-to="en producción"]').click();
+  await openDocumentTab(page, 'execution');
   await page.selectOption('#document-execution-processStage', 'Ensamblaje');
   await page.fill('#document-execution-machine', 'CNC-01');
   await page.fill('#document-execution-batchCode', 'LOTE-E2E');
@@ -26,14 +27,17 @@ test('runs the full production and quality workflow and survives a reload', asyn
   await page.fill('#document-execution-scrapQty', '2');
   await page.fill('#document-execution-responsible', 'Ana Torres');
   await page.click('#document-execution-submit');
+  await openDocumentTab(page, 'orders');
   await expect(page.locator('#document-detail')).toContainText('CNC-01');
 
   await page.locator('#document-detail button[data-transition-to="en control de calidad"]').click();
+  await openDocumentTab(page, 'quality');
   await page.fill('#document-quality-producedQty', '8');
   await page.fill('#document-quality-scrapQty', '2');
   await page.selectOption('#document-quality-qualityResult', 'Aprobado');
   await page.fill('#document-quality-notes', 'Lote conforme');
   await page.click('#document-quality-submit');
+  await openDocumentTab(page, 'orders');
 
   await page.locator('#document-detail button[data-transition-to="terminada"]').click();
   await expect(page.locator('#document-detail')).toContainText('Terminada');
@@ -83,7 +87,9 @@ test('blocks finishing an order until quality is approved', async ({ page }) => 
   const approve = page.locator('#document-detail button[data-transition-to="terminada"]');
   await expect(approve).toBeDisabled();
 
+  await openDocumentTab(page, 'quality');
   await page.selectOption('#document-quality-qualityResult', 'Aprobado');
   await page.click('#document-quality-submit');
+  await openDocumentTab(page, 'orders');
   await expect(approve).toBeEnabled();
 });

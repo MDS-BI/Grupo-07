@@ -98,6 +98,11 @@ export async function openDocuments(page) {
   await page.waitForSelector('#documents-domain:not([hidden])');
 }
 
+export async function openDocumentTab(page, name) {
+  await page.locator(`[data-document-tab="${name}"]`).click();
+  await page.waitForSelector(`#document-tabpanel-${name}:not([hidden])`);
+}
+
 export function todayWithOffset(offsetDays) {
   return today(offsetDays);
 }

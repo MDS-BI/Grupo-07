@@ -12,7 +12,15 @@ import {
   deleteDocument,
   validateDocument
 } from './storage.js';
-import { applyShell, showView, articleFor, lowerLabel, selectedSuffix } from './components/shell.js';
+import {
+  applyShell,
+  showView,
+  showDocumentTab,
+  DOCUMENT_TAB_NAMES,
+  articleFor,
+  lowerLabel,
+  selectedSuffix
+} from './components/shell.js';
 import { applyDashboard, refreshStats } from './components/dashboard.js';
 import { renderCustomFields, collectCustomValues, fillCustomValues } from './components/custom-fields.js';
 import {
@@ -65,6 +73,7 @@ const DOCUMENT_INPUTS = [
 
 let currentConfig = null;
 let selectedDocumentId = null;
+let activeDocumentTab = 'orders';
 const domainFilterState = { values: {}, toggles: {} };
 
 function $(id) {
@@ -111,6 +120,8 @@ function applyViewLabels() {
   );
 
   setText('documents-view-heading', labels.documents);
+  setText('document-tab-orders-label', labels.documents);
+  setText('document-tab-form-label', `Agregar / Editar ${labels.document}`);
   setText('document-form-heading', `Agregar / Editar ${labels.document}`);
   setText('edit-document-heading', `Editar o eliminar ${articleFor(labels.document)} ${lowerLabel(labels.document)}`);
   setText(
@@ -248,8 +259,69 @@ function domainConfig() {
   return currentConfig && currentConfig.domain ? currentConfig.domain : null;
 }
 
+function setDocumentTab(name, focusTab = false) {
+  if (!DOCUMENT_TAB_NAMES.includes(name)) {
+    return;
+  }
+  activeDocumentTab = name;
+  showDocumentTab(name);
+  if (focusTab) {
+    document.getElementById(`document-tab-${name}`)?.focus();
+  }
+}
+
+function applyDocumentTabLabels() {
+  for (const name of ['execution', 'quality']) {
+    const formSpec = resolveForm(currentConfig, name);
+    setText(`document-tab-${name}-label`, formSpec ? formSpec.title : name);
+    const tab = $(`document-tab-${name}`);
+    if (tab) {
+      tab.hidden = !formSpec;
+    }
+  }
+}
+
+function wireDocumentTabs() {
+  const tablist = $('document-tabs');
+  if (!tablist) {
+    return;
+  }
+
+  tablist.addEventListener('click', (event) => {
+    const tab = event.target.closest('[data-document-tab]');
+    if (tab) {
+      setDocumentTab(tab.dataset.documentTab, true);
+    }
+  });
+
+  tablist.addEventListener('keydown', (event) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
+      return;
+    }
+    const tabs = [...tablist.querySelectorAll('[data-document-tab]')].filter((tab) => !tab.hidden);
+    const index = tabs.indexOf(document.activeElement);
+    if (index === -1) {
+      return;
+    }
+    event.preventDefault();
+
+    let next;
+    if (event.key === 'ArrowRight') {
+      next = (index + 1) % tabs.length;
+    } else if (event.key === 'ArrowLeft') {
+      next = (index - 1 + tabs.length) % tabs.length;
+    } else if (event.key === 'Home') {
+      next = 0;
+    } else {
+      next = tabs.length - 1;
+    }
+    setDocumentTab(tabs[next].dataset.documentTab, true);
+  });
+}
+
 function resetDomainState() {
   selectedDocumentId = null;
+  activeDocumentTab = 'orders';
   domainFilterState.values = {};
   domainFilterState.toggles = {};
 }
@@ -422,10 +494,15 @@ function documentActionsFor(record) {
 function renderDomainForms(record) {
   for (const name of ['execution', 'quality']) {
     const panel = $(`document-${name}-panel`);
+    const empty = $(`document-${name}-empty`);
     const title = $(`document-${name}-title`);
     const submit = $(`document-${name}-submit`);
     const fields = $(`document-${name}-fields`);
     const formSpec = resolveForm(currentConfig, name);
+
+    if (empty) {
+      empty.hidden = !formSpec || Boolean(record);
+    }
 
     if (!formSpec || !record) {
       if (panel) {
@@ -464,6 +541,7 @@ function renderDocumentsDomain() {
     if (section) {
       section.hidden = true;
     }
+    showDocumentTab('form');
     return;
   }
 
@@ -518,6 +596,8 @@ function renderDocumentsDomain() {
     costSummary: domain.costSummary || null,
     records: allDocuments
   });
+
+  showDocumentTab(activeDocumentTab);
 }
 
 function runDocumentAction(action) {
@@ -945,6 +1025,7 @@ function wireQuickActions() {
       renderEntitySelects();
       renderDocumentSelects();
       renderDocumentsDomain();
+      setDocumentTab('form');
       resetDocumentForm();
       if ($('document-entity')) {
         $('document-entity').focus();
@@ -1181,6 +1262,7 @@ export async function initApp(result) {
   applyShell(config);
   applyDashboard(config);
   applyViewLabels();
+  applyDocumentTabLabels();
 
   renderCustomFields($('entity-custom-fields'), entityCustomFields());
   renderCustomFields($('document-custom-fields'), documentCustomFields());
@@ -1188,6 +1270,7 @@ export async function initApp(result) {
   buildStatusControl(null);
 
   wireNavigation();
+  wireDocumentTabs();
   wireQuickActions();
   wireEntityForm();
   wireDocumentForm();

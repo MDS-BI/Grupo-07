@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { makeProduct, resetApp, seedApp, openDocuments } from './fixtures.js';
+import { makeProduct, resetApp, seedApp, openDocuments, openDocumentTab } from './fixtures.js';
 
 test.beforeEach(async ({ page }) => {
   await resetApp(page);
@@ -44,6 +44,7 @@ test('manages an order from the documents module', async ({ page }) => {
   await seedApp(page, { products: [product] });
 
   await openDocuments(page);
+  await openDocumentTab(page, 'form');
   await page.selectOption('#document-entity', product.entity_id);
   await page.fill('#series', 'OP');
   await page.fill('#folio', '5001');
@@ -54,9 +55,11 @@ test('manages an order from the documents module', async ({ page }) => {
   await page.selectOption('#status', 'planificada');
   await page.click('#document-submit-button');
 
+  await openDocumentTab(page, 'orders');
   await expect(page.locator('#document-list tbody .document-row')).toHaveCount(1);
   await expect(page.locator('#document-list')).toContainText('Silla E2E');
 
+  await openDocumentTab(page, 'form');
   const documentValue = await page.locator('#edit-document option').nth(1).getAttribute('value');
   await page.selectOption('#edit-document', documentValue);
   await page.fill('#quantity', '9');
@@ -66,6 +69,7 @@ test('manages an order from the documents module', async ({ page }) => {
   page.once('dialog', (dialog) => dialog.accept());
   await page.selectOption('#edit-document', documentValue);
   await page.click('#delete-document');
+  await openDocumentTab(page, 'orders');
   await expect(page.locator('#document-list-empty')).toBeVisible();
 });
 

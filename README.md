@@ -120,6 +120,7 @@ The shipped `userConfig` is `manufacturingConfig`, so the app runs the manufactu
 
 - **Products (Entidades)** — item type, unit of measure, current/minimum stock, storage location, supplier and replenishment lead time. Low stock is flagged only when both stock values exist and `currentStock < minStock`; otherwise the UI shows "sin dato" without a badge.
 - **Production orders (Documentos)** — the order list, filters, detail, indicators and cost summary live inside the Documentos module; the sidebar keeps exactly four modules.
+- **Order sub-windows** — the Documentos module is split into five tabs: Órdenes de Producción, Indicadores, Ejecución de planta, Control de calidad and Agregar / Editar Orden de Producción.
 - **Order workflow** — confirm/reject with optional notes; the configured lifecycle drives which transitions are offered and reject unreachable ones.
 - **Execution** — released orders record stage, machine, batch, produced quantity, scrap, responsible and notes, then move to `en producción` and `en control de calidad`.
 - **Quality** — the inspection uses the labels "Cantidad QA", "Merma QA" and "Calidad QA" over the `producedQty`, `scrapQty` and `qualityResult` keys; approval closes the order, correction returns it to production and rejection cancels it.
