@@ -1,5 +1,54 @@
 export const ENTITIES_KEY = 'erp_base_module:entities';
 export const DOCUMENTS_KEY = 'erp_base_module:documents';
+export const SESSION_KEY = 'erp_base_module:session';
+
+export const ROLE_IDS = {
+  manager: 'plantManager',
+  warehouse: 'warehouseLead',
+  supervisor: 'productionSupervisor',
+  quality: 'qualityInspector'
+};
+
+export const ROLE_SECRETS = {
+  [ROLE_IDS.manager]: 'PLANT-2026',
+  [ROLE_IDS.warehouse]: 'WH-2026',
+  [ROLE_IDS.supervisor]: 'PROD-2026',
+  [ROLE_IDS.quality]: 'QA-2026'
+};
+
+async function waitForLogin(page) {
+  await page.waitForSelector('#view-login:not([hidden])');
+  await page.waitForFunction(() => document.querySelector('#login-role')?.options.length > 1);
+}
+
+/** Abre la aplicación sin sesión, con datos opcionales sembrados en localStorage. */
+export async function openLogin(page, { products = [], orders = [] } = {}) {
+  await page.goto('/?demo=0');
+  await page.evaluate(
+    ({ entitiesKey, documentsKey, sessionKey, productList, orderList }) => {
+      window.localStorage.clear();
+      window.localStorage.setItem(entitiesKey, JSON.stringify(productList));
+      window.localStorage.setItem(documentsKey, JSON.stringify(orderList));
+      window.localStorage.removeItem(sessionKey);
+    },
+    {
+      entitiesKey: ENTITIES_KEY,
+      documentsKey: DOCUMENTS_KEY,
+      sessionKey: SESSION_KEY,
+      productList: products,
+      orderList: orders
+    }
+  );
+  await page.reload();
+  await waitForLogin(page);
+}
+
+export async function loginAs(page, roleId, secret) {
+  await page.selectOption('#login-role', roleId);
+  await page.fill('#login-secret', secret);
+  await page.click('#login-submit');
+  await page.waitForSelector('#view-dashboard:not([hidden])');
+}
 
 let sequence = 0;
 
@@ -57,22 +106,30 @@ export function makeOrder(product, overrides = {}) {
   };
 }
 
+export async function ensureWorkspace(page) {
+  await page.waitForFunction(
+    () =>
+      document.querySelector('#brand-name')?.textContent !== 'Módulo Base ERP' &&
+      (!document.querySelector('#view-login')?.hidden || !document.querySelector('#view-dashboard')?.hidden)
+  );
+  const loginVisible = await page.locator('#view-login').isVisible();
+  if (loginVisible) {
+    await loginAs(page, ROLE_IDS.manager, ROLE_SECRETS[ROLE_IDS.manager]);
+  }
+  await page.waitForSelector('#view-dashboard:not([hidden])');
+}
+
+/** Espera a que la app termine de arrancar y garantiza una sesión de jefe de planta. */
 export async function waitForApp(page) {
   await page.goto('/?demo=0');
-  await page.waitForSelector('#view-dashboard');
-  await page.waitForFunction(() => document.querySelector('#brand-name')?.textContent !== 'Módulo Base ERP');
+  await ensureWorkspace(page);
 }
 
 export async function resetApp(page) {
   await waitForApp(page);
   await page.evaluate(() => window.localStorage.clear());
   await page.reload();
-  await waitForReady(page);
-}
-
-async function waitForReady(page) {
-  await page.waitForSelector('#view-dashboard');
-  await page.waitForFunction(() => document.querySelector('#brand-name')?.textContent !== 'Módulo Base ERP');
+  await ensureWorkspace(page);
 }
 
 export async function seedApp(page, { products = [], orders = [] } = {}) {
@@ -90,7 +147,7 @@ export async function seedApp(page, { products = [], orders = [] } = {}) {
     }
   );
   await page.reload();
-  await waitForReady(page);
+  await ensureWorkspace(page);
 }
 
 export async function openDocuments(page) {

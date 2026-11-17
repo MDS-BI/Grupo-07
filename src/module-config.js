@@ -338,6 +338,7 @@ export const manufacturingConfig = {
           options: ['Pendiente', 'Aprobado', 'Corrección', 'Rechazado']
         },
         {
+          key: 'overdue',
           label: 'Solo retrasadas',
           toggle: true,
           predicate: {
@@ -351,6 +352,7 @@ export const manufacturingConfig = {
       ],
       detailSections: [
         {
+          id: 'order',
           title: 'Pedido',
           fields: [
             'series',
@@ -367,6 +369,7 @@ export const manufacturingConfig = {
           ]
         },
         {
+          id: 'product',
           title: 'Producto',
           fields: [
             { key: 'entityCode', label: 'Código de producto' },
@@ -380,10 +383,12 @@ export const manufacturingConfig = {
           ]
         },
         {
+          id: 'execution',
           title: 'Ejecución',
           fields: ['processStage', 'machine', 'batchCode', 'producedQty', 'scrapQty', 'responsible', 'notes']
         },
         {
+          id: 'quality',
           title: 'Calidad',
           fields: [
             { key: 'producedQty', label: 'Cantidad QA' },
@@ -531,7 +536,182 @@ export const manufacturingConfig = {
         require: { field: 'qualityResult', op: 'eq', value: 'Rechazado' },
         message: 'Solo se puede rechazar una orden con resultado Rechazado.'
       }
-    ]
+    ],
+    access: {
+      enabled: true,
+      sessionKey: 'erp_base_module:session',
+      labels: {
+        loginTitle: 'Acceso por cargo',
+        role: 'Cargo',
+        secret: 'Clave de verificación',
+        activeRole: 'Rol activo:',
+        logout: 'Cerrar sesión',
+        chooseRole: 'Seleccione un cargo',
+        loginAction: 'Ingresar',
+        missingRole: 'Seleccione un cargo para continuar.',
+        emptySecret: 'Introduzca la clave de verificación.',
+        invalidSecret: 'La clave no corresponde al cargo seleccionado.',
+        denied: 'Su rol actual no tiene permisos para realizar esta acción.'
+      },
+      roles: [
+        {
+          id: 'plantManager',
+          label: 'Jefe de planta / Gerente de operaciones',
+          secret: 'PLANT-2026',
+          grants: {
+            views: ['dashboard', 'entities', 'documents', 'search'],
+            actions: [
+              'entity.create',
+              'entity.update',
+              'entity.delete',
+              'document.create',
+              'document.update',
+              'document.delete'
+            ],
+            sections: ['order', 'product', 'execution', 'quality'],
+            fields: {
+              entity: [
+                'name',
+                'code',
+                'taxId',
+                'email',
+                'phone',
+                'address',
+                'category',
+                'description',
+                'targetDate',
+                'creditLimit',
+                'paymentTerms',
+                'itemType',
+                'unitOfMeasure',
+                'currentStock',
+                'minStock',
+                'leadTimeDays',
+                'supplier'
+              ],
+              document: [
+                'series',
+                'folio',
+                'startDate',
+                'endDate',
+                'quantity',
+                'subtotal',
+                'discount',
+                'taxAmount',
+                'totalAmount',
+                'currency',
+                'notes',
+                'paymentTerms',
+                'status',
+                'processStage',
+                'machine',
+                'batchCode',
+                'priority',
+                'producedQty',
+                'scrapQty',
+                'qualityResult',
+                'responsible'
+              ]
+            },
+            filters: ['status', 'priority', 'qualityResult', 'overdue'],
+            transitions: [
+              { from: 'planificada', to: 'liberada' },
+              { from: 'planificada', to: 'cancelada' },
+              { from: 'liberada', to: 'en producción' },
+              { from: 'liberada', to: 'cancelada' },
+              { from: 'en producción', to: 'en control de calidad' },
+              { from: 'en producción', to: 'cancelada' },
+              { from: 'en control de calidad', to: 'terminada' },
+              { from: 'en control de calidad', to: 'en producción' },
+              { from: 'en control de calidad', to: 'cancelada' }
+            ]
+          }
+        },
+        {
+          id: 'warehouseLead',
+          label: 'Encargado de bodega y logística',
+          secret: 'WH-2026',
+          grants: {
+            views: ['dashboard', 'entities', 'documents', 'search'],
+            actions: ['entity.create', 'entity.update', 'entity.delete'],
+            sections: ['order', 'product'],
+            fields: {
+              entity: [
+                'name',
+                'code',
+                'address',
+                'description',
+                'itemType',
+                'unitOfMeasure',
+                'currentStock',
+                'minStock',
+                'leadTimeDays',
+                'supplier'
+              ],
+              document: []
+            },
+            filters: ['status', 'overdue'],
+            transitions: []
+          }
+        },
+        {
+          id: 'productionSupervisor',
+          label: 'Supervisor de producción / Jefe de turno',
+          secret: 'PROD-2026',
+          grants: {
+            views: ['dashboard', 'documents', 'search'],
+            actions: ['document.create', 'document.update'],
+            sections: ['order', 'execution'],
+            fields: {
+              entity: [],
+              document: [
+                'series',
+                'folio',
+                'startDate',
+                'endDate',
+                'quantity',
+                'currency',
+                'notes',
+                'paymentTerms',
+                'status',
+                'processStage',
+                'machine',
+                'batchCode',
+                'priority',
+                'responsible'
+              ]
+            },
+            filters: ['status', 'priority', 'overdue'],
+            transitions: [
+              { from: 'liberada', to: 'en producción' },
+              { from: 'liberada', to: 'cancelada' },
+              { from: 'en producción', to: 'en control de calidad' },
+              { from: 'en producción', to: 'cancelada' }
+            ]
+          }
+        },
+        {
+          id: 'qualityInspector',
+          label: 'Inspector de calidad (QA)',
+          secret: 'QA-2026',
+          grants: {
+            views: ['dashboard', 'documents', 'search'],
+            actions: ['document.update'],
+            sections: ['order', 'quality'],
+            fields: {
+              entity: [],
+              document: ['producedQty', 'scrapQty', 'qualityResult', 'notes', 'status']
+            },
+            filters: ['status', 'qualityResult'],
+            transitions: [
+              { from: 'en control de calidad', to: 'terminada' },
+              { from: 'en control de calidad', to: 'en producción' },
+              { from: 'en control de calidad', to: 'cancelada' }
+            ]
+          }
+        }
+      ]
+    }
   }
 };
 

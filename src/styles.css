@@ -1404,3 +1404,80 @@ form > button.primary {
 [hidden] {
   display: none !important;
 }
+
+.session-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.session-indicator strong {
+  color: var(--text);
+}
+
+.logout-button {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.logout-button:hover {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
+.login-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background:
+    radial-gradient(circle at 20% 15%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 32rem),
+    var(--bg);
+}
+
+.login-card {
+  width: min(100%, 28rem);
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.login-card h1 {
+  margin: 0.2rem 0 0.35rem;
+  font-size: 1.5rem;
+}
+
+.login-form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.login-form .primary {
+  width: 100%;
+}
+
+.login-error {
+  margin: 0;
+  min-height: 1.25rem;
+  color: var(--danger);
+  font-size: 0.85rem;
+  font-weight: 600;
+}

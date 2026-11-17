@@ -93,6 +93,7 @@ export function resolveDetailSections(config) {
   }
 
   return list.detailSections.map((section) => ({
+    id: section.id,
     title: section.title,
     fields: Array.isArray(section.fields) ? section.fields.map((field) => ({ key: field.key, label: field.label })) : []
   }));

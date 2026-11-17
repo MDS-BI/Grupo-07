@@ -1,4 +1,4 @@
-# Tareas: Módulo ERP de Manufactura y Operaciones
+# Tareas: Módulo ERP de Manufactura y Operaciones (incluye US16)
 
 **Entrada**: Documentos de diseño desde `/specs/001-erp-base-module/`
 **Prerrequisitos**: [plan.md](plan.md) (obligatorio), [spec.md](spec.md) (obligatorio para las historias de usuario), [research.md](research.md), [data-model.md](data-model.md), [contracts/](contracts/), [quickstart.md](quickstart.md)
@@ -7,14 +7,14 @@
 
 **Organización**: Las tareas se agrupan por historia de usuario para permitir implementación y validación independientes.
 
-**Estado actual**: 86 de 86 tareas completadas. Las pruebas de integración **T072** (filtro por prioridad, HU14) y **T075** (filtro por resultado de calidad, HU15) existen y pasan, y la puerta final **T086** está cerrada. Puertas en verde: `npm test` 37 archivos / 271 pruebas, `npm run test:e2e` 11/11, `npm run lint`, `npm run format:check` y `npm run build`. El hallazgo C1 queda resuelto con cobertura automatizada real.
+**Estado actual**: 101 de 101 tareas completadas (Fases 1-19; puertas T086 y T101 cerradas). Puertas finales en verde verificadas el 2026-11-17: `npm test` 40 archivos / 294 pruebas, `npm run test:e2e` 14/14, `npm run lint`, `npm run format:check` y `npm run build`. El hallazgo C1 quedó resuelto con cobertura automatizada real. La Fase 19 (US16, acceso por cargo y permisos) se implementó como incremento aislado sobre la línea base verde de US1-US15, sin regresiones.
 
 **Trazabilidad C1 (numeración anterior)**: antigua T081 → T071, antigua T082 → T072, antigua T083 → T073, antigua T084 → T074, antigua T085 → T075, antigua T086 → T076. Los IDs se renumberan de forma consecutiva para eliminar el salto T079/T080.
 
 ## Formato: `[ID] [P?] [Historia] Descripción`
 
 - **[P]**: puede ejecutarse en paralelo (archivos distintos, sin dependencia de tareas incompletas).
-- **[Historia]**: `[US1]`…`[US15]` para tareas de historia; sin etiqueta en configuración, fundacional y pulido.
+- **[Historia]**: `[US1]`…`[US16]` para tareas de historia; sin etiqueta en configuración, fundacional y pulido.
 - Todas las tareas incluyen la ruta de archivo exacta.
 
 ## Convenciones de rutas
@@ -307,6 +307,39 @@
 
 ---
 
+## Fase 19: Historia de Usuario 16 - Iniciar sesión por cargo con clave de verificación y controlar los permisos por rol (Prioridad: P1)
+
+**Objetivo**: exigir cargo y clave ficticia antes del Panel, mostrar el rol activo, restringir vistas, acciones, campos, secciones, filtros y transiciones según el cargo, y permitir cerrar o cambiar de sesión sin pérdida de datos.
+
+**Prueba independiente**: abrir la aplicación sin sesión y comprobar que aparece la pantalla de acceso; seleccionar «Inspector de calidad (QA)», introducir su clave y entrar; verificar que puede editar `CantidadQA`, `MermaQA`, `CalidadQA`, notas y el filtro de calidad y mover órdenes en control de calidad, mientras los controles de otros cargos están deshabilitados o rechazan la acción; cerrar sesión, entrar como otro cargo y comprobar que los productos y órdenes siguen intactos.
+
+**Dependencia**: usa el marco y la configuración existentes (Fase 2) y las secciones de calidad y el filtro de US5/US15; no requiere rehacer US1-US15. Ejecutar después de la línea base verde de T086.
+
+### Pruebas para la Historia de Usuario 16
+
+- [X] T087 [P] [US16] Añadir pruebas unitarias de validación de `domain.access` (roles vacíos, identificadores duplicados, clave en blanco, capacidad desconocida, transición inexistente) en `tests/unit/domain/access.test.js`; ejecutar `npm test` y verificar que fallan antes de T091
+- [X] T088 [P] [US16] Añadir pruebas unitarias de `authenticate`, `can`, `isFieldEditable`, `isSectionVisible`, `isFilterAllowed` e `isTransitionAllowed`, incluidos cargo ausente y clave incorrecta, en `tests/unit/access.test.js`
+- [X] T089 [P] [US16] Añadir pruebas de integración del recorrido completo de acceso (pantalla previa al Panel, errores de validación, permisos QA frente a otros cargos, acción forzada rechazada y cierre de sesión sin pérdida de datos) en `tests/integration/role-access.test.js`
+- [X] T090 [P] [US16] Añadir el recorrido E2E de inicio de sesión por cargo, rol activo, restricciones y cierre/cambio de sesión con datos persistentes en `tests/e2e/access.spec.js`
+
+### Implementación para la Historia de Usuario 16
+
+- [X] T091 [US16] Extender `src/domain/config-schema.js` como **única fuente de validación** de `domain.access` (roles no vacíos, identificadores únicos, claves no vacías, lista blanca de capacidades `views`/`actions`/`sections`/`fields`/`filters`/`transitions` y transiciones existentes en el ciclo de vida), exponiendo un validador reutilizable y devolviendo `null` con error cuando la declaración sea inválida (FR-025)
+- [X] T092 [US16] Crear `src/domain/access.js` **sin revalidar la forma**: `normalizeAccess` delega en el validador de T091 y solo construye las estructuras de consulta en memoria; implementar además `authenticate`, `can`, `isFieldEditable`, `isSectionVisible`, `isFilterAllowed` e `isTransitionAllowed`, sin identificadores de cargo ni claves de manufactura en el motor (XR-007)
+- [X] T093 [US16] Crear `src/session.js` con `loadSession`, `saveSession`, `clearSession` y acceso al rol activo, usando `sessionKey` de la configuración en `localStorage` y memoria sin borrar entidades ni documentos
+- [X] T094 [P] [US16] Añadir en `index.html` la vista `view-login` con selector de cargo, campo de clave, mensaje de error y botón de ingreso, más el indicador de rol y el botón de cierre de sesión en la barra superior; añadir estilos accesibles en `src/styles.css`
+- [X] T095 [US16] Crear `src/components/login.js` para renderizar el formulario con etiquetas y errores derivados de `access.labels`, escape centralizado de `src/security.js`, foco inicial y envío por formulario accesible
+- [X] T096 [US16] Declarar en `manufacturingConfig.domain.access` de `src/module-config.js` los cuatro cargos de la US16, sus claves ficticias y sus permisos (QA: sección de calidad, campos QA, filtro de calidad y transiciones desde *en control de calidad*; jefe de planta: confirmar/rechazar y liberar; bodega: catálogo y stock; supervisor: ejecución y envío a calidad)
+- [X] T097 [US16] Cablear la puerta de acceso y los permisos en `src/app.js` y `src/components/shell.js`: mostrar la vista de acceso antes del Panel cuando no hay sesión, aplicar `applyPermissions` a vistas, acciones, campos, secciones, filtros y botones de transición, mostrar el rol activo y conectar cierre/cambio de sesión
+- [X] T098 [US16] Rechazar en `src/storage.js` y en el cableado de transiciones de `src/app.js` las escrituras o cambios de estado no permitidos por el rol activo, con mensaje claro aunque el control esté deshabilitado (escenario 7)
+- [X] T099 [P] [US16] Ampliar `tests/unit/domain-boundary.test.js` con los identificadores de cargo y claves de la US16 para verificar que aparecen solo en `src/module-config.js` y no en archivos centrales (XR-007)
+- [X] T100 [P] [US16] Verificar en Documentos la combinación del filtro de calidad con el rol QA y verificar/actualizar en `specs/001-erp-base-module/quickstart.md` el recorrido manual de la US16 ya redactado, ajustando cualquier desviación respecto al comportamiento implementado
+- [X] T101 Ejecutar la puerta completa `npm test`, `npm run test:e2e`, `npm run lint`, `npm run format:check` y `npm run build`; corregir regresiones y dejar constancia del resultado junto a la línea base de T086 (SC-015)
+
+**Punto de control**: con T087-T101 completadas, la US16 es funcional de forma independiente y las 101 tareas quedan cerradas sin regresiones en US1-US15.
+
+---
+
 ## Dependencias y Orden de Ejecución
 
 ### Dependencias por fase
@@ -319,6 +352,7 @@
   - **US4 y US5** dependen de la lista/detalle de la US1.
 - **Fase 18 (Pulido)**: depende de todas las historias deseadas; T086 dependió además de T072 y T075, ya completadas.
 - **US14 y US15** dependen de la lista y los filtros configurables de US1; sus pruebas (T072, T075) deben ejecutarse antes de darlas por terminadas.
+- **Fase 19 (US16)**: depende de la Fase 2 (motor y configuración) y de las secciones de calidad y filtros de US5/US15; se ejecuta sobre la línea base verde de T086 y no rehace US1-US15. T101 depende de T087-T100.
 
 ### Dependencias entre historias
 
@@ -329,6 +363,7 @@
 - **US6, US7, US13 (P1)**: verificaciones de regresión sobre capacidades base ya implementadas; independientes.
 - **US8-US12 (P2)**: verificaciones de regresión sobre capacidades base ya implementadas; independientes.
 - **US14, US15 (P2)**: dependen de US1; independientes entre sí y del resto.
+- **US16 (P1)**: depende del motor y la configuración (Fase 2) y de las secciones de calidad y los filtros de US5/US15; no modifica la lógica de US1-US15 y se implementa como incremento aislado en la Fase 19.
 
 ### Dentro de cada historia
 
@@ -347,6 +382,7 @@
 - **US4 y US5**: pueden avanzar en paralelo una vez que US1 entregue el detalle de documentos, coordinando `src/app.js` y `src/components/document-list.js`.
 - **US14 y US15**: T072 y T075 comparten `tests/integration/document-list.test.js`, por lo que se ejecutan en secuencia; T073 y T076 pueden ejecutarse en paralelo.
 - **Fase 18**: T077-T081 y T083-T084 en paralelo; T082, T085 y T086 al final.
+- **Fase 19**: T087, T088, T089, T090 y T099 en paralelo (archivos de prueba distintos); T091 → T092 → T093 secuenciales (esquema → motor → sesión); T094, T095 y T096 pueden prepararse en paralelo tras T091 (vista, componente y declaración de roles contra el contrato); T097 depende de T093, T094, T095 y T096; T098 depende de T092 y T093; T100 depende de T097, T098 y T090; T101 al final.
 
 ### Ejemplo de paralelización: Historia de Usuario 1
 
@@ -383,7 +419,8 @@ Tarea: "Añadir estilos en src/styles.css"
 5. US5 → validar calidad → demostrar el recorrido completo.
 6. US6-US13 → validar regresiones del núcleo base.
 7. US14 y US15 → T072 y T075 completadas → validar filtros.
-8. Fase 18 → seguridad, E2E, rendimiento, documentación y puerta de calidad T086.
+8. Fase 18 → seguridad, E2E, rendimiento, documentación y puerta de calidad T086 (línea base verde actual).
+9. Fase 19 (US16) → T087-T101 completadas → acceso, permisos y cierre de sesión validados sin regresiones.
 
 ### Estrategia de equipo en paralelo
 
@@ -405,4 +442,7 @@ Tarea: "Añadir estilos en src/styles.css"
 - La barra lateral mantiene cuatro módulos; la lista/detalle de órdenes vive dentro de Documentos.
 - Los valores ausentes nunca se convierten en cero: se muestran como "sin dato" o se omiten según la regla.
 - La documentación y las pruebas se actualizan junto con el comportamiento, conforme a la constitución.
-- US14, US15 y T086 están completadas: T072 y T075 pasan dentro de las 271 pruebas de `npm test`.
+- US14, US15 y T086 están completadas: T072 y T075 pasan dentro de las 294 pruebas de `npm test`.
+- US16 está implementada y verificada: Fase 19 (T087-T101) completada con TDD (rojo confirmado antes de T091), puerta T101 en verde y sin regresiones en US1-US15.
+- La identificación de la US16 es ficticia y se valida en el cliente; los roles, claves y permisos se declaran solo en `src/module-config.js` (XR-007). No añadir roles, claves ni reglas de manufactura a `app.js`, `storage.js`, `shell.js`, `session.js`, `access.js` ni a los componentes.
+- El cierre de sesión descarta solo la sesión: no borrar entidades ni documentos (SC-015).

@@ -43,6 +43,9 @@ import {
   collectDomainForm
 } from './components/document-list.js';
 import { renderIndicators, renderCostSummary } from './components/indicators.js';
+import { normalizeAccess, authenticate, authenticationError, can } from './domain/access.js';
+import { loadSession, saveSession, clearSession } from './session.js';
+import { renderLogin, setLoginError } from './components/login.js';
 
 const ENTITY_INPUTS = [
   'name',
@@ -74,7 +77,36 @@ const DOCUMENT_INPUTS = [
 let currentConfig = null;
 let selectedDocumentId = null;
 let activeDocumentTab = 'orders';
+let activeAccess = null;
+let activeSession = null;
 const domainFilterState = { values: {}, toggles: {} };
+
+const VIEW_ORDER = ['dashboard', 'entities', 'documents', 'search'];
+const ENTITY_ACTION_IDS = ['entity.create', 'entity.update', 'entity.delete'];
+const DOCUMENT_ACTION_IDS = ['document.create', 'document.update', 'document.delete'];
+
+function accessEnabled() {
+  return Boolean(activeAccess && activeAccess.enabled);
+}
+
+/** true cuando no hay control de acceso o el rol activo concede la capacidad. */
+function granted(capability, context) {
+  if (!accessEnabled() || !activeSession) {
+    return true;
+  }
+  return can(activeSession.grants, capability, context);
+}
+
+function grantedAny(capability, contexts) {
+  return contexts.some((context) => granted(capability, context));
+}
+
+function accessMessage() {
+  return (
+    (activeAccess && activeAccess.labels && activeAccess.labels.denied) ||
+    'Su rol actual no tiene permisos para realizar esta acción.'
+  );
+}
 
 function $(id) {
   return document.getElementById(id);
@@ -276,6 +308,7 @@ function applyDocumentTabLabels() {
     setText(`document-tab-${name}-label`, formSpec ? formSpec.title : name);
     const tab = $(`document-tab-${name}`);
     if (tab) {
+      tab.dataset.formMissing = String(!formSpec);
       tab.hidden = !formSpec;
     }
   }
@@ -418,6 +451,10 @@ function renderDomainFilters(filters) {
   container.hidden = false;
 
   filters.forEach((filter, index) => {
+    if (filter.key && !granted('filters', filter.key)) {
+      return;
+    }
+
     const wrapper = document.createElement('label');
     wrapper.className = 'filter-control';
 
@@ -480,7 +517,7 @@ function documentActionsFor(record) {
   const actions = domain && Array.isArray(domain.transitionActions) ? domain.transitionActions : [];
 
   return actions
-    .filter((action) => action.from === record.status)
+    .filter((action) => action.from === record.status && granted('transitions', { from: action.from, to: action.to }))
     .map((action) => {
       const blocked = action.requires ? !evaluatePredicate(action.requires, record) : false;
       return {
@@ -493,7 +530,19 @@ function documentActionsFor(record) {
 
 function renderDomainForms(record) {
   for (const name of ['execution', 'quality']) {
+    const sectionAllowed = granted('sections', name);
+    const tab = $(`document-tab-${name}`);
+    if (tab) {
+      tab.hidden = !sectionAllowed || tab.dataset.formMissing === 'true';
+    }
+
     const panel = $(`document-${name}-panel`);
+    if (!sectionAllowed) {
+      if (panel) {
+        panel.hidden = true;
+      }
+      continue;
+    }
     const empty = $(`document-${name}-empty`);
     const title = $(`document-${name}-title`);
     const submit = $(`document-${name}-submit`);
@@ -525,6 +574,7 @@ function renderDomainForms(record) {
 
     renderDomainForm(fields, formSpec, documentCustomFields(), { idPrefix: `document-${name}` });
     fillDomainForm(fields, record);
+    renderDomainFormPermissions(name, record);
   }
 }
 
@@ -574,11 +624,14 @@ function renderDocumentsDomain() {
   });
 
   const selected = findDocumentById(selectedDocumentId);
+  const sections = resolveDetailSections(currentConfig).filter((section) =>
+    granted('sections', section.id || String(section.title || '').toLowerCase())
+  );
 
   renderDocumentDetail($('document-detail'), {
     documentRecord: selected,
     entity: findEntityForDocument(selected),
-    sections: resolveDetailSections(currentConfig),
+    sections,
     config: currentConfig,
     actions: selected ? documentActionsFor(selected) : [],
     onAction: runDocumentAction,
@@ -597,6 +650,12 @@ function renderDocumentsDomain() {
     records: allDocuments
   });
 
+  if (!granted('views', 'documents')) {
+    return;
+  }
+  if (['execution', 'quality'].includes(activeDocumentTab) && !granted('sections', activeDocumentTab)) {
+    activeDocumentTab = 'orders';
+  }
   showDocumentTab(activeDocumentTab);
 }
 
@@ -611,6 +670,11 @@ function runDocumentAction(action) {
     showDomainFeedback(
       action.blockedReason || action.message || 'Complete los datos requeridos antes de ejecutar esta acción.'
     );
+    return;
+  }
+
+  if (!granted('transitions', { from: record.status, to: action.to })) {
+    showDomainFeedback(accessMessage());
     return;
   }
 
@@ -651,7 +715,18 @@ function saveDomainForm(name) {
     return;
   }
 
+  if (!granted('sections', name) || !granted('actions', 'document.update')) {
+    showDomainFeedback(accessMessage());
+    return;
+  }
+
   const values = collectDomainForm($(`document-${name}-fields`));
+  const deniedField = Object.keys(values).find((field) => !granted('fields', { target: 'document', field }));
+  if (deniedField) {
+    showDomainFeedback(accessMessage());
+    return;
+  }
+
   const merged = { ...record, ...values };
   const validation = validateDocument(merged);
 
@@ -984,6 +1059,10 @@ function wireNavigation() {
   document.querySelectorAll('.nav-module').forEach((button) => {
     button.addEventListener('click', () => {
       const target = button.dataset.module;
+      if (!granted('views', target)) {
+        showDomainFeedback(accessMessage());
+        return;
+      }
 
       if (target === 'entities') {
         renderEntitySelects();
@@ -1245,6 +1324,210 @@ function wireSearch() {
   });
 }
 
+function renderDomainFormPermissions(name, record) {
+  if (!record) {
+    return;
+  }
+  const formSpec = resolveForm(currentConfig, name);
+  if (!formSpec) {
+    return;
+  }
+  for (const field of formSpec.fields) {
+    const control = $(`document-${name}-${field.key}`);
+    if (control) {
+      control.disabled = !granted('fields', { target: 'document', field: field.key });
+    }
+  }
+}
+
+function updateActiveRole() {
+  const role =
+    activeSession && activeAccess ? activeAccess.roles.find((item) => item.id === activeSession.roleId) : null;
+  setText('active-role', role ? role.label : '');
+  const indicator = $('session-indicator');
+  if (indicator) {
+    indicator.hidden = !role;
+  }
+}
+
+function firstAllowedView() {
+  return VIEW_ORDER.find((view) => granted('views', view)) || 'dashboard';
+}
+
+function applyPermissions() {
+  document.querySelectorAll('.nav-module').forEach((button) => {
+    button.hidden = !granted('views', button.dataset.module);
+  });
+
+  const viewActions = {
+    'action-new-entity': 'entities',
+    'action-open-entities': 'entities',
+    'action-find': 'search'
+  };
+  for (const [id, view] of Object.entries(viewActions)) {
+    const button = $(id);
+    if (button) {
+      button.hidden = !granted('views', view);
+    }
+  }
+
+  const newDocument = $('action-new-document');
+  if (newDocument) {
+    newDocument.hidden = !granted('views', 'documents') || !granted('actions', 'document.create');
+  }
+
+  const buttonGuards = [
+    ['submit-button', grantedAny('actions', ENTITY_ACTION_IDS)],
+    ['delete-entity', granted('actions', 'entity.delete')],
+    ['delete-document', granted('actions', 'document.delete')]
+  ];
+  for (const [id, allowed] of buttonGuards) {
+    const button = $(id);
+    if (button) {
+      button.disabled = !allowed;
+    }
+  }
+
+  for (const formId of ['document-form']) {
+    const form = $(formId);
+    if (form) {
+      form.querySelectorAll('button[type="submit"]').forEach((button) => {
+        button.disabled = !grantedAny('actions', DOCUMENT_ACTION_IDS);
+      });
+    }
+  }
+
+  for (const name of ['execution', 'quality']) {
+    const form = $(`document-${name}-form`);
+    if (form) {
+      form.querySelectorAll('button[type="submit"]').forEach((button) => {
+        button.disabled = !granted('actions', 'document.update') || !granted('sections', name);
+      });
+    }
+    const tab = $(`document-tab-${name}`);
+    if (tab) {
+      tab.hidden = !granted('sections', name) || tab.dataset.formMissing === 'true';
+    }
+  }
+
+  for (const field of entityCustomFields()) {
+    const control = $(`cf-${field.key}`);
+    if (control) {
+      control.disabled = !granted('fields', { target: 'entity', field: field.key });
+    }
+  }
+  for (const field of documentCustomFields()) {
+    const control = $(`cf-${field.key}`);
+    if (control) {
+      control.disabled = !granted('fields', { target: 'document', field: field.key });
+    }
+  }
+  for (const id of ENTITY_INPUTS) {
+    const control = $(id);
+    if (control) {
+      control.disabled = !granted('fields', { target: 'entity', field: id });
+    }
+  }
+  for (const id of DOCUMENT_INPUTS) {
+    const control = $(id);
+    if (control) {
+      control.disabled = !granted('fields', { target: 'document', field: id });
+    }
+  }
+  const status = $('status');
+  if (status) {
+    status.disabled = !granted('fields', { target: 'document', field: 'status' });
+  }
+}
+
+function showWorkspace() {
+  const shell = $('app-shell');
+  const login = $('view-login');
+  if (shell) {
+    shell.hidden = false;
+  }
+  if (login) {
+    login.hidden = true;
+  }
+
+  updateActiveRole();
+  applyPermissions();
+  showView(firstAllowedView());
+  renderEntitySelects();
+  renderDocumentSelects();
+  renderDocumentsDomain();
+  resetEntityForm();
+  resetDocumentForm();
+  refreshStats();
+}
+
+function showLoginScreen(message = '') {
+  const shell = $('app-shell');
+  const login = $('view-login');
+  for (const id of ['view-dashboard', 'view-entities', 'view-documents', 'view-search']) {
+    const view = $(id);
+    if (view) {
+      view.hidden = true;
+    }
+  }
+  if (shell) {
+    shell.hidden = true;
+  }
+  if (login) {
+    login.hidden = false;
+    renderLogin(login, activeAccess, (roleId, secret) => {
+      const result = signIn(roleId, secret);
+      if (!result.ok) {
+        setLoginError(result.message);
+      }
+    });
+  }
+  setLoginError(message);
+}
+
+function enterApp() {
+  if (!accessEnabled()) {
+    activeSession = null;
+    showWorkspace();
+    return;
+  }
+
+  const stored = loadSession(activeAccess.sessionKey);
+  const role = stored ? activeAccess.roles.find((item) => item.id === stored.roleId) : null;
+  if (!role) {
+    if (stored) {
+      clearSession(activeAccess.sessionKey);
+    }
+    activeSession = null;
+    showLoginScreen();
+    return;
+  }
+
+  activeSession = saveSession(activeAccess.sessionKey, { roleId: role.id, grants: role.grants });
+  showWorkspace();
+}
+
+export function signIn(roleId, secret) {
+  if (!accessEnabled()) {
+    return { ok: false, message: 'El acceso por cargo no está disponible.' };
+  }
+  const session = authenticate(activeAccess, roleId, secret);
+  if (!session) {
+    return { ok: false, message: authenticationError(activeAccess, roleId, secret) };
+  }
+  activeSession = saveSession(activeAccess.sessionKey, { roleId: session.roleId, grants: session.grants });
+  showWorkspace();
+  return { ok: true, session: activeSession };
+}
+
+export function signOut() {
+  if (activeAccess) {
+    clearSession(activeAccess.sessionKey);
+  }
+  activeSession = null;
+  showLoginScreen();
+}
+
 export async function initApp(result) {
   let config;
   let errors;
@@ -1261,6 +1544,7 @@ export async function initApp(result) {
   currentConfig = config;
   setActiveConfig(config);
   resetDomainState();
+  activeAccess = normalizeAccess(config.domain && config.domain.access, config.statusLifecycle);
 
   applyShell(config);
   applyDashboard(config);
@@ -1280,13 +1564,18 @@ export async function initApp(result) {
   wireDomainForms();
   wireSearch();
 
+  const logout = $('logout');
+  if (logout) {
+    logout.addEventListener('click', signOut);
+  }
+
   renderEntitySelects();
   renderDocumentSelects();
   renderDocumentsDomain();
   resetEntityForm();
   resetDocumentForm();
   refreshStats();
-  showView('dashboard');
+  enterApp();
   showConfigErrors(errors);
 
   return config;

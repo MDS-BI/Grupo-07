@@ -217,6 +217,59 @@ Las acciones de dominio se declaran como transiciones y guardas:
 - **Devolver a producción**: `en control de calidad → en producción`, requiriendo `qualityResult = Corrección`.
 - **Rechazar lote**: `en control de calidad → cancelada`, requiriendo `qualityResult = Rechazado`.
 
+## Sesión y permisos por cargo (US16)
+
+La identificación es ficticia y demostrativa: valida cargo y clave en el cliente, sin backend (véanse las suposiciones de la especificación). Los cargos, sus claves y sus permisos viven solo en `src/module-config.js`; el motor genérico `src/domain/access.js` los interpreta sin conocer Manufacturing (XR-007).
+
+### Roles declarados
+
+El perfil declara cuatro cargos bajo `domain.access.roles[]`. Los identificadores y la clave de ejemplo son ficticios:
+
+| `id` | `label` | `secret` (ficticia) | Permisos principales |
+|---|---|---|---|
+| `plantManager` | Jefe de planta / Gerente de operaciones | `PLANT-2026` | Confirmar/rechazar pedidos y liberar órdenes; ver el panel y todos los módulos. |
+| `warehouseLead` | Encargado de bodega y logística | `WH-2026` | Catálogo de productos, stock y campos de bodega; sin transiciones de calidad. |
+| `productionSupervisor` | Supervisor de producción / Jefe de turno | `PROD-2026` | Ejecución de órdenes, envío a control de calidad y re-trabajo. |
+| `qualityInspector` | Inspector de calidad (QA) | `QA-2026` | Sección de calidad, campos `producedQty`/`scrapQty`/`qualityResult`/`notes`, filtro de calidad y transiciones desde *en control de calidad*. |
+
+Los nombres anteriores son ejemplos del perfil de manufactura y no aparecen en `app.js`, `storage.js`, `shell.js`, `session.js`, `access.js` ni en los componentes. La guarda de XR-007 (T099) lo verifica.
+
+### Forma de un rol
+
+```js
+{
+  id: 'qualityInspector',
+  label: 'Inspector de calidad (QA)',
+  secret: 'QA-2026',
+  grants: {
+    views: ['dashboard', 'documents', 'search'],
+    actions: ['document.update'],
+    sections: ['quality'],
+    fields: { document: ['producedQty', 'scrapQty', 'qualityResult', 'notes'] },
+    filters: ['status', 'qualityResult'],
+    transitions: [{ from: 'en control de calidad', to: 'terminada' }]
+  }
+}
+```
+
+`grants` usa capacidades genéricas (`views`, `actions`, `sections`, `fields`, `filters`, `transitions`); `fields` se agrupa por destino (`entity`/`document`) y `transitions` por pares `{ from, to }` existentes en el ciclo de vida. Cualquier capacidad desconocida, identificador duplicado o clave vacía invalida `domain.access` y activa el aviso de FR-025. La validación de la forma tiene una única fuente (`src/domain/config-schema.js`); `access.js` la reutiliza y solo prepara las estructuras de consulta.
+
+### Sesión
+
+| Propiedad | Valor |
+|---|---|
+| Clave de almacenamiento | `erp_base_module:session` (`domain.access.sessionKey`) |
+| Contenido | `{ roleId, grants }` de la sesión activa |
+| Ciclo de vida | Se crea al autenticar; persiste en `localStorage` y en memoria; `clearSession()` la descarta al cerrar o cambiar de sesión. |
+| Aislamiento | No modifica `erp_base_module:entities` ni `erp_base_module:documents`; productos y órdenes permanecen intactos (SC-015). |
+| Recarga y enlaces profundos | Con sesión válida se conserva el rol activo; sin sesión se muestra la vista `view-login` antes de cualquier módulo. |
+
+### Aplicación de permisos
+
+- **Preventiva**: la vista de acceso y el marco ocultan o deshabilitan vistas, acciones, secciones, campos, filtros y botones de transición no concedidos.
+- **Correctiva**: `src/storage.js` y el cableado de transiciones en `src/app.js` comprueban la capacidad del rol activo antes de persistir o cambiar estado y rechazan intentos forzados con un mensaje claro (escenario 7).
+- **Estado del diseño**: la sesión y los permisos quedaron implementados en la Fase 19 (T087-T101). `src/domain/config-schema.js` valida la declaración, `src/domain/access.js` decide permisos, `src/session.js` persiste solo el rol activo y `src/components/login.js` presenta el formulario; la verificación está en verde.
+
 ## Vistas y comportamiento de dominio
 
 La lista y el detalle de órdenes viven dentro del **módulo Documentos**. La configuración declara:
@@ -251,6 +304,7 @@ Todo está en `src/module-config.js`. El perfil está **activo**: `userConfig = 
 | `domain.rules` | Guardas de calidad y transiciones |
 | `domain.transitionActions` | Etiquetas de confirmar, rechazar, iniciar, enviar a calidad, aprobar y devolver |
 | `domain.transitionGuards` | Condiciones declarativas por transición |
+| `domain.access` | Cargos, claves ficticias, `sessionKey`, etiquetas y permisos de la US16 (declarados en T096) |
 
 La forma completa y las operaciones permitidas están en [contracts/module-extension.md](contracts/module-extension.md).
 
@@ -265,6 +319,7 @@ Se rechazan además:
 - Indicadores o insignias con tipos desconocidos.
 - Filtros que apunten a estados fuera del ciclo de vida configurado.
 - Vistas sin columnas o con secciones de detalle vacías.
+- `domain.access` con roles vacíos, identificadores duplicados, claves en blanco, capacidades desconocidas o transiciones que no existen en el ciclo de vida (US16).
 
 ## Reglas de validación
 
@@ -335,6 +390,7 @@ Máquina, lote, proveedor y control de calidad quedaron como campos y no como ta
 - [x] Perfil activo sin aviso de configuración inválida
 - [x] Verificación SC-008/XR-006 automatizada en `tests/unit/domain-boundary.test.js`: literales de dominio confinados a `src/module-config.js` y `src/demo-data.js`
 - [x] Puerta de calidad completa (T086, 2026-11-17): 37 archivos / 271 pruebas y 11/11 E2E en verde; `npm run lint`, `npm run format:check` y `npm run build` correctos. Incluye T072 (US14) y T075 (US15)
+- [x] US16 — sesión por cargo, claves ficticias y permisos declarativos: implementada y verificada en la Fase 19 (T087-T101); 40 archivos / 294 pruebas y 14/14 E2E en verde (SC-015, XR-007)
 - [ ] Notificaciones automáticas de stock bajo y de órdenes retrasadas (la identificación en pantalla está cubierta por FR-042/FR-046)
 - [ ] Validar producción + merma frente a la cantidad planificada
 - [ ] Consumo de materia prima por orden

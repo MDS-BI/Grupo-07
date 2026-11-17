@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openDocuments } from './fixtures.js';
+import { openDocuments, ensureWorkspace } from './fixtures.js';
 
 test('keeps the search icon clear of the input and makes demo orders filterable without duplicates', async ({
   page
@@ -8,6 +8,7 @@ test('keeps the search icon clear of the input and makes demo orders filterable 
   page.on('pageerror', (error) => errors.push(error.message));
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
+  await ensureWorkspace(page);
   await expect(page.locator('#brand-name')).toHaveText('Manufactura y Operaciones');
   await page.locator('#nav-search').click();
 
@@ -44,6 +45,7 @@ test('keeps the search icon clear of the input and makes demo orders filterable 
     localStorage.setItem(key, JSON.stringify([...orders, { ...orders[0], id: 'duplicate-demo-order' }]));
   });
   await page.reload();
+  await ensureWorkspace(page);
   await expect(page.locator('#brand-name')).toHaveText('Manufactura y Operaciones');
   await openDocuments(page);
 

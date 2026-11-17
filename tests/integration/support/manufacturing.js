@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
 import { vi } from 'vitest';
 import { normalizeConfig, manufacturingConfig } from '../../../src/module-config.js';
-import { initApp } from '../../../src/app.js';
+import { initApp, signIn } from '../../../src/app.js';
 import * as storage from '../../../src/storage.js';
 
 const html = fs.readFileSync(fileURLToPath(new URL('../../../index.html', import.meta.url)), 'utf8');
@@ -23,9 +23,18 @@ export function setupManufacturingDom() {
   return dom;
 }
 
-export async function bootManufacturing(configOverride = manufacturingConfig) {
+export async function bootManufacturing(configOverride = manufacturingConfig, options = {}) {
   const result = normalizeConfig(configOverride);
   await initApp(result);
+
+  const access = result.config.domain && result.config.domain.access;
+  if (options.signIn !== false && access && access.enabled && access.roles.length > 0) {
+    const role = access.roles[0];
+    const signed = signIn(role.id, role.secret);
+    if (!signed.ok) {
+      throw new Error(signed.message);
+    }
+  }
   return result;
 }
 

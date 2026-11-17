@@ -2,7 +2,7 @@
 
 **Rama de la funcionalidad**: 001-erp-base-module  
 **Creada**: 2026-07-08  
-**Estado**: Núcleo base y perfil de manufactura implementados; 86/86 tareas completadas. Puertas en verde: 37 archivos / 271 pruebas, 11/11 E2E, lint, formato y build.  
+**Estado**: Núcleo base, perfil de manufactura (US1-US15) y acceso por cargo (US16) implementados; 101/101 tareas completadas y puertas en verde (40 archivos / 294 pruebas, 14/14 E2E, lint, formato y build). La US16 se implementó como incremento aislado en la Fase 19 de `tasks.md`, sin regresiones en US1-US15.  
 **Entrada**: Descripción del usuario: "Construir un módulo base de software de planificación de recursos empresariales (ERP) que pueda extenderse en módulos ERP personalizados. Debe proporcionar gestión de datos maestros (entidades) y documentos transaccionales vinculados con capacidades de crear/editar/eliminar/buscar."
 
 ## Propósito
@@ -326,6 +326,27 @@ Como inspector de calidad, quiero filtrar las órdenes por resultado de calidad,
 
 ---
 
+### Historia de Usuario 16 - Iniciar sesión por cargo con clave de verificación y controlar los permisos por rol (Prioridad: P1)
+
+Como usuario de la plataforma (jefe de planta, encargado de bodega y logística, supervisor de producción o inspector de calidad), quiero seleccionar mi cargo e ingresar una clave de verificación ficticia antes de acceder al panel general, para visualizar y modificar únicamente las secciones, campos y estados que corresponden a mi rol dentro de la planta.
+
+**Por qué esta prioridad**: En la operación intervienen distintos responsables sobre el mismo catálogo y las mismas órdenes de producción. Solicitar una identificación previa por rol con clave de acceso evita que un usuario modifique por error etapas o registros ajenos a su función (por ejemplo, que alguien fuera de calidad apruebe un lote o que otro rol altere la liberación de pedidos), garantizando el orden operativo desde el ingreso al sistema.
+
+**Prueba Independiente**: Al abrir la aplicación, se muestra una pantalla de inicio de sesión antes del panel general. El usuario selecciona el cargo «Inspector de calidad (QA)», ingresa la clave de verificación ficticia asignada a ese rol y accede al sistema; comprueba que puede ver y modificar los apartados de control de calidad (`CantidadQA`, `MermaQA`, `CalidadQA` y dictamen de la orden), mientras que las modificaciones exclusivas de otros cargos quedan bloqueadas. Finalmente, cierra sesión y verifica que puede ingresar con otro cargo sin perder los datos guardados.
+
+**Escenarios de Aceptación**:
+
+1. **Dado** que un usuario abre la aplicación sin haber iniciado sesión, **cuando** carga el sistema, **entonces** se muestra una pantalla de inicio de sesión antes de permitir el ingreso a la página general (Panel) y al resto de los módulos.
+2. **Dada** la pantalla de inicio de sesión, **cuando** el usuario consulta las opciones de acceso, **entonces** puede seleccionar su tipo de usuario entre los cargos definidos en la plataforma (`Jefe de planta / Gerente de operaciones`, `Encargado de bodega y logística`, `Supervisor de producción / Jefe de turno` o `Inspector de calidad (QA)`) y dispone de un campo para introducir su clave de verificación.
+3. **Dado** que el usuario selecciona un cargo específico, **cuando** ingresa la clave de verificación ficticia correcta asignada a ese cargo y confirma, **entonces** el sistema le permite el ingreso a la página general y muestra en el espacio de trabajo cuál es el rol activo.
+4. **Dado** que el usuario intenta ingresar sin seleccionar un cargo, dejando la clave en blanco o escribiendo una clave de verificación que no corresponde al cargo elegido, **cuando** intenta acceder, **entonces** el sistema bloquea el ingreso y muestra un mensaje claro explicando el error.
+5. **Dado** que el usuario inició sesión como `Inspector de calidad (QA)`, **cuando** accede a la plataforma, **entonces** puede ver y modificar los apartados propios de control de calidad (registro de `CantidadQA`, `MermaQA`, `CalidadQA`, notas de inspección, filtro por resultado de calidad y paso de órdenes en control de calidad a `terminada`, `en producción` o `cancelada`), pero no puede modificar las secciones reservadas a otros cargos.
+6. **Dado** que el usuario inició sesión como `Jefe de planta`, `Encargado de bodega y logística` o `Supervisor de producción`, **cuando** navega por los módulos de la plataforma, **entonces** el sistema le permite ver y modificar únicamente las funciones, campos y transiciones de estado que corresponden a su cargo.
+7. **Dado** que un usuario con sesión activa intenta realizar una modificación que pertenece a otro cargo, **cuando** visualiza el formulario o intenta ejecutar la acción, **entonces** el sistema mantiene esos controles deshabilitados o rechaza la acción explicando que su rol actual no tiene permisos para modificar ese apartado.
+8. **Dada** una sesión activa en la plataforma, **cuando** el usuario selecciona la opción para cerrar sesión o cambiar de usuario, **entonces** el sistema regresa a la pantalla de inicio de sesión conservando intactos todos los productos y órdenes almacenados.
+
+---
+
 ### Casos Límite
 
 - ¿Qué ocurre cuando un usuario intenta guardar una entidad sin nombre o código obligatorio?
@@ -344,8 +365,11 @@ Como inspector de calidad, quiero filtrar las órdenes por resultado de calidad,
 - ¿Qué ocurre cuando el panel se abre con cero entidades o cero documentos (valores estadísticos)?
 - ¿Qué ocurre cuando el color de acento configurado no es un valor de color válido?
 - ¿Cómo mantiene la barra lateral contraída las etiquetas de módulo accesibles en ventanas gráficas estrechas?
+- ¿Qué ocurre si la configuración de accesos declara dos cargos con el mismo identificador, una clave vacía o una capacidad desconocida (US16)?
+- ¿Qué ocurre si se recarga la página con una sesión activa o se abre un enlace profundo sin sesión (US16)?
+- ¿Qué ocurre si un usuario cambia de cargo sin cerrar sesión o intenta una acción vedada para su rol desde el teclado o una llamada directa (US16)?
 
-> **Alcance de los casos límite**: los casos de campos personalizados que dejan de estar declarados, el botón atrás del navegador y la navegación con cambios sin guardar se tratan como comportamiento heredado del marco base. No tienen una tarea dedicada en `tasks.md`; la decisión queda registrada en [data-model.md](data-model.md).
+> **Alcance de los casos límite**: los casos de campos personalizados que dejan de estar declarados, el botón atrás del navegador y la navegación con cambios sin guarda se tratan como comportamiento heredado del marco base. No tienen una tarea dedicada en `tasks.md`; la decisión queda registrada en [data-model.md](data-model.md). Los casos de sesión, credenciales inválidas y permisos se cubren en la Fase 19 de `tasks.md`.
 
 ## Requisitos *(obligatorio)*
 
@@ -408,6 +432,8 @@ Estos requisitos describen el perfil de manufactura que se construye sobre el m�
 - **FR-049**: El perfil DEBE rechazar valores negativos o no numéricos en cantidades y merma, y transiciones de estado no permitidas, con una explicación clara.
 - **FR-051**: El perfil DEBE permitir filtrar la lista de órdenes por prioridad y combinar este filtro con el filtro de estado y los demás filtros activos; al vaciar el filtro de prioridad DEBE conservarse el resto de filtros.
 - **FR-052**: El perfil DEBE permitir filtrar la lista de órdenes por resultado de calidad y combinar este filtro con el filtro de estado y los demás filtros activos; al vaciar el filtro de resultado de calidad DEBE conservarse el resto de filtros.
+- **FR-054**: El perfil DEBE presentar una pantalla de inicio de sesión previa al panel general que exija seleccionar un cargo operativo e introducir su clave de verificación ficticia correspondiente antes de acceder al espacio de trabajo (US16).
+- **FR-055**: El perfil DEBE restringir las acciones de creación, edición, eliminación y cambio de estado según el cargo con sesión activa, permitiendo a cada rol ver y modificar únicamente los apartados que le competen y ofreciendo una opción para cerrar o cambiar de sesión sin pérdida de datos (US16).
 
 ### Requisitos Funcionales de Seguridad
 
@@ -423,6 +449,7 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **XR-004**: Apoyarse en el módulo base para generación de identidad, marcas de tiempo, integridad referencial entre entidades y documentos, y eliminación en cascada.
 - **XR-005**: Remarcar el espacio de trabajo —nombre del módulo, logotipo derivado y color de acento— únicamente mediante configuración.
 - **XR-006**: Implementar la lógica de dominio de las Historias de Usuario 1-5 (evaluación de pedidos, inventario, ejecución y calidad) mediante configuración y puntos de extensión declarativos, sin modificar archivos fuente centrales.
+- **XR-007**: Declarar los cargos, las claves ficticias y los permisos de la US16 en la configuración del módulo e interpretarlos con un motor genérico, sin codificar roles, claves ni reglas de manufactura en los archivos fuente centrales.
 
 ### Entidades Clave *(incluir si la funcionalidad implica datos)*
 
@@ -448,11 +475,12 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **SC-012**: Los indicadores de órdenes por estado, retrasos, merma y costos coinciden con los datos almacenados.
 - **SC-013**: Un usuario puede localizar y corregir un producto con stock bajo el mínimo en menos de 2 minutos.
 - **SC-014**: Un inspector puede completar la inspección de calidad de una orden en menos de 5 minutos.
+- **SC-015**: Un usuario puede seleccionar su cargo, introducir la clave ficticia y acceder al panel en menos de 10 segundos; las pruebas de la Fase 19 verifican que cada rol ejecuta el 100 % de sus acciones permitidas y que el 100 % de las acciones, campos, secciones y transiciones ajenas a su cargo quedan bloqueados, y que el cierre de sesión conserva íntegros los productos y órdenes.
 
 ## Suposiciones
 
 - El módulo base gestiona datos para un único espacio de trabajo en lugar de una base de datos multiinquilino compartida.
-- La adaptación a un módulo específico se realiza mediante un archivo de configuración del módulo en lugar de editando archivos fuente centrales; esto incluye la lógica de dominio de las Historias de Usuario 1-5 (evaluación, inventario, ejecución y calidad).
+- La adaptación a un módulo específico se realiza mediante un archivo de configuración del módulo en lugar de editando archivos fuente centrales; esto incluye la lógica de dominio de las Historias de Usuario 1-5 (evaluación, inventario, ejecución y calidad) y la identificación por cargo de la US16 (XR-007).
 - Cada entidad incluye información básica suficiente para identificación y seguimiento; los módulos personalizados aportan los campos específicos del dominio.
 - La versión inicial se centra en la gestión central de datos maestros y documentos en lugar de capacidades ERP avanzadas como flujos de aprobación, períodos de contabilización o informes.
 - La búsqueda se realiza sobre los registros de entidad almacenados.
@@ -465,4 +493,6 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - Los datos siguen persistiéndose en el localStorage del navegador y no se ven afectados por la navegación entre pantallas.
 - La pantalla de búsqueda se centra en encontrar y ver entidades; la edición permanece en la pantalla de gestión.
 - El contenido introducido por el usuario (nombres, descripciones, notas de documentos) DEBE sanitizarse antes de renderizarse en el DOM para prevenir ataques de inyección de scripts (XSS), conforme a FR-050. El módulo base DEBE escapar HTML y atributos de eventos al mostrar datos de localStorage.
+- La identificación de la US16 es ficticia y demostrativa: los cargos y sus claves se declaran en `src/module-config.js` y se comprueban en el cliente. No constituye autenticación de producción ni protege contra un usuario con acceso al código o a `localStorage`; las reglas de negocio reales seguirían requiriendo un backend (FR-054, FR-055).
+- La sesión activa y sus permisos se guardan solo en el navegador; al cerrar sesión se descarta la sesión, no los productos ni las órdenes (SC-015).
 

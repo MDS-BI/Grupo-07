@@ -93,6 +93,22 @@ npm run dev
 
 Open http://localhost:5173 (or the URL Vite prints).
 
+### Acceso por cargo | Role-based login
+
+Sin sesión, la aplicación muestra la pantalla **Acceso por cargo** antes del Panel. Selecciona un cargo e introduce su clave ficticia: / Without a session, the app shows the **Acceso por cargo** sign-in screen before the dashboard. Pick a role and enter its fictitious key:
+
+| Cargo / Role | Clave / Key | Acceso principal / Main access |
+|---|---|---|
+| Jefe de planta / Gerente de operaciones (`plantManager`) | `PLANT-2026` | Todos los módulos y transiciones; recorrido completo de US1-US15. / All modules and transitions; full US1-US15 workflow. |
+| Encargado de bodega y logística (`warehouseLead`) | `WH-2026` | Catálogo de productos y stock; sin transiciones de calidad. / Product catalogue and stock; no quality transitions. |
+| Supervisor de producción / Jefe de turno (`productionSupervisor`) | `PROD-2026` | Ejecución, envío a control de calidad y re-trabajo. / Execution, send to quality control and rework. |
+| Inspector de calidad (QA) (`qualityInspector`) | `QA-2026` | Campos y filtro de calidad; aprobar, devolver o rechazar lotes. / Quality fields and filter; approve, return or reject batches. |
+
+- Las claves son **ficticias** y la comprobación ocurre únicamente en el navegador: no hay backend ni credenciales reales. / The keys are **fictitious** and checked entirely in the browser: no backend and no real credentials.
+- Se declaran en `src/module-config.js`, en `manufacturingConfig.domain.access.roles[].secret`, junto a los permisos de cada cargo. / They are declared in `src/module-config.js`, under `manufacturingConfig.domain.access.roles[].secret`, alongside each role's grants.
+- La sesión se guarda en `localStorage` como `erp_base_module:session` y contiene solo el cargo y sus permisos, nunca la clave. Cerrar sesión no borra productos ni órdenes. / The session is stored in `localStorage` as `erp_base_module:session` and holds only the role and its grants, never the key. Signing out does not delete products or orders.
+- Para volver al acceso directo al Panel (comportamiento de US1-US15), elimina `domain.access` de la configuración o usa `userConfig = null`. / To skip sign-in and go straight to the dashboard (US1-US15 behaviour), remove `domain.access` from the config or set `userConfig = null`.
+
 ### Tests
 
 Run the full test suite (unit + integration) with:
@@ -151,6 +167,7 @@ The `domain` section of `src/module-config.js` is a **declarative** contract int
 | `badges` | Conditional labels with `when` predicates and `tone` (`info`, `warning`, `danger`), scoped by `target`. |
 | `rules` | Validation rules enforced by `src/storage.js` before persisting. |
 | `transitionActions` / `transitionGuards` | Labels and guards for lifecycle transitions, including quality-result guards. |
+| `access` | Declarative roles, fictitious keys, labels and grants (`views`, `actions`, `sections`, `fields`, `filters`, `transitions`) enforced by `src/domain/access.js` and `src/session.js`. |
 
 Predicates support `eq`, `neq`, `in`, `notIn`, `lt`, `lte`, `gt`, `gte`, `exists` and `blank`, combined with `all`/`any`/`not`. Unknown operators, fields or lifecycle states fail configuration validation and are reported in the banner.
 

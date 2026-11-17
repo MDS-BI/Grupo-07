@@ -7,13 +7,18 @@
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
-    <div class="app-shell">
+    <div id="app-shell" class="app-shell">
       <header class="topbar">
         <div class="brand">
           <span id="logo-mark" class="logo-mark" aria-hidden="true"></span>
           <span id="brand-name" class="brand-name">Módulo Base ERP</span>
         </div>
         <div id="config-banner" class="config-banner" hidden></div>
+        <div id="session-indicator" class="session-indicator" hidden>
+          <span id="active-role-label">Rol activo:</span>
+          <strong id="active-role"></strong>
+          <button id="logout" class="logout-button" type="button">Cerrar sesión</button>
+        </div>
       </header>
 
       <div class="workspace">
@@ -669,6 +674,26 @@
         </main>
       </div>
     </div>
+
+    <section id="view-login" class="login-screen" aria-labelledby="login-title" hidden>
+      <div class="login-card">
+        <p class="eyebrow">Acceso por cargo</p>
+        <h1 id="login-title">Acceso por cargo</h1>
+        <p id="login-subtitle" class="view-subtitle">Seleccione su cargo e introduzca su clave de verificación.</p>
+        <form id="login-form" class="login-form">
+          <div class="field">
+            <label id="login-role-label" for="login-role">Cargo</label>
+            <select id="login-role" name="role"></select>
+          </div>
+          <div class="field">
+            <label id="login-secret-label" for="login-secret">Clave de verificación</label>
+            <input id="login-secret" name="secret" type="password" autocomplete="current-password" />
+          </div>
+          <p id="login-error" class="login-error" role="alert" aria-live="polite"></p>
+          <button id="login-submit" class="primary" type="submit">Ingresar</button>
+        </form>
+      </div>
+    </section>
 
     <script type="module" src="/src/main.js"></script>
   </body>

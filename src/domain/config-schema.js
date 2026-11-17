@@ -4,6 +4,8 @@ import { VIRTUAL_FIELDS, buildFieldLabels } from './fields.js';
 const INDICATOR_TYPES = ['countByField', 'countWhere', 'ratio'];
 const BADGE_TARGETS = ['entity', 'document'];
 const TONES = ['info', 'warning', 'danger'];
+export const ACCESS_CAPABILITIES = ['views', 'actions', 'sections', 'fields', 'filters', 'transitions'];
+const ACCESS_LABEL_KEYS = ['loginTitle', 'role', 'secret', 'activeRole', 'logout'];
 
 function isObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -170,6 +172,7 @@ function normalizeFilters(raw, fields, lifecycle, labels, path, errors) {
     if (entry.predicate !== undefined) {
       validatePredicate(entry.predicate, fields, `${entryPath}.predicate`, errors);
       filters.push({
+        key: isNonEmptyString(entry.key) ? entry.key.trim() : undefined,
         label: isNonEmptyString(entry.label) ? entry.label.trim() : 'Filtro',
         predicate: entry.predicate,
         toggle: entry.toggle === true
@@ -490,6 +493,192 @@ function normalizeTransitionEntries(raw, statuses, kind, fields, path, errors) {
   return entries;
 }
 
+function normalizeAccessList(raw, path, errors) {
+  if (raw === undefined) {
+    return [];
+  }
+  if (!Array.isArray(raw)) {
+    errors.push(`${path} debe ser una lista.`);
+    return [];
+  }
+
+  const values = [];
+  raw.forEach((entry, index) => {
+    if (!isNonEmptyString(entry)) {
+      errors.push(`${path}[${index}] debe ser una cadena no vacía.`);
+      return;
+    }
+    values.push(entry.trim());
+  });
+  return values;
+}
+
+/**
+ * Fuente única de validación de `domain.access` (US16, FR-025).
+ * Ningún otro módulo debe reproducir estas reglas.
+ *
+ * @param {object} access declaración de acceso por cargo.
+ * @param {object|null} statusLifecycle ciclo de vida usado para validar transiciones.
+ * @returns {{access: object|null, errors: string[]}}
+ */
+export function validateAccessConfig(access, statusLifecycle = null) {
+  const errors = [];
+  const path = 'domain.access';
+
+  if (access === undefined || access === null) {
+    return { access: null, errors };
+  }
+
+  if (!isObject(access)) {
+    errors.push(`${path} debe ser un objeto.`);
+    return { access: null, errors };
+  }
+
+  if (typeof access.enabled !== 'boolean') {
+    errors.push(`${path}.enabled debe ser booleano.`);
+  }
+  if (!isNonEmptyString(access.sessionKey)) {
+    errors.push(`${path}.sessionKey es obligatorio.`);
+  }
+
+  const labels = {};
+  if (!isObject(access.labels)) {
+    errors.push(`${path}.labels debe ser un objeto.`);
+  } else {
+    for (const key of ACCESS_LABEL_KEYS) {
+      if (!isNonEmptyString(access.labels[key])) {
+        errors.push(`${path}.labels.${key} es obligatorio.`);
+      } else {
+        labels[key] = access.labels[key].trim();
+      }
+    }
+    for (const [key, value] of Object.entries(access.labels)) {
+      if (isNonEmptyString(value)) {
+        labels[key] = value.trim();
+      }
+    }
+  }
+
+  if (!Array.isArray(access.roles) || access.roles.length === 0) {
+    errors.push(`${path}.roles debe tener al menos un cargo.`);
+    return { access: null, errors };
+  }
+
+  const seenIds = new Set();
+  const roles = [];
+
+  access.roles.forEach((rawRole, index) => {
+    const rolePath = `${path}.roles[${index}]`;
+    if (!isObject(rawRole)) {
+      errors.push(`${rolePath}: debe ser un objeto.`);
+      return;
+    }
+
+    const id = isNonEmptyString(rawRole.id) ? rawRole.id.trim() : '';
+    if (id === '') {
+      errors.push(`${rolePath}.id es obligatorio.`);
+    } else if (seenIds.has(id)) {
+      errors.push(`${rolePath}.id está duplicado ("${id}").`);
+    } else {
+      seenIds.add(id);
+    }
+
+    if (!isNonEmptyString(rawRole.label)) {
+      errors.push(`${rolePath}.label es obligatorio.`);
+    }
+    if (!isNonEmptyString(rawRole.secret)) {
+      errors.push(`${rolePath}.secret (clave) es obligatorio.`);
+    }
+
+    const rawGrants = rawRole.grants;
+    if (!isObject(rawGrants)) {
+      errors.push(`${rolePath}.grants debe ser un objeto.`);
+      return;
+    }
+
+    for (const key of Object.keys(rawGrants)) {
+      if (!ACCESS_CAPABILITIES.includes(key)) {
+        errors.push(`${rolePath}.grants: capacidad desconocida "${key}".`);
+      }
+    }
+
+    const grants = {
+      views: normalizeAccessList(rawGrants.views, `${rolePath}.grants.views`, errors),
+      actions: normalizeAccessList(rawGrants.actions, `${rolePath}.grants.actions`, errors),
+      sections: normalizeAccessList(rawGrants.sections, `${rolePath}.grants.sections`, errors),
+      fields: { entity: [], document: [] },
+      filters: normalizeAccessList(rawGrants.filters, `${rolePath}.grants.filters`, errors),
+      transitions: []
+    };
+
+    if (rawGrants.fields !== undefined) {
+      if (!isObject(rawGrants.fields)) {
+        errors.push(`${rolePath}.grants.fields debe ser un objeto con entity y document.`);
+      } else {
+        for (const key of Object.keys(rawGrants.fields)) {
+          if (key !== 'entity' && key !== 'document') {
+            errors.push(`${rolePath}.grants.fields: destino desconocido "${key}".`);
+          }
+        }
+        grants.fields.entity = normalizeAccessList(rawGrants.fields.entity, `${rolePath}.grants.fields.entity`, errors);
+        grants.fields.document = normalizeAccessList(
+          rawGrants.fields.document,
+          `${rolePath}.grants.fields.document`,
+          errors
+        );
+      }
+    }
+
+    if (rawGrants.transitions !== undefined) {
+      if (!Array.isArray(rawGrants.transitions)) {
+        errors.push(`${rolePath}.grants.transitions debe ser una lista.`);
+      } else {
+        rawGrants.transitions.forEach((entry, transitionIndex) => {
+          const transitionPath = `${rolePath}.grants.transitions[${transitionIndex}]`;
+          if (!isObject(entry) || !isNonEmptyString(entry.from) || !isNonEmptyString(entry.to)) {
+            errors.push(`${transitionPath}: debe declarar from y to no vacíos.`);
+            return;
+          }
+          const from = entry.from.trim();
+          const to = entry.to.trim();
+          const statuses = statusLifecycle && Array.isArray(statusLifecycle.statuses) ? statusLifecycle.statuses : null;
+          const allowed = statusLifecycle && statusLifecycle.transitions ? statusLifecycle.transitions[from] : null;
+          if (statuses && (!statuses.includes(from) || !statuses.includes(to))) {
+            errors.push(`${transitionPath}: la transición "${from}" → "${to}" no existe en el ciclo de vida.`);
+          } else if (allowed && !allowed.includes(to)) {
+            errors.push(`${transitionPath}: la transición "${from}" → "${to}" no existe en el ciclo de vida.`);
+          } else {
+            grants.transitions.push({ from, to });
+          }
+        });
+      }
+    }
+
+    if (id !== '' && isNonEmptyString(rawRole.label) && isNonEmptyString(rawRole.secret)) {
+      roles.push({
+        id,
+        label: rawRole.label.trim(),
+        secret: rawRole.secret.trim(),
+        grants
+      });
+    }
+  });
+
+  if (errors.length > 0) {
+    return { access: null, errors };
+  }
+
+  return {
+    access: {
+      enabled: access.enabled,
+      sessionKey: access.sessionKey.trim(),
+      labels,
+      roles
+    },
+    errors
+  };
+}
+
 /**
  * Valida y normaliza la sección `domain` de la configuración.
  *
@@ -554,7 +743,11 @@ export function validateDomainConfig(config, baseFields = { entity: [], document
               return;
             }
             const sectionFields = normalizeFields(section.fields, fields, labels, `${sectionPath}.fields`, errors);
-            detailSections.push({ title: section.title.trim(), fields: sectionFields });
+            const normalizedSection = { title: section.title.trim(), fields: sectionFields };
+            if (isNonEmptyString(section.id)) {
+              normalizedSection.id = section.id.trim();
+            }
+            detailSections.push(normalizedSection);
           });
         }
       }
@@ -608,6 +801,12 @@ export function validateDomainConfig(config, baseFields = { entity: [], document
         );
       }
     }
+  }
+
+  if (rawDomain.access !== undefined) {
+    const accessResult = validateAccessConfig(rawDomain.access, lifecycle);
+    errors.push(...accessResult.errors);
+    domain.access = accessResult.access;
   }
 
   return { domain: errors.length === 0 ? domain : null, errors };

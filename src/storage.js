@@ -1,5 +1,7 @@
 import { getConfig } from './module-config.js';
 import { evaluateRules, guardTransition } from './domain/rules.js';
+import { can } from './domain/access.js';
+import { activeGrants } from './session.js';
 
 const ENTITIES_KEY = 'erp_base_module:entities';
 const DOCUMENTS_KEY = 'erp_base_module:documents';
@@ -126,6 +128,46 @@ function validateCustomFields(target, record, errors) {
   }
 }
 
+function accessConfig() {
+  const config = getConfig();
+  return config && config.domain ? config.domain.access : null;
+}
+
+function currentGrants() {
+  const access = accessConfig();
+  return access ? activeGrants(access.sessionKey) : null;
+}
+
+function denyAccess() {
+  const access = accessConfig();
+  const message =
+    (access && access.labels && access.labels.denied) || 'Su rol actual no tiene permisos para realizar esta acción.';
+  const error = new Error(message);
+  error.code = 'ACCESS_DENIED';
+  error.errors = { access: message };
+  throw error;
+}
+
+function assertAction(action) {
+  const grants = currentGrants();
+  if (grants && !can(grants, 'actions', action)) {
+    denyAccess();
+  }
+}
+
+function assertFields(target, values) {
+  const grants = currentGrants();
+  if (!grants) {
+    return;
+  }
+  const ignored = new Set(['id', 'entity_id', 'entityId', 'createdAt', 'updatedAt']);
+  for (const key of Object.keys(values || {})) {
+    if (!ignored.has(key) && !can(grants, 'fields', { target, field: key })) {
+      denyAccess();
+    }
+  }
+}
+
 function domainViolations(target, record) {
   return evaluateRules(target, record, getConfig());
 }
@@ -157,6 +199,9 @@ export function saveEntities(entities) {
 }
 
 export function addEntity(data = {}) {
+  assertAction('entity.create');
+  assertFields('entity', data);
+
   const entity = {
     id: uid('ent'),
     entity_id: uid('eid')
@@ -193,6 +238,9 @@ export function addEntity(data = {}) {
 }
 
 export function updateEntity(id, updates = {}) {
+  assertAction('entity.update');
+  assertFields('entity', updates);
+
   const entities = loadEntities();
   const index = entities.findIndex((item) => item.id === id);
   if (index === -1) {
@@ -233,6 +281,8 @@ export function updateEntity(id, updates = {}) {
 }
 
 export function deleteEntity(id) {
+  assertAction('entity.delete');
+
   const entities = loadEntities();
   const entity = entities.find((item) => item.id === id);
   if (!entity) {
@@ -339,6 +389,9 @@ export function saveDocuments(documents) {
 }
 
 export function addDocument(data = {}) {
+  assertAction('document.create');
+  assertFields('document', data);
+
   const document = normalizeDocument(data);
   assertPersistable('document', document);
   const documents = loadDocuments();
@@ -348,6 +401,9 @@ export function addDocument(data = {}) {
 }
 
 export function updateDocument(id, updates = {}) {
+  assertAction('document.update');
+  assertFields('document', updates);
+
   const documents = loadDocuments();
   const index = documents.findIndex((item) => item.id === id);
   if (index === -1) {
@@ -368,6 +424,11 @@ export function updateDocument(id, updates = {}) {
       const error = new Error(transition.message);
       error.errors = { status: transition.message };
       throw error;
+    }
+
+    const grants = currentGrants();
+    if (grants && !can(grants, 'transitions', { from: document.status, to: String(updates.status) })) {
+      denyAccess();
     }
   }
 
@@ -409,6 +470,8 @@ export function updateDocument(id, updates = {}) {
 }
 
 export function deleteDocument(id) {
+  assertAction('document.delete');
+
   const documents = loadDocuments();
   const next = documents.filter((item) => item.id !== id);
   if (next.length === documents.length) {

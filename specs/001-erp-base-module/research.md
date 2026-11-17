@@ -112,6 +112,26 @@
 - Aceptar el hallazgo CRITICAL tal cual y reescribir archivos centrales: innecesario y habría introducido código de dominio donde debe haber abstracción.
 - No documentar la comprobación: dejaría la documentación desalineada con el código real.
 
+## Decisión: Identificación ficticia por cargo con permisos declarativos (US16)
+
+**Justificación**: La US16 pide una pantalla de acceso con cargo y clave de verificación y permisos por rol. El proyecto no tiene backend y la restricción XR-007 exige que roles, claves y reglas vivan solo en la configuración. La clave es ficticia y demostrativa: sirve para evitar cambios accidentales entre roles, no como seguridad real. Añadir un backend o una librería de autenticación rompería la huella mínima de dependencias y el alcance de espacio único.
+
+**Forma de la decisión**:
+
+- `domain.access` en `src/module-config.js` declara `enabled`, `labels`, `sessionKey` y `roles[]`. Cada rol define `id`, `label`, `secret` y `grants` con capacidades genéricas: `views`, `actions`, `sections`, `fields`, `filters` y `transitions` (pares `{ from, to }`).
+- `src/domain/access.js` **no revalida la forma**: su `normalizeAccess` delega en el validador de `config-schema.js` y solo construye las estructuras de consulta en memoria; expone `authenticate`, `can`, `isFieldEditable`, `isSectionVisible`, `isFilterAllowed` e `isTransitionAllowed`, sin conocer cargos ni claves concretos.
+- `src/session.js` guarda `{ roleId, grants }` en `localStorage` bajo `sessionKey` (`erp_base_module:session`) y mantiene una copia en memoria; `clearSession()` elimina solo la sesión y no las entidades ni los documentos.
+- `src/domain/config-schema.js` es la **única fuente de verdad** para validar la forma de `domain.access`: roles no vacíos, identificadores únicos, claves no vacías, capacidades de la lista blanca y transiciones existentes en el ciclo de vida. Un error deja el acceso inactivo y muestra el aviso de FR-025. Así se evita duplicar reglas con criterios que podrían divergir.
+- `src/components/login.js` y la vista `view-login` renderizan el formulario con etiquetas y errores derivados de `access.labels` y escape centralizado (FR-050).
+- La UI aplica los permisos de forma preventiva (controles deshabilitados) y `src/storage.js` junto al cableado de transiciones en `src/app.js` los reaplica de forma correctiva antes de persistir o cambiar estado (escenario 7).
+- La guarda estructural `tests/unit/domain-boundary.test.js` se amplía (T099) para impedir que identificadores de cargo o claves se filtren a archivos centrales (XR-007).
+
+**Alternativas consideradas**:
+
+- Backend con usuarios y contraseñas reales: seguro, pero añade infraestructura, dependencias y contradice el alcance sin servidor; se documenta como limitación en las suposiciones de la especificación.
+- Codificar los cuatro cargos en `app.js`/`shell.js`: más directo, pero rompe XR-007 y obliga a tocar el motor para cada módulo personalizado.
+- No pedir clave y solo ocultar controles: incumple FR-054/FR-055 y deja acciones forzadas sin rechazo; se descarta en favor del doble control UI + persistencia.
+
 ## Decisión: Normalización del fin de línea para `format:check`
 
 **Justificación**: inicialmente `npm run format:check` fallaba en 63 archivos en este checkout de Windows. La causa principal no era el estilo de código sino el desajuste entre los saltos de línea CRLF del checkout (`git config core.autocrlf` = `true`) y el valor `lf` que Prettier aplica por defecto. En `src/app.js` se midieron 1295 saltos, todos CRLF. Tras aplicar `endOfLine: "auto"` quedaban 6 archivos con diferencias reales de estilo, también corregidos.

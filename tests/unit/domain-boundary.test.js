@@ -19,6 +19,19 @@ const domainKeys = [
   'batchCode'
 ];
 
+// US16: los cargos y sus claves ficticias también son datos del perfil,
+// nunca constants en el motor genérico (XR-007).
+const accessKeys = [
+  'plantManager',
+  'warehouseLead',
+  'productionSupervisor',
+  'qualityInspector',
+  'PLANT-2026',
+  'WH-2026',
+  'PROD-2026',
+  'QA-2026'
+];
+
 const configurationFiles = new Set(['module-config.js', 'demo-data.js']);
 
 function sourceFiles(directory) {
@@ -40,7 +53,7 @@ describe('SC-008 / XR-006 - declarative domain boundary', () => {
     const offenders = [];
     for (const file of coreFiles) {
       const source = fs.readFileSync(file, 'utf8');
-      for (const key of domainKeys) {
+      for (const key of [...domainKeys, ...accessKeys]) {
         if (new RegExp(`\\b${key}\\b`).test(source)) {
           offenders.push(`${path.relative(root, file)}: ${key}`);
         }
@@ -53,6 +66,13 @@ describe('SC-008 / XR-006 - declarative domain boundary', () => {
   it('declares every manufacturing field key in the configuration profile', () => {
     const config = fs.readFileSync(path.join(root, 'src', 'module-config.js'), 'utf8');
     for (const key of domainKeys) {
+      expect(config).toMatch(new RegExp(`\\b${key}\\b`));
+    }
+  });
+
+  it('declares every US16 role id and secret only in the configuration profile', () => {
+    const config = fs.readFileSync(path.join(root, 'src', 'module-config.js'), 'utf8');
+    for (const key of accessKeys) {
       expect(config).toMatch(new RegExp(`\\b${key}\\b`));
     }
   });
