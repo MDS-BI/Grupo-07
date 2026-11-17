@@ -191,9 +191,8 @@ export function renderDocumentDetail(container, options = {}) {
       term.textContent = field.label;
       const value = document.createElement('dd');
       const fieldValue = resolveFieldValue(documentRecord, field.key, { entity });
-      value.textContent = field.key === 'status' || field.key === 'statusLabel'
-        ? formatStatus(fieldValue)
-        : formatValue(fieldValue);
+      value.textContent =
+        field.key === 'status' || field.key === 'statusLabel' ? formatStatus(fieldValue) : formatValue(fieldValue);
       list.appendChild(term);
       list.appendChild(value);
     }

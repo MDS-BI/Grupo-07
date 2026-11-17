@@ -1,4 +1,4 @@
-import { loadModuleConfig, normalizeConfig, setActiveConfig } from './module-config.js';
+import { labelFor, loadModuleConfig, normalizeConfig, setActiveConfig } from './module-config.js';
 import {
   loadEntities,
   addEntity,
@@ -625,7 +625,10 @@ function runDocumentAction(action) {
   try {
     updateDocument(record.id, updates);
   } catch (error) {
-    showDomainFeedback(error.message || 'No se pudo actualizar la orden.');
+    const documentLabel = labelFor('document');
+    showDomainFeedback(
+      error.message || `No se pudo actualizar ${articleFor(documentLabel)} ${lowerLabel(documentLabel)}.`
+    );
     return;
   }
 
@@ -953,7 +956,7 @@ function runSearch() {
 
     const product = document.createElement('div');
     product.className = 'entity-custom';
-    product.textContent = `Producto: ${entity ? `${entity.name} — ${entity.code}` : formatValue(record.entity_id)}`;
+    product.textContent = `${labelFor('entity')}: ${entity ? `${entity.name} — ${entity.code}` : formatValue(record.entity_id)}`;
     item.appendChild(product);
 
     const status = document.createElement('div');

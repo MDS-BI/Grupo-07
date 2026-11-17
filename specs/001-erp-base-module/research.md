@@ -96,6 +96,38 @@
 - Quinto módulo "Órdenes": más visible, pero amplía la navegación base y duplica el concepto de documento.
 - Búsqueda ampliada a documentos: mezcla recuperación con gestión y no ofrece el detalle operativo requerido.
 
+## Decisión: Verificación automatizada y por inspección de fuentes de SC-008/XR-006
+
+**Justificación**: Durante el análisis de la funcionalidad se planteó un hallazgo CRITICAL que afirmaba que existía lógica de manufactura codificada en archivos centrales. La comprobación directa del código fuente mostró que la afirmación era exagerada: los literales del dominio (`itemType`, `producedQty`, `scrapQty`, `qualityResult`, `processStage`, `Orden de Producción`, etc.) aparecen únicamente en `src/module-config.js` y en `src/demo-data.js` (datos de demostración). `src/app.js`, `src/storage.js`, `src/components/shell.js` y los módulos de `src/domain/` son genéricos.
+
+**Forma de la decisión**:
+
+- La garantía SC-008/XR-006 se verifica por inspección de fuentes y, desde esta corrección, mediante la prueba estructural `tests/unit/domain-boundary.test.js`, que falla si aparecen claves de manufactura fuera de la configuración y los datos de demostración.
+- `src/module-config.js` concentra el perfil declarativo; `src/demo-data.js` contiene solo datos de ejemplo.
+- Los dos literales de interfaz que quedaban en `src/app.js` (`'Producto: '` y `'No se pudo actualizar la orden.'`) ya se derivan de `labelFor('entity')` y `labelFor('document')`, completando FR-029.
+- El plan y la documentación reflejan esta distinción para no sobrestimar el problema ni declarar una cobertura de pruebas inexistente.
+
+**Alternativas consideradas**:
+
+- Aceptar el hallazgo CRITICAL tal cual y reescribir archivos centrales: innecesario y habría introducido código de dominio donde debe haber abstracción.
+- No documentar la comprobación: dejaría la documentación desalineada con el código real.
+
+## Decisión: Normalización del fin de línea para `format:check`
+
+**Justificación**: inicialmente `npm run format:check` fallaba en 63 archivos en este checkout de Windows. La causa principal no era el estilo de código sino el desajuste entre los saltos de línea CRLF del checkout (`git config core.autocrlf` = `true`) y el valor `lf` que Prettier aplica por defecto. En `src/app.js` se midieron 1295 saltos, todos CRLF. Tras aplicar `endOfLine: "auto"` quedaban 6 archivos con diferencias reales de estilo, también corregidos.
+
+**Forma de la decisión**:
+
+- Se fijó `"endOfLine": "auto"` en `.prettierrc.json` para que `format:check` respete el fin de línea existente y sea reproducible tanto en checkout CRLF (Windows) como LF (Linux/macOS).
+- Se aplicó Prettier de forma dirigida a los 6 archivos con estilo realmente divergente: `src/app.js`, `src/components/document-list.js`, `src/demo-data.js`, `tests/e2e/demo.spec.js`, `tests/unit/domain-boundary.test.js` e `index.html`.
+- La alternativa de normalizar el checkout a LF y desactivar `core.autocrlf` se descartó porque cambia el entorno del equipo y no arregla la reproducibilidad en otros sistemas.
+- La puerta de formato está en verde y T086 queda cerrada.
+
+**Alternativas consideradas**:
+
+- Ejecutar `prettier --write` sobre todo el árbol: convertiría los archivos a LF en disco y podría generar un diff masivo y ruidoso; se prefirió la escritura dirigida a los 6 archivos con diferencias reales.
+- Ignorar `format:check`: contradice el principio de calidad de la constitución.
+
 ## Decisiones adicionales
 
 - Se usará localStorage del navegador para la persistencia porque el módulo base es de espacio único y no necesita almacenamiento del lado servidor.

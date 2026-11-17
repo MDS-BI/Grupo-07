@@ -19,7 +19,7 @@ Guía para ejecutar y validar la funcionalidad `001-erp-base-module` sobre el m�
 | `npm run test:watch` | Disponible | Vitest en modo watch. |
 | `npm run lint` | Disponible | ESLint sobre `src/` y `tests/`. |
 | `npm run format` | Disponible | Prettier sobre código, pruebas, HTML y configuración. |
-| `npm run format:check` | Disponible | Verificación de formato sin escribir. |
+| `npm run format:check` | Disponible | Verificación de formato sin escribir; pasa con `"endOfLine": "auto"` y el estilo normalizado. |
 | `npm run test:e2e` | Disponible | Pruebas E2E con Playwright; levanta Vite en el puerto 4173. |
 
 ## Activación del perfil de manufactura
@@ -31,7 +31,7 @@ El perfil ya está activo: `userConfig = manufacturingConfig` en `src/module-con
    - El nombre del módulo es "Manufactura y Operaciones" y el color de acento es el declarado.
    - Las etiquetas de la barra lateral y el logotipo muestran Producto/Productos y Orden de Producción/Órdenes de Producción.
    - No aparece el aviso de configuración inválida (FR-025).
-3. Confirme que no fue necesario modificar `app.js`, `storage.js`, `shell.js` ni los componentes genéricos (SC-008, XR-006). El motor de `src/domain/` solo interpreta la configuración.
+3. Confirme que no fue necesario modificar `app.js`, `storage.js`, `shell.js` ni los componentes genéricos (SC-008, XR-006). El motor de `src/domain/` solo interpreta la configuración; además, `tests/unit/domain-boundary.test.js` fallaría si aparecieran claves de manufactura en esos archivos.
 4. Para volver al módulo base genérico, asigne `userConfig = null`; no hace falta tocar código central.
 
 ## Flujo base (regresión)
@@ -106,19 +106,19 @@ Resultado esperado: el texto se muestra literalmente, no se ejecuta ningún scri
 
 ## Automatización implementada
 
-- **Unitarias**: evaluación de predicados, operaciones del motor, cálculo de indicadores/merma, agrupación de costos, validación de configuración, escape/URLs seguras y regla de stock bajo (incluido el caso "sin dato").
-- **Integración**: lista/detalle de documentos, insignias, secciones de indicadores, guardas de transición, formularios de ejecución y calidad, edición/borrado en cascada, búsqueda con 500 registros y renderizado seguro de payloads.
+- **Unitarias**: evaluación de predicados, operaciones del motor, cálculo de indicadores/merma, agrupación de costos, validación de configuración, escape/URLs seguras, regla de stock bajo (incluido el caso "sin dato") y guarda estructural de SC-008/XR-006 (`tests/unit/domain-boundary.test.js`).
+- **Integración**: lista/detalle de documentos, insignias, secciones de indicadores, guardas de transición, formularios de ejecución y calidad, edición/borrado en cascada, búsqueda con 500 registros, renderizado seguro de payloads y filtros por prioridad (US14) y resultado de calidad (US15), incluida su combinación con el filtro de estado.
 - **E2E (Playwright)**: crear/editar/eliminar/buscar producto; crear/gestionar orden; confirmar/rechazar pedido; registrar ejecución; completar control de calidad; verificar sanitización, persistencia tras recarga y rendimiento con 500 productos y 300 órdenes.
 
-## Resultados de validación (2026-11-05)
+## Resultados de validación (2026-11-17)
 
 | Puerta | Resultado |
 |---|---|
-| `npm test` | 35 archivos / 263 pruebas en verde |
+| `npm test` | 37 archivos / 271 pruebas en verde (incluye T072, T075 y la guarda de SC-008/XR-006) |
 | `npm run lint` | Sin errores |
-| `npm run format:check` | Todos los archivos conformes |
-| `npm run build` | Compilación de producción correcta |
-| `npm run test:e2e` | 10/10 pruebas en verde |
+| `npm run format:check` | Pasa: `"endOfLine": "auto"` en `.prettierrc.json` y estilo normalizado con Prettier |
+| `npm run build` | Compilación de producción correcta (20 módulos, 4 archivos generados) |
+| `npm run test:e2e` | 11/11 pruebas en verde |
 | Aviso de configuración inválida | No aparece con `userConfig = manufacturingConfig` |
 | Cambios en código central para el perfil | Ninguno; todo el perfil es declarativo (SC-008, XR-006) |
 
@@ -126,6 +126,8 @@ Los recorridos manuales de esta guía siguen siendo la referencia para validar l
 
 ## Validación de la demo de manufactura
 
-- Compilación y lint correctos. Pasaron 263 pruebas unitarias y de integración y 11 recorridos en Chrome.
+- Compilación, lint y formato correctos. Pasaron 271 pruebas unitarias y de integración y 11 recorridos en Chrome.
 - El recorrido de la demo comprueba que la lupa queda fuera del área de texto a 390 px, encuentra los guantes y su orden, y elimina una copia de una orden ficticia al recargar.
 - Los filtros de prioridad y calidad se pueden combinar con el estado y limpiar individualmente. Al limpiar todos los filtros reaparecen los seis folios, incluido el casco con prioridad sin dato.
+
+**Cobertura resuelta (C1)**: los filtros de prioridad (US14) y resultado de calidad (US15) tienen pruebas de integración (T072 y T075 en `tasks.md`) que verifican coincidencias, combinación con el filtro de estado y limpieza individual. Ambas pasan dentro de las 271 pruebas; US14, US15 y la puerta T086 están cerradas. `npm run format:check` también pasa con `endOfLine: "auto"`.

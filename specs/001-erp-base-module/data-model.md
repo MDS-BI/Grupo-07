@@ -288,7 +288,7 @@ Se rechazan además:
 - El estado solo puede cambiar siguiendo las transiciones del ciclo de vida y las guardas configuradas.
 - En estado *en control de calidad*, el resultado de calidad debe ser uno de los valores declarados antes de pasar a *terminada*, *en producción* o *cancelada*.
 
-Hay reglas de negocio que el módulo base no valida y que por ahora quedan fuera, por ejemplo que producción más merma no supere lo planificado, o que una orden no se pueda terminar sin calidad aprobada cuando la configuración no lo declare. Esas reglas pueden añadirse como guardas declarativas en una etapa posterior.
+Hay reglas de negocio que el módulo base no valida y que quedan fuera del alcance de esta entrega, por ejemplo que producción más merma no supere lo planificado, o que una orden no se pueda terminar sin calidad aprobada cuando la configuración no lo declare. Podrían añadirse como guardas declarativas en una extensión futura del perfil.
 
 ## Seguridad de renderizado
 
@@ -318,6 +318,11 @@ Los valores de entidades, documentos, campos personalizados y notas se escapan a
 
 Máquina, lote, proveedor y control de calidad quedaron como campos y no como tablas propias, porque el módulo base solo maneja un par entidad/documento. Si más adelante necesitamos trazabilidad completa de lotes o capacidad de máquinas, habría que agregar un segundo par.
 
+## Decisiones de alcance
+
+- Los casos límite relativos a campos personalizados que dejan de estar declarados, al botón atrás del navegador y a la navegación con cambios sin guardar se tratan como comportamiento heredado del marco base; no tienen tarea ni prueba dedicada en esta entrega.
+- Las notificaciones automáticas, el consumo de materia prima y la validación de producción + merma frente a la cantidad planificada quedan registradas como mejoras futuras, no como tareas pendientes de esta versión.
+
 ## Estado del avance
 
 - [x] Modelo de datos definido y documentado
@@ -328,7 +333,8 @@ Máquina, lote, proveedor y control de calidad quedaron como campos y no como ta
 - [x] Datos de ejemplo sembrados por las pruebas de integración y E2E
 - [x] Pruebas unitarias, de integración y E2E de los recorridos críticos
 - [x] Perfil activo sin aviso de configuración inválida
-- [x] Puerta de calidad: 263 pruebas unitarias/integración, 10 E2E, lint y formato limpios, build correcto
+- [x] Verificación SC-008/XR-006 automatizada en `tests/unit/domain-boundary.test.js`: literales de dominio confinados a `src/module-config.js` y `src/demo-data.js`
+- [x] Puerta de calidad completa (T086, 2026-11-17): 37 archivos / 271 pruebas y 11/11 E2E en verde; `npm run lint`, `npm run format:check` y `npm run build` correctos. Incluye T072 (US14) y T075 (US15)
 - [ ] Notificaciones automáticas de stock bajo y de órdenes retrasadas (la identificación en pantalla está cubierta por FR-042/FR-046)
 - [ ] Validar producción + merma frente a la cantidad planificada
 - [ ] Consumo de materia prima por orden

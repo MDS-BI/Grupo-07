@@ -91,6 +91,13 @@ export function selectFirstRow() {
   return row;
 }
 
+export function documentRowFolios() {
+  return [...document.querySelectorAll('#document-list tbody .document-row')]
+    .map((row) => row.querySelectorAll('td')[1]?.textContent.trim())
+    .filter(Boolean)
+    .sort((a, b) => Number(a) - Number(b));
+}
+
 export function actionButton(to) {
   return document.querySelector(`#document-detail .document-actions button[data-transition-to="${to}"]`);
 }

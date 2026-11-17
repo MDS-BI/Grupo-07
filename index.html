@@ -318,7 +318,12 @@
             </header>
 
             <div id="documents-domain" class="domain-section">
-              <div id="document-tabs" class="document-tabs" role="tablist" aria-label="Secciones de órdenes de producción">
+              <div
+                id="document-tabs"
+                class="document-tabs"
+                role="tablist"
+                aria-label="Secciones de órdenes de producción"
+              >
                 <button
                   id="document-tab-orders"
                   class="document-tab"
@@ -387,21 +392,21 @@
                 aria-labelledby="document-tab-orders"
                 tabindex="0"
               >
-              <div class="panel">
-                <div class="panel-header">
-                  <div class="panel-title-group">
-                    <h2 id="document-list-heading">Documentos</h2>
-                    <p class="panel-subtitle">Selecciona un registro para ver el detalle y ejecutar acciones.</p>
+                <div class="panel">
+                  <div class="panel-header">
+                    <div class="panel-title-group">
+                      <h2 id="document-list-heading">Documentos</h2>
+                      <p class="panel-subtitle">Selecciona un registro para ver el detalle y ejecutar acciones.</p>
+                    </div>
+                    <div id="document-filters" class="list-filters"></div>
                   </div>
-                  <div id="document-filters" class="list-filters"></div>
+                  <div id="document-list" class="document-list"></div>
+                  <div id="document-detail" class="document-detail"></div>
+                  <div class="field action-note">
+                    <label for="document-action-note">Nota de la acción (opcional)</label>
+                    <input id="document-action-note" name="document-action-note" type="text" autocomplete="off" />
+                  </div>
                 </div>
-                <div id="document-list" class="document-list"></div>
-                <div id="document-detail" class="document-detail"></div>
-                <div class="field action-note">
-                  <label for="document-action-note">Nota de la acción (opcional)</label>
-                  <input id="document-action-note" name="document-action-note" type="text" autocomplete="off" />
-                </div>
-              </div>
               </div>
 
               <div
@@ -412,14 +417,14 @@
                 tabindex="0"
                 hidden
               >
-              <div class="panel">
-                <div class="panel-title-group">
-                  <h2 id="document-indicators-heading">Indicadores</h2>
-                  <p class="panel-subtitle">Estado actual del flujo y de los costos registrados.</p>
+                <div class="panel">
+                  <div class="panel-title-group">
+                    <h2 id="document-indicators-heading">Indicadores</h2>
+                    <p class="panel-subtitle">Estado actual del flujo y de los costos registrados.</p>
+                  </div>
+                  <div id="document-indicators" class="indicator-grid"></div>
+                  <div id="document-costs" class="cost-summary"></div>
                 </div>
-                <div id="document-indicators" class="indicator-grid"></div>
-                <div id="document-costs" class="cost-summary"></div>
-              </div>
               </div>
 
               <div
@@ -430,19 +435,19 @@
                 tabindex="0"
                 hidden
               >
-              <div class="panel" id="document-execution-panel" hidden>
-                <div class="panel-title-group">
-                  <h2 id="document-execution-title">Ejecución</h2>
-                  <p class="panel-subtitle">Registra el avance de la orden seleccionada.</p>
+                <div class="panel" id="document-execution-panel" hidden>
+                  <div class="panel-title-group">
+                    <h2 id="document-execution-title">Ejecución</h2>
+                    <p class="panel-subtitle">Registra el avance de la orden seleccionada.</p>
+                  </div>
+                  <form id="document-execution-form" novalidate>
+                    <div id="document-execution-fields" class="domain-form-fields"></div>
+                    <button id="document-execution-submit" class="primary" type="submit">Guardar ejecución</button>
+                  </form>
                 </div>
-                <form id="document-execution-form" novalidate>
-                  <div id="document-execution-fields" class="domain-form-fields"></div>
-                  <button id="document-execution-submit" class="primary" type="submit">Guardar ejecución</button>
-                </form>
-              </div>
-              <p id="document-execution-empty" class="empty-state" hidden>
-                Seleccione una orden de producción para registrar la ejecución.
-              </p>
+                <p id="document-execution-empty" class="empty-state" hidden>
+                  Seleccione una orden de producción para registrar la ejecución.
+                </p>
               </div>
 
               <div
@@ -453,19 +458,19 @@
                 tabindex="0"
                 hidden
               >
-              <div class="panel" id="document-quality-panel" hidden>
-                <div class="panel-title-group">
-                  <h2 id="document-quality-title">Control de calidad</h2>
-                  <p class="panel-subtitle">Registra el resultado de la inspección de calidad.</p>
+                <div class="panel" id="document-quality-panel" hidden>
+                  <div class="panel-title-group">
+                    <h2 id="document-quality-title">Control de calidad</h2>
+                    <p class="panel-subtitle">Registra el resultado de la inspección de calidad.</p>
+                  </div>
+                  <form id="document-quality-form" novalidate>
+                    <div id="document-quality-fields" class="domain-form-fields"></div>
+                    <button id="document-quality-submit" class="primary" type="submit">Guardar inspección</button>
+                  </form>
                 </div>
-                <form id="document-quality-form" novalidate>
-                  <div id="document-quality-fields" class="domain-form-fields"></div>
-                  <button id="document-quality-submit" class="primary" type="submit">Guardar inspección</button>
-                </form>
-              </div>
-              <p id="document-quality-empty" class="empty-state" hidden>
-                Seleccione una orden de producción para registrar la inspección.
-              </p>
+                <p id="document-quality-empty" class="empty-state" hidden>
+                  Seleccione una orden de producción para registrar la inspección.
+                </p>
               </div>
 
               <div id="domain-feedback" class="error" role="alert"></div>
@@ -479,139 +484,141 @@
               tabindex="0"
               hidden
             >
-            <div class="panel-grid panel-grid-form">
-              <div class="panel">
-                <div class="panel-title-group">
-                  <h2 id="document-form-heading">Agregar / Editar Documento</h2>
-                  <p class="panel-subtitle">Registra la información general, las fechas y los montos del documento.</p>
-                </div>
-                <form id="document-form" novalidate>
-                  <input type="hidden" id="document-id" />
-
-                  <fieldset class="form-section">
-                    <legend>Vinculación y numeración</legend>
-
-                    <div class="field">
-                      <label for="document-entity">Entidad</label>
-                      <select id="document-entity">
-                        <option value="">-- Seleccionar --</option>
-                      </select>
-                      <span class="error" id="error-document-entity"></span>
-                    </div>
-
-                    <div class="field">
-                      <label for="series">Serie</label>
-                      <input id="series" name="series" type="text" autocomplete="off" />
-                      <span class="error" id="error-series"></span>
-                    </div>
-
-                    <div class="field">
-                      <label for="folio">Folio</label>
-                      <input id="folio" name="folio" type="number" step="1" />
-                      <span class="error" id="error-folio"></span>
-                    </div>
-                  </fieldset>
-
-                  <fieldset class="form-section">
-                    <legend>Fechas y cantidad</legend>
-
-                    <div class="field">
-                      <label for="startDate">Fecha de inicio</label>
-                      <input id="startDate" name="startDate" type="date" />
-                      <span class="error" id="error-startDate"></span>
-                    </div>
-
-                    <div class="field">
-                      <label for="endDate">Fecha de fin</label>
-                      <input id="endDate" name="endDate" type="date" />
-                      <span class="error" id="error-endDate"></span>
-                    </div>
-
-                    <div class="field">
-                      <label for="quantity">Cantidad</label>
-                      <input id="quantity" name="quantity" type="number" step="1" />
-                      <span class="error" id="error-quantity"></span>
-                    </div>
-                  </fieldset>
-
-                  <fieldset class="form-section">
-                    <legend>Montos</legend>
-
-                    <div class="field">
-                      <label for="subtotal">Subtotal</label>
-                      <input id="subtotal" name="subtotal" type="number" step="any" />
-                      <span class="error" id="error-subtotal"></span>
-                    </div>
-
-                    <div class="field">
-                      <label for="discount">Descuento</label>
-                      <input id="discount" name="discount" type="number" step="any" />
-                      <span class="error" id="error-discount"></span>
-                    </div>
-
-                    <div class="field">
-                      <label for="taxAmount">Impuesto</label>
-                      <input id="taxAmount" name="taxAmount" type="number" step="any" />
-                      <span class="error" id="error-taxAmount"></span>
-                    </div>
-
-                    <div class="field">
-                      <label for="totalAmount">Total</label>
-                      <input id="totalAmount" name="totalAmount" type="number" step="any" />
-                      <span class="error" id="error-totalAmount"></span>
-                    </div>
-
-                    <div class="field">
-                      <label for="currency">Moneda</label>
-                      <input id="currency" name="currency" type="text" autocomplete="off" />
-                      <span class="error" id="error-currency"></span>
-                    </div>
-                  </fieldset>
-
-                  <fieldset class="form-section">
-                    <legend>Detalles adicionales</legend>
-
-                    <div class="field">
-                      <label for="docPaymentTerms">Condiciones de pago</label>
-                      <input id="docPaymentTerms" name="docPaymentTerms" type="text" autocomplete="off" />
-                      <span class="error" id="error-paymentTerms"></span>
-                    </div>
-
-                    <div class="field">
-                      <label for="notes">Notas</label>
-                      <input id="notes" name="notes" type="text" autocomplete="off" />
-                      <span class="error" id="error-notes"></span>
-                    </div>
-
-                    <div class="field">
-                      <label for="status">Estado</label>
-                      <div id="status-container"></div>
-                      <span class="error" id="error-status"></span>
-                    </div>
-                  </fieldset>
-
-                  <div id="document-custom-fields" class="custom-fields" hidden></div>
-
-                  <div class="form-actions">
-                    <button id="document-submit-button" class="primary" type="submit">Guardar Documento</button>
+              <div class="panel-grid panel-grid-form">
+                <div class="panel">
+                  <div class="panel-title-group">
+                    <h2 id="document-form-heading">Agregar / Editar Documento</h2>
+                    <p class="panel-subtitle">
+                      Registra la información general, las fechas y los montos del documento.
+                    </p>
                   </div>
-                </form>
-              </div>
+                  <form id="document-form" novalidate>
+                    <input type="hidden" id="document-id" />
 
-              <div class="panel panel-compact">
-                <div class="panel-title-group">
-                  <h2 id="edit-document-heading">Editar o eliminar el documento</h2>
-                  <p class="panel-subtitle">Selecciona un documento para cargarlo en el formulario.</p>
+                    <fieldset class="form-section">
+                      <legend>Vinculación y numeración</legend>
+
+                      <div class="field">
+                        <label for="document-entity">Entidad</label>
+                        <select id="document-entity">
+                          <option value="">-- Seleccionar --</option>
+                        </select>
+                        <span class="error" id="error-document-entity"></span>
+                      </div>
+
+                      <div class="field">
+                        <label for="series">Serie</label>
+                        <input id="series" name="series" type="text" autocomplete="off" />
+                        <span class="error" id="error-series"></span>
+                      </div>
+
+                      <div class="field">
+                        <label for="folio">Folio</label>
+                        <input id="folio" name="folio" type="number" step="1" />
+                        <span class="error" id="error-folio"></span>
+                      </div>
+                    </fieldset>
+
+                    <fieldset class="form-section">
+                      <legend>Fechas y cantidad</legend>
+
+                      <div class="field">
+                        <label for="startDate">Fecha de inicio</label>
+                        <input id="startDate" name="startDate" type="date" />
+                        <span class="error" id="error-startDate"></span>
+                      </div>
+
+                      <div class="field">
+                        <label for="endDate">Fecha de fin</label>
+                        <input id="endDate" name="endDate" type="date" />
+                        <span class="error" id="error-endDate"></span>
+                      </div>
+
+                      <div class="field">
+                        <label for="quantity">Cantidad</label>
+                        <input id="quantity" name="quantity" type="number" step="1" />
+                        <span class="error" id="error-quantity"></span>
+                      </div>
+                    </fieldset>
+
+                    <fieldset class="form-section">
+                      <legend>Montos</legend>
+
+                      <div class="field">
+                        <label for="subtotal">Subtotal</label>
+                        <input id="subtotal" name="subtotal" type="number" step="any" />
+                        <span class="error" id="error-subtotal"></span>
+                      </div>
+
+                      <div class="field">
+                        <label for="discount">Descuento</label>
+                        <input id="discount" name="discount" type="number" step="any" />
+                        <span class="error" id="error-discount"></span>
+                      </div>
+
+                      <div class="field">
+                        <label for="taxAmount">Impuesto</label>
+                        <input id="taxAmount" name="taxAmount" type="number" step="any" />
+                        <span class="error" id="error-taxAmount"></span>
+                      </div>
+
+                      <div class="field">
+                        <label for="totalAmount">Total</label>
+                        <input id="totalAmount" name="totalAmount" type="number" step="any" />
+                        <span class="error" id="error-totalAmount"></span>
+                      </div>
+
+                      <div class="field">
+                        <label for="currency">Moneda</label>
+                        <input id="currency" name="currency" type="text" autocomplete="off" />
+                        <span class="error" id="error-currency"></span>
+                      </div>
+                    </fieldset>
+
+                    <fieldset class="form-section">
+                      <legend>Detalles adicionales</legend>
+
+                      <div class="field">
+                        <label for="docPaymentTerms">Condiciones de pago</label>
+                        <input id="docPaymentTerms" name="docPaymentTerms" type="text" autocomplete="off" />
+                        <span class="error" id="error-paymentTerms"></span>
+                      </div>
+
+                      <div class="field">
+                        <label for="notes">Notas</label>
+                        <input id="notes" name="notes" type="text" autocomplete="off" />
+                        <span class="error" id="error-notes"></span>
+                      </div>
+
+                      <div class="field">
+                        <label for="status">Estado</label>
+                        <div id="status-container"></div>
+                        <span class="error" id="error-status"></span>
+                      </div>
+                    </fieldset>
+
+                    <div id="document-custom-fields" class="custom-fields" hidden></div>
+
+                    <div class="form-actions">
+                      <button id="document-submit-button" class="primary" type="submit">Guardar Documento</button>
+                    </div>
+                  </form>
                 </div>
-                <div class="field">
-                  <label for="edit-document">Seleccionar documento</label>
-                  <select id="edit-document">
-                    <option value="">-- Seleccionar --</option>
-                  </select>
+
+                <div class="panel panel-compact">
+                  <div class="panel-title-group">
+                    <h2 id="edit-document-heading">Editar o eliminar el documento</h2>
+                    <p class="panel-subtitle">Selecciona un documento para cargarlo en el formulario.</p>
+                  </div>
+                  <div class="field">
+                    <label for="edit-document">Seleccionar documento</label>
+                    <select id="edit-document">
+                      <option value="">-- Seleccionar --</option>
+                    </select>
+                  </div>
+                  <button id="delete-document" class="danger" type="button">Eliminar el documento seleccionado</button>
                 </div>
-                <button id="delete-document" class="danger" type="button">Eliminar el documento seleccionado</button>
               </div>
-            </div>
             </div>
           </section>
 

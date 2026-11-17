@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { openDocuments } from './fixtures.js';
 
-test('keeps the search icon clear of the input and makes demo orders filterable without duplicates', async ({ page }) => {
+test('keeps the search icon clear of the input and makes demo orders filterable without duplicates', async ({
+  page
+}) => {
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.setViewportSize({ width: 390, height: 844 });

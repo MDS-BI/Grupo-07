@@ -1,8 +1,8 @@
-# Lista de Verificación de Calidad de la Especificación: Módulo Base de Software de Planificación de Recursos Empresariales (ERP)
+# Lista de Verificación de Calidad de la Especificación: Módulo ERP de Manufactura y Operaciones
 
 **Propósito**: Validar la completitud y calidad de la especificación antes de proceder a la planificación
 **Creada**: 2026-07-08
-**Funcionalidad**: [Enlace a spec.md](spec.md)
+**Funcionalidad**: [Enlace a spec.md](../spec.md)
 
 ## Calidad del Contenido
 
@@ -31,7 +31,7 @@
 
 ## Notas
 
-- El núcleo base (FR-001 a FR-039, HU6-HU13) está implementado y verificado con 12 archivos y 111 pruebas en verde; `npm run build` compila correctamente.
-- Las Historias de Usuario 1-5 describen el perfil de manufactura. Sus requisitos (FR-040 a FR-050) y criterios (SC-011 a SC-014) están definidos, pero su implementación está pendiente y se reorganiza en `tasks.md` conforme al plan declarativo.
-- `userConfig` permanece en `null` para que los tests y la aplicación arranquen con los valores predeterminados; `manufacturingConfig` queda como perfil de referencia hasta su activación.
+- El núcleo base (FR-001 a FR-039 y FR-053, HU6-HU13) está implementado y verificado dentro de las 37 archivos / 271 pruebas en verde; `npm run build` compila correctamente.
+- Las Historias de Usuario 1-5 describen el perfil de manufactura. Sus requisitos (FR-040 a FR-050) y criterios (SC-011 a SC-014) están implementados de forma declarativa y verificados; junto con US14/US15, las 86 tareas de `tasks.md` están completas.
+- `userConfig = manufacturingConfig` está activo; el módulo base genérico sigue disponible asignando `null`.
 - Las dependencias antes atribuidas a la "Historia de Usuario 5" se corrigieron a FR-023 a FR-025.

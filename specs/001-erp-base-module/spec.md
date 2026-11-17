@@ -1,8 +1,8 @@
-# Especificación de la Funcionalidad: Módulo Base de Software de Planificación de Recursos Empresariales (ERP)
+# Especificación de la Funcionalidad: Módulo ERP de Manufactura y Operaciones
 
 **Rama de la funcionalidad**: 001-erp-base-module  
 **Creada**: 2026-07-08  
-**Estado**: Núcleo base implementado; perfil de manufactura pendiente (Fases 1-16 de `tasks.md`)  
+**Estado**: Núcleo base y perfil de manufactura implementados; 86/86 tareas completadas. Puertas en verde: 37 archivos / 271 pruebas, 11/11 E2E, lint, formato y build.  
 **Entrada**: Descripción del usuario: "Construir un módulo base de software de planificación de recursos empresariales (ERP) que pueda extenderse en módulos ERP personalizados. Debe proporcionar gestión de datos maestros (entidades) y documentos transaccionales vinculados con capacidades de crear/editar/eliminar/buscar."
 
 ## Propósito
@@ -33,9 +33,9 @@ Como jefe de planta o gerente de operaciones, quiero evaluar si la planta es cap
 1. **Dado** que Ventas ha enviado pedidos a la planta, **cuando** el usuario abre la lista de órdenes y filtra las que están en estado *planificada*, **entonces** ve los pedidos pendientes de decisión, cada uno con su número (serie y folio), producto, cantidad, fecha de inicio, fecha de entrega y estado.
 2. **Dada** una orden pendiente de decisión, **cuando** el usuario abre su detalle, **entonces** ve todos los datos del pedido, incluidos los importes registrados
 y las notas, para poder evaluarlo.
-3. **Dado** que el usuario está evaluando un pedido, **cuando** consulta las órdenes que están *en producción*, **entonces** ve qué se está fabricando en ese momento y en qué máquina, para juzgar si la planta tiene capacidad.
+3. **Dado** que el usuario está evaluando un pedido, **cuando** consulta las órdenes que están *en producción*, **entonces** ve qué se está fabricando en ese momento y en qué máquina, para juzgar si la planta tiene capacidad. La "carga/capacidad disponible" es información derivada de esas órdenes y del stock del producto; no implica un cálculo automático de capacidad.
 4. **Dado** que el usuario está evaluando un pedido, **cuando** consulta el producto del pedido, **entonces** ve su stock actual junto al stock mínimo; si el producto no tiene stock registrado, se indica "sin dato" y no cero.
-5. **Dada** una orden *planificada* y la carga actual de la planta, **cuando** el usuario revisa la capacidad disponible, **entonces** decide si confirma o rechaza el pedido con la información a la vista.
+5. **Dada** una orden *planificada* y la carga actual de la planta, **cuando** el usuario revisa la información de órdenes en producción y stock de la HU1, **entonces** decide si confirma o rechaza el pedido con la información a la vista.
 *Confirmar el pedido*
  
 6. **Dada** una orden *planificada*, **cuando** el usuario la confirma, **entonces** la orden pasa a *liberada*, el cambio se refleja en la lista y la orden queda disponible para continuar con su ejecución.
@@ -106,7 +106,7 @@ Como encargado de bodega y logística, quiero administrar el catálogo de stock 
 3. **Dado** un campo personalizado de tipo numérico (stock actual, stock mínimo o plazo de reposición), **cuando** un usuario ingresa un valor que no es un número, **entonces** el sistema no lo guarda y explica el error.
 4. **Dado** un ítem ya existente, **cuando** un usuario edita su stock actual, stock mínimo, plazo de reposición, ubicación o proveedor, **entonces** la información se actualiza correctamente en los resultados de la pantalla Buscar.
 5. **Dado** un ítem con stock actual estrictamente menor que el stock mínimo y ambos valores registrados, **cuando** el usuario consulta los resultados de la pantalla Buscar, **entonces** le aparece que el ítem se encuentra con "stock bajo el mínimo".
-6. **Dado** que un usuario deja el stock mínimo o stock actual en blanco, **cuando** guarde el ítem, **entonces** quedará guardado igualmente, los resultados de búsqueda mostrarán en ese apartado "sin datos" y no se marcará stock bajo.
+6. **Dado** que un usuario deja el stock mínimo o stock actual en blanco, **cuando** guarde el ítem, **entonces** quedará guardado igualmente, los resultados de búsqueda mostrarán en ese apartado "sin dato" y no se marcará stock bajo.
 7. **Dado** un ítem que ya no se utiliza, **cuando** el usuario lo elimina, **entonces** desaparecerá de los resultados de búsqueda.
 8. **Dada** una búsqueda de productos, **cuando** el usuario activa «Solo stock bajo», **entonces** la lista muestra únicamente productos coincidentes con stock actual estrictamente menor que el mínimo y ambos valores registrados.
 
@@ -203,7 +203,7 @@ Como usuario de negocio, quiero buscar mis entidades por detalles clave para enc
 
 1. **Dadas** múltiples entidades almacenadas, **cuando** el usuario busca con un término coincidente, **entonces** solo se muestran las entidades coincidentes.
 2. **Dada** una búsqueda sin coincidencias, **cuando** el usuario envía la búsqueda, **entonces** el sistema muestra un estado vacío claro y permite volver a intentarlo.
-3. **Dadas** cientos de entidades almacenadas, **cuando** el usuario busca, **entonces** los resultados coincidentes aparecen con prontitud sin retraso perceptible.
+3. **Dadas** 500 entidades almacenadas, **cuando** el usuario busca, **entonces** los resultados coincidentes aparecen en menos de 3 s (SC-004).
 
 ---
 
@@ -250,7 +250,7 @@ Como usuario de negocio, quiero una pantalla de búsqueda dedicada para encontra
 
 1. **Dado** que el usuario está en la pantalla de búsqueda, **cuando** introduce un término coincidente, **entonces** solo se muestran las entidades coincidentes.
 2. **Dada** una búsqueda sin coincidencias, **cuando** el usuario envía la búsqueda, **entonces** se muestra un estado vacío claro y puede volver a intentarlo.
-3. **Dadas** cientos de entidades almacenadas, **cuando** el usuario busca desde la pantalla de búsqueda, **entonces** los resultados aparecen con prontitud sin retraso perceptible.
+3. **Dadas** 500 entidades almacenadas, **cuando** el usuario busca desde la pantalla de búsqueda, **entonces** los resultados aparecen en menos de 3 s (SC-004).
 4. **Dado** que el usuario está en la pantalla de búsqueda, **cuando** activa el botón Panel en la barra lateral, **entonces** vuelve al panel de inicio.
 5. **Dada** una búsqueda con texto o con el filtro de stock bajo activo, **cuando** el usuario activa «Limpiar búsqueda», **entonces** reaparecen todos los productos y el foco vuelve al campo.
 
@@ -322,6 +322,8 @@ Como inspector de calidad, quiero filtrar las órdenes por resultado de calidad,
 2. **Dado** que hay un filtro de estado activo, **cuando** selecciono Corrección, **entonces** la lista muestra las órdenes que cumplen ambos filtros.
 3. **Dado** que el filtro de resultado de calidad está activo, **cuando** elijo la opción vacía, **entonces** reaparecen las órdenes que cumplen los demás filtros, incluidas las que carecen de ese dato.
 
+> **Nota de patrón común (US14/US15)**: ambas historias comparten el mismo contrato de filtrado declarativo: coincidencia exacta, combinación con el filtro de estado y limpieza con la opción vacía que restaura los demás filtros. Solo cambia el campo filtrado (`priority` en US14, `qualityResult` en US15).
+
 ---
 
 ### Casos Límite
@@ -343,6 +345,8 @@ Como inspector de calidad, quiero filtrar las órdenes por resultado de calidad,
 - ¿Qué ocurre cuando el color de acento configurado no es un valor de color válido?
 - ¿Cómo mantiene la barra lateral contraída las etiquetas de módulo accesibles en ventanas gráficas estrechas?
 
+> **Alcance de los casos límite**: los casos de campos personalizados que dejan de estar declarados, el botón atrás del navegador y la navegación con cambios sin guardar se tratan como comportamiento heredado del marco base. No tienen una tarea dedicada en `tasks.md`; la decisión queda registrada en [data-model.md](data-model.md).
+
 ## Requisitos *(obligatorio)*
 
 ### Requisitos Funcionales
@@ -350,7 +354,7 @@ Como inspector de calidad, quiero filtrar las órdenes por resultado de calidad,
 - **FR-001**: El sistema DEBE permitir a los usuarios crear un registro de entidad con al menos un nombre y un código.
 - **FR-002**: El sistema DEBE permitir a los usuarios editar los detalles de un registro de entidad existente.
 - **FR-003**: El sistema DEBE permitir a los usuarios eliminar un registro de entidad existente.
-- **FR-004**: El sistema DEBE permitir a los usuarios buscar registros de entidad por nombre, código, categoría u otras palabras clave descriptivas.
+- **FR-004**: El sistema DEBE permitir a los usuarios buscar registros de entidad por nombre, código, categoría, descripción, fecha objetivo y valores de campos personalizados. Esta es la definición canónica de los criterios de búsqueda.
 - **FR-005**: El sistema DEBE mostrar en la pantalla de búsqueda una lista clara de entidades e indicar cuándo ningún resultado coincide con una búsqueda.
 - **FR-006**: El sistema DEBE presentar retroalimentación clara cuando falta información obligatoria o no se puede completar una acción.
 - **FR-007**: El sistema DEBE mantener los datos de entidad consistentes tras operaciones de creación, edición y eliminación.
@@ -366,7 +370,7 @@ Como inspector de calidad, quiero filtrar las órdenes por resultado de calidad,
 - **FR-017**: La pantalla de gestión DEBE proporcionar la funcionalidad de crear, editar y eliminar entidades.
 - **FR-018**: La pantalla de gestión DEBE proporcionar la funcionalidad de crear, editar y eliminar documentos.
 - **FR-019**: El sistema DEBE navegar a una pantalla de búsqueda dedicada cuando se selecciona el botón Buscar en la barra lateral.
-- **FR-020**: La pantalla de búsqueda DEBE permitir buscar entidades por nombre, código, categoría, descripción o fecha objetivo.
+- **FR-020**: La pantalla de búsqueda DEBE aplicar exclusivamente los criterios canónicos definidos en FR-004.
 - **FR-021**: La pantalla de búsqueda DEBE ser accesible tanto desde la barra lateral como desde la acción rápida de buscar registros del panel.
 - **FR-022**: El sistema DEBE mantener los datos de entidades y documentos intactos y consistentes durante la navegación entre pantallas.
 - **FR-023**: El sistema DEBE cargar la configuración del módulo al arrancar y aplicarla en todas las pantallas.
@@ -378,18 +382,19 @@ Como inspector de calidad, quiero filtrar las órdenes por resultado de calidad,
 - **FR-029**: El sistema DEBE derivar todas las etiquetas visibles para el usuario de la configuración del módulo en lugar de texto fijo en el código.
 - **FR-030**: El sistema DEBE aplicar las transiciones de estado configuradas en los documentos independientemente de cómo se envíe un cambio.
 - **FR-031**: El sistema DEBE mantener el estado del documento como texto libre cuando no hay ciclo de vida configurado.
-- **FR-032**: El sistema DEBE mantener el renderizado de listas y la búsqueda ágiles y correctos para conjuntos de datos de al menos 500 registros de entidad.
+- **FR-032**: El sistema DEBE mantener el renderizado de listas y la búsqueda ágiles y correctos para conjuntos de datos de al menos 500 registros de entidad; el render de la lista DEBE completarse en menos de 5 s y la primera búsqueda, la búsqueda sin coincidencias y la apertura de detalle en menos de 3 s (SC-004).
 - **FR-033**: El panel DEBE ofrecer al menos cuatro botones de acción rápida: nueva entidad, nuevo documento, abrir gestión de entidades y buscar registros.
 - **FR-034**: Activar la acción rápida de nueva entidad o nuevo documento DEBE abrir el área de gestión correspondiente con un formulario vacío listo para introducir datos.
 - **FR-035**: El panel DEBE mostrar tarjetas de estadísticas con el número de entidades y documentos almacenados, actualizadas cada vez que se muestra el panel.
 - **FR-036**: La barra superior DEBE mostrar un logotipo derivado del nombre del módulo junto con el nombre del módulo configurado en cada pantalla.
 - **FR-037**: La barra lateral DEBE resaltar visualmente el módulo activo en cada pantalla.
-- **FR-038**: La configuración PUEDE definir un color de acento; el sistema DEBE aplicarlo consistentemente en todo el marco y retroceder de forma segura a los valores integrados cuando esté ausente o sea inválido.
+- **FR-038**: La configuración PUEDE definir un color de acento; el sistema DEBE aplicarlo consistentemente en todo el marco y retroceder de forma segura al token integrado `#0f766e` cuando esté ausente o sea inválido.
 - **FR-039**: En ventanas gráficas estrechas, la barra lateral DEBE contraerse a una columna de iconos manteniéndose operable.
+- **FR-053**: El sistema DEBE permitir registrar una `targetDate` opcional al crear o editar una entidad, mostrarla en listas y resultados de búsqueda cuando exista, y rechazar valores que no sean fechas de calendario válidas (formato YYYY-MM-DD) con retroalimentación clara.
 
 ### Requisitos Funcionales de los Perfiles de Dominio (Manufactura)
 
-Estos requisitos describen el perfil de manufactura que se construye sobre el módulo base mediante configuración. El módulo base aporta la infraestructura (entidades, documentos, campos personalizados, ciclo de vida, búsqueda y marco); la lógica de capacidad, inventario y calidad pertenece al perfil de dominio y se implementa en una etapa posterior. Todos estos requisitos DEBEN satisfacerse mediante configuración y puntos de extensión del módulo base, sin modificar archivos fuente centrales (SC-008).
+Estos requisitos describen el perfil de manufactura que se construye sobre el módulo base mediante configuración. El módulo base aporta la infraestructura (entidades, documentos, campos personalizados, ciclo de vida, búsqueda y marco); la lógica de capacidad, inventario y calidad pertenece al perfil de dominio y ya está implementada en el perfil de manufactura activo. Todos estos requisitos DEBEN satisfacerse mediante configuración y puntos de extensión del módulo base, sin modificar archivos fuente centrales (SC-008).
 
 - **FR-040**: El perfil DEBE permitir evaluar pedidos en estado *planificada* y confirmarlos (a *liberada*) o rechazarlos (a *cancelada*).
 - **FR-041**: El perfil DEBE mostrar, por pedido, número (serie y folio), producto, cantidad, fechas, importes, notas y estado.
@@ -401,8 +406,8 @@ Estos requisitos describen el perfil de manufactura que se construye sobre el m�
 - **FR-047**: El perfil DEBE permitir asignar máquina, lote y etapa del proceso a una orden liberada, registrar cantidades producidas y merma, y enviarla a control de calidad.
 - **FR-048**: El perfil DEBE permitir al inspector de calidad registrar `CantidadQA`, `MermaQA`, `CalidadQA` y notas, y mover la orden a *terminada*, de vuelta a *en producción* o a *cancelada* según el resultado.
 - **FR-049**: El perfil DEBE rechazar valores negativos o no numéricos en cantidades y merma, y transiciones de estado no permitidas, con una explicación clara.
-- **FR-051**: El perfil DEBE permitir filtrar la lista de órdenes por prioridad y combinar este filtro con los demás filtros activos.
-- **FR-052**: El perfil DEBE permitir filtrar la lista de órdenes por resultado de calidad y combinar este filtro con los demás filtros activos.
+- **FR-051**: El perfil DEBE permitir filtrar la lista de órdenes por prioridad y combinar este filtro con el filtro de estado y los demás filtros activos; al vaciar el filtro de prioridad DEBE conservarse el resto de filtros.
+- **FR-052**: El perfil DEBE permitir filtrar la lista de órdenes por resultado de calidad y combinar este filtro con el filtro de estado y los demás filtros activos; al vaciar el filtro de resultado de calidad DEBE conservarse el resto de filtros.
 
 ### Requisitos Funcionales de Seguridad
 

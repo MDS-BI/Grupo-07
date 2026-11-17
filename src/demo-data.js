@@ -28,9 +28,10 @@ export async function loadDemoData() {
   }
   setActiveConfig(config);
   const existingProducts = loadEntities();
-  const demoProducts = products.map((product) =>
-    existingProducts.find((existing) => existing.code === product.code) ??
-    addEntity({ itemType: 'Producto terminado', unitOfMeasure: 'Unidad', ...product })
+  const demoProducts = products.map(
+    (product) =>
+      existingProducts.find((existing) => existing.code === product.code) ??
+      addEntity({ itemType: 'Producto terminado', unitOfMeasure: 'Unidad', ...product })
   );
 
   const existingOrders = loadDocuments();
