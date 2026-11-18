@@ -2,9 +2,12 @@ import { PREDICATE_OPERATORS } from './rules.js';
 import { VIRTUAL_FIELDS, buildFieldLabels } from './fields.js';
 
 const INDICATOR_TYPES = ['countByField', 'countWhere', 'ratio'];
+const CHART_TYPES = ['countByField', 'sumByField', 'compareFields'];
+const CHART_DISPLAYS = ['bars', 'donut'];
+const CHART_SOURCES = ['entity', 'document'];
 const BADGE_TARGETS = ['entity', 'document'];
 const TONES = ['info', 'warning', 'danger'];
-export const ACCESS_CAPABILITIES = ['views', 'actions', 'sections', 'fields', 'filters', 'transitions'];
+export const ACCESS_CAPABILITIES = ['views', 'actions', 'sections', 'fields', 'filters', 'transitions', 'charts'];
 const ACCESS_LABEL_KEYS = ['loginTitle', 'role', 'secret', 'activeRole', 'logout'];
 
 function isObject(value) {
@@ -279,6 +282,155 @@ function normalizeIndicators(raw, fields, labels, path, errors) {
   });
 
   return indicators;
+}
+
+function normalizeChartSeries(raw, fields, labels, path, errors) {
+  if (!Array.isArray(raw) || raw.length === 0 || raw.length > 3) {
+    errors.push(`${path}: series debe tener entre una y tres entradas.`);
+    return [];
+  }
+
+  const series = [];
+  raw.forEach((entry, index) => {
+    const entryPath = `${path}[${index}]`;
+    if (!isObject(entry)) {
+      errors.push(`${entryPath}: debe ser un objeto.`);
+      return;
+    }
+    const key = isNonEmptyString(entry.key) ? entry.key.trim() : '';
+    if (key === '' || !fields.has(key)) {
+      errors.push(`${entryPath}: el campo "${key}" no existe.`);
+      return;
+    }
+    series.push({
+      key,
+      label: isNonEmptyString(entry.label) ? entry.label.trim() : labels[key] || key
+    });
+  });
+
+  return series;
+}
+
+function normalizeValueLabels(raw, path, errors) {
+  if (raw === undefined) {
+    return {};
+  }
+  if (!isObject(raw)) {
+    errors.push(`${path}: valueLabels debe ser un objeto.`);
+    return {};
+  }
+
+  const labels = {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (!isNonEmptyString(value)) {
+      errors.push(`${path}.${key}: la etiqueta debe ser una cadena no vacía.`);
+      continue;
+    }
+    labels[key] = value.trim();
+  }
+  return labels;
+}
+
+function normalizeCharts(raw, fields, labels, path, errors) {
+  if (!Array.isArray(raw)) {
+    errors.push(`${path}: charts debe ser una lista.`);
+    return [];
+  }
+
+  const charts = [];
+  const seen = new Set();
+
+  raw.forEach((entry, index) => {
+    const entryPath = `${path}.charts[${index}]`;
+
+    if (!isObject(entry)) {
+      errors.push(`${entryPath}: debe ser un objeto.`);
+      return;
+    }
+
+    if (!isNonEmptyString(entry.id)) {
+      errors.push(`${entryPath}: id es obligatorio.`);
+    } else if (seen.has(entry.id)) {
+      errors.push(`${entryPath}: id "${entry.id}" está duplicado.`);
+    } else {
+      seen.add(entry.id);
+    }
+
+    if (!CHART_TYPES.includes(entry.type)) {
+      errors.push(`${entryPath}: tipo de gráfico desconocido "${entry.type}".`);
+      return;
+    }
+
+    const display = entry.display === undefined ? 'bars' : entry.display;
+    if (!CHART_DISPLAYS.includes(display)) {
+      errors.push(`${entryPath}: display desconocido "${display}".`);
+      return;
+    }
+
+    const source = entry.source === undefined ? 'document' : entry.source;
+    if (!CHART_SOURCES.includes(source)) {
+      errors.push(`${entryPath}: source desconocido "${source}".`);
+      return;
+    }
+
+    if (!isNonEmptyString(entry.label)) {
+      errors.push(`${entryPath}: label es obligatorio.`);
+      return;
+    }
+
+    const chart = {
+      id: entry.id,
+      type: entry.type,
+      label: entry.label.trim(),
+      display,
+      source,
+      valueLabels: normalizeValueLabels(entry.valueLabels, `${entryPath}.valueLabels`, errors),
+      otherLabel: isNonEmptyString(entry.otherLabel) ? entry.otherLabel.trim() : 'Otros',
+      limit: Number.isInteger(entry.limit) && entry.limit > 0 ? entry.limit : 8
+    };
+
+    if (isNonEmptyString(entry.description)) {
+      chart.description = entry.description.trim();
+    }
+    if (isNonEmptyString(entry.emptyLabel)) {
+      chart.emptyLabel = entry.emptyLabel.trim();
+    }
+    if (isNonEmptyString(entry.unit)) {
+      chart.unit = entry.unit.trim();
+    }
+
+    if (entry.type === 'countByField' || entry.type === 'sumByField') {
+      if (!isNonEmptyString(entry.field) || !fields.has(entry.field)) {
+        errors.push(`${entryPath}: el campo "${entry.field}" no existe.`);
+        return;
+      }
+      chart.field = entry.field;
+    }
+
+    if (entry.type === 'sumByField') {
+      if (!isNonEmptyString(entry.valueField) || !fields.has(entry.valueField)) {
+        errors.push(`${entryPath}: valueField "${entry.valueField}" no existe.`);
+        return;
+      }
+      chart.valueField = entry.valueField;
+    }
+
+    if (entry.type === 'compareFields') {
+      if (!isNonEmptyString(entry.labelField) || !fields.has(entry.labelField)) {
+        errors.push(`${entryPath}: labelField "${entry.labelField}" no existe.`);
+        return;
+      }
+      chart.labelField = entry.labelField;
+      chart.series = normalizeChartSeries(entry.series, fields, labels, `${entryPath}.series`, errors);
+      if (chart.series.length === 0) {
+        return;
+      }
+    }
+
+    charts.push(chart);
+  });
+
+  return charts;
 }
 
 function normalizeForms(raw, fields, labels, path, errors) {
@@ -608,6 +760,7 @@ export function validateAccessConfig(access, statusLifecycle = null) {
       sections: normalizeAccessList(rawGrants.sections, `${rolePath}.grants.sections`, errors),
       fields: { entity: [], document: [] },
       filters: normalizeAccessList(rawGrants.filters, `${rolePath}.grants.filters`, errors),
+      charts: normalizeAccessList(rawGrants.charts, `${rolePath}.grants.charts`, errors),
       transitions: []
     };
 
@@ -758,6 +911,10 @@ export function validateDomainConfig(config, baseFields = { entity: [], document
 
   if (rawDomain.indicators !== undefined) {
     domain.indicators = normalizeIndicators(rawDomain.indicators, fields, labels, 'domain', errors);
+  }
+
+  if (rawDomain.charts !== undefined) {
+    domain.charts = normalizeCharts(rawDomain.charts, fields, labels, 'domain', errors);
   }
 
   if (rawDomain.costSummary !== undefined) {

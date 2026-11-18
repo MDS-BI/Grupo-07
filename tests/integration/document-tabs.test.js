@@ -27,8 +27,8 @@ function visibleTabs() {
 }
 
 describe('Production orders sub-windows', () => {
-  it('splits the documents view into five tabs with the orders list active by default', () => {
-    expect(visibleTabs()).toEqual(['orders', 'indicators', 'execution', 'quality', 'form']);
+  it('splits the documents view into six tabs with the orders list active by default', () => {
+    expect(visibleTabs()).toEqual(['orders', 'indicators', 'charts', 'execution', 'quality', 'form']);
     expect(qs('document-tab-orders-label').textContent).toBe('Órdenes de Producción');
     expect(qs('document-tab-form-label').textContent).toBe('Agregar / Editar Orden de Producción');
 
@@ -39,10 +39,10 @@ describe('Production orders sub-windows', () => {
     expect(qs('document-tabpanel-form').hidden).toBe(true);
   });
 
-  it('switches between indicators, execution, quality and the order form', () => {
+  it('switches between indicators, charts, execution, quality and the order form', () => {
     openDocuments();
 
-    for (const name of ['indicators', 'execution', 'quality', 'form']) {
+    for (const name of ['indicators', 'charts', 'execution', 'quality', 'form']) {
       qs(`document-tab-${name}`).click();
       expect(qs(`document-tabpanel-${name}`).hidden).toBe(false);
       expect(qs(`document-tab-${name}`).getAttribute('aria-selected')).toBe('true');

@@ -353,6 +353,18 @@
                   <span id="document-tab-indicators-label">Indicadores</span>
                 </button>
                 <button
+                  id="document-tab-charts"
+                  class="document-tab"
+                  type="button"
+                  role="tab"
+                  data-document-tab="charts"
+                  aria-controls="document-tabpanel-charts"
+                  aria-selected="false"
+                  tabindex="-1"
+                >
+                  <span id="document-tab-charts-label">Gráficos</span>
+                </button>
+                <button
                   id="document-tab-execution"
                   class="document-tab"
                   type="button"
@@ -429,6 +441,25 @@
                   </div>
                   <div id="document-indicators" class="indicator-grid"></div>
                   <div id="document-costs" class="cost-summary"></div>
+                </div>
+              </div>
+
+              <div
+                id="document-tabpanel-charts"
+                class="document-tabpanel"
+                role="tabpanel"
+                aria-labelledby="document-tab-charts"
+                tabindex="0"
+                hidden
+              >
+                <div class="panel">
+                  <div class="panel-title-group">
+                    <h2 id="document-charts-heading">Gráficos</h2>
+                    <p class="panel-subtitle">
+                      Distribución, inventario y merma representados a partir de los datos registrados.
+                    </p>
+                  </div>
+                  <div id="document-charts" class="chart-grid"></div>
                 </div>
               </div>
 

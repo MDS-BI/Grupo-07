@@ -82,6 +82,19 @@ El perfil ya está activo: `userConfig = manufacturingConfig` en `src/module-con
 - En control de calidad, confirme que no se puede terminar sin un `qualityResult` válido (`Aprobado`, `Corrección`, `Rechazado`).
 - Confirme que las etiquetas de interfaz son "Cantidad QA", "Merma QA" y "Calidad QA", mapeadas a `producedQty`, `scrapQty` y `qualityResult`.
 
+## Gráficos (US17-US20)
+
+Validar manualmente con la Fase 20 implementada:
+
+1. Abrir **Documentos** y activar la pestaña **Gráficos**; comprobar los cuatro gráficos declarados: anillo de órdenes por estado, barras por prioridad, barras agrupadas de stock actual frente al mínimo y barras de merma por etapa.
+2. Aplicar un filtro de prioridad o estado en la lista de órdenes; verificar que los gráficos alimentados por documentos muestran solo las órdenes visibles y que el anillo conserva su total.
+3. Editar el stock de un producto y guardar; comprobar que sus dos barras se actualizan sin recargar. Un producto con stock actual pero sin mínimo debe mostrar «sin dato» en la serie ausente.
+4. Registrar merma en una orden y comprobar que la barra de su etapa suma el nuevo valor; las etapas sin merma no deben aparecer.
+5. Cerrar sesión, entrar como inspector de calidad (`QA-2026`) y verificar que solo aparecen los gráficos concedidos a ese cargo. Entrar como bodega (`WH-2026`) y comprobar que ve el anillo de estados y la comparación de stock, pero no los gráficos de prioridad ni merma.
+6. Probar un nombre de producto con `<script>alert(1)</script>`; el gráfico debe mostrarlo como texto en la etiqueta y en su descripción accesible, sin ejecutarlo.
+
+La verificación automatizada correspondiente está en T102-T114: `src/domain/charts.js`, `src/components/charts.js`, `tests/unit/domain/charts.test.js`, `tests/integration/charts.test.js` y el recorrido E2E en `tests/e2e/manufacturing.spec.js`.
+
 ## Acceso por cargo (US16)
 
 Validar manualmente con la Fase 19 implementada:

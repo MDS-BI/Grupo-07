@@ -7,7 +7,7 @@
 
 **Organización**: Las tareas se agrupan por historia de usuario para permitir implementación y validación independientes.
 
-**Estado actual**: 101 de 101 tareas completadas (Fases 1-19; puertas T086 y T101 cerradas). Puertas finales en verde verificadas el 2026-11-17: `npm test` 40 archivos / 294 pruebas, `npm run test:e2e` 14/14, `npm run lint`, `npm run format:check` y `npm run build`. El hallazgo C1 quedó resuelto con cobertura automatizada real. La Fase 19 (US16, acceso por cargo y permisos) se implementó como incremento aislado sobre la línea base verde de US1-US15, sin regresiones.
+**Estado actual**: 114 de 114 tareas completadas (Fases 1-20; puertas T086, T101 y T114 cerradas). Puertas finales en verde verificadas el 2026-11-18: `npm test` 43 archivos / 310 pruebas, `npm run test:e2e` 15/15, `npm run lint`, `npm run format:check` y `npm run build`. El hallazgo C1 quedó resuelto con cobertura automatizada real. La Fase 19 (US16, acceso por cargo y permisos) y la Fase 20 (US17-US20, gráficos) se implementaron como incrementos aislados sobre las líneas base verdes anteriores, sin regresiones.
 
 **Trazabilidad C1 (numeración anterior)**: antigua T081 → T071, antigua T082 → T072, antigua T083 → T073, antigua T084 → T074, antigua T085 → T075, antigua T086 → T076. Los IDs se renumberan de forma consecutiva para eliminar el salto T079/T080.
 
@@ -340,6 +340,39 @@
 
 ---
 
+## Fase 20: Historias de Usuario 17-20 - Visualización mediante gráficos (Prioridad: P2)
+
+**Objetivo**: entregar información de forma visual dentro de Documentos mediante cuatro gráficos declarativos —distribución de órdenes por estado, carga por prioridad, stock actual frente al mínimo y merma por etapa— con filtros activos, permisos por cargo, estados vacíos y acceso accesible.
+
+**Prueba independiente**: abrir Documentos con productos y órdenes de ejemplo, activar la pestaña Gráficos y comprobar los cuatro gráficos; cambiar un filtro de prioridad y verificar que los gráficos de órdenes se recalculan; iniciar sesión como inspector de calidad y comprobar que solo aparecen los gráficos permitidos para ese cargo.
+
+**Dependencia**: usa el motor declarativo de la Fase 2, la lista y los filtros de US1/US14 y el control de acceso de US16; se ejecuta sobre la línea base verde de T101 sin rehacer US1-US16.
+
+### Pruebas para las Historias de Usuario 17-20
+
+- [X] T102 [P] [US17-US20] Añadir pruebas unitarias del motor de agregación (`countByField`, `sumByField`, `compareFields`, límite con «Otros», valores ausentes y sin datos) en `tests/unit/domain/charts.test.js`
+- [X] T103 [P] [US17-US20] Añadir pruebas unitarias de validación de `domain.charts` y de la capacidad `charts` en `tests/unit/domain/chart-config.test.js`
+- [X] T104 [P] [US17-US20] Añadir pruebas de integración del renderizado, filtros, permisos por rol, estado vacío y escape de etiquetas en `tests/integration/charts.test.js`; actualizar `tests/integration/document-tabs.test.js` para la sexta pestaña
+- [X] T105 [P] [US17-US20] Añadir el recorrido E2E de la pestaña Gráficos en `tests/e2e/manufacturing.spec.js`
+
+### Implementación para las Historias de Usuario 17-20
+
+- [X] T106 [US17-US20] Extender `src/domain/config-schema.js` como única fuente de validación de `domain.charts` (identificadores únicos, tipos `countByField`/`sumByField`/`compareFields`, fuentes `entity`/`document`, campos existentes, series, etiquetas y límite) y añadir `charts` a la lista blanca de capacidades de `domain.access`
+- [X] T107 [US17-US20] Crear `src/domain/charts.js` con `computeChart` y `computeCharts`, sin conocer campos ni términos del perfil de manufactura (XR-008)
+- [X] T108 [US17-US20] Crear `src/components/charts.js` para renderizar anillos y barras con SVG/CSS del navegador, descripción accesible (`role="img"` y `aria-label`), leyenda con valores y texto seguro (FR-050, FR-059)
+- [X] T109 [US17-US20] Añadir en `index.html` la pestaña Gráficos y su panel, y registrar la subventana en `src/components/shell.js` conservando la barra lateral de cuatro módulos
+- [X] T110 [US17-US20] Cablear en `src/app.js` el render de gráficos con entidades y documentos filtrados, ocultar la pestaña cuando no hay gráficos permitidos y hacer respetar la capacidad `charts` del cargo activo (FR-057, FR-060)
+- [X] T111 [P] [US17-US20] Añadir estilos responsivos y tokens de color para tarjetas, anillos, barras y leyendas en `src/styles.css`
+- [X] T112 [US17-US20] Declarar en `manufacturingConfig.domain.charts` de `src/module-config.js` los cuatro gráficos y ampliar los permisos `charts` de los cuatro cargos, sin modificar archivos centrales (SC-008, XR-008)
+- [X] T113 [P] [US17-US20] Actualizar `README.md` y `specs/001-erp-base-module/` (`data-model.md`, `contracts/module-extension.md`, `quickstart.md`) con el contrato `domain.charts`, la capacidad `charts` y el recorrido manual de la pestaña Gráficos
+- [X] T114 Ejecutar la puerta completa `npm test`, `npm run test:e2e`, `npm run lint`, `npm run format:check` y `npm run build`; corregir regresiones y dejar constancia del resultado junto a las líneas base de T086 y T101 (SC-016)
+
+**Puerta T114 (2026-11-18)**: `npm test` 43 archivos / 310 pruebas en verde; `npm run test:e2e` 15/15 en verde; `npm run lint`, `npm run format:check` y `npm run build` en verde. Sin regresiones frente a las líneas base de T086 (40/294 y 14/14) y T101. La puerta requirió fijar `vite@8.2.1` porque `vite@8.3.8`/`rolldown@1.2.19` rompe `vite build` con `bindingChunk.getCodeIdentity is not a function`, y usar `--configLoader runner` en los scripts de Vitest por el mismo cambio de toolchain.
+
+**Punto de control**: con T102-T114 completadas, las US17-US20 funcionan de forma independiente y las 114 tareas quedan cerradas sin regresiones en US1-US16.
+
+---
+
 ## Dependencias y Orden de Ejecución
 
 ### Dependencias por fase
@@ -353,6 +386,7 @@
 - **Fase 18 (Pulido)**: depende de todas las historias deseadas; T086 dependió además de T072 y T075, ya completadas.
 - **US14 y US15** dependen de la lista y los filtros configurables de US1; sus pruebas (T072, T075) deben ejecutarse antes de darlas por terminadas.
 - **Fase 19 (US16)**: depende de la Fase 2 (motor y configuración) y de las secciones de calidad y filtros de US5/US15; se ejecuta sobre la línea base verde de T086 y no rehace US1-US15. T101 depende de T087-T100.
+- **Fase 20 (US17-US20)**: depende de la Fase 2 (motor declarativo), de la lista y los filtros de US1/US14 y de los permisos de US16; se ejecutó sobre la línea base verde de T101. T106 → T107 → T108 fueron secuenciales; T114 dependió de T102-T113 y quedó en verde.
 
 ### Dependencias entre historias
 
@@ -364,6 +398,7 @@
 - **US8-US12 (P2)**: verificaciones de regresión sobre capacidades base ya implementadas; independientes.
 - **US14, US15 (P2)**: dependen de US1; independientes entre sí y del resto.
 - **US16 (P1)**: depende del motor y la configuración (Fase 2) y de las secciones de calidad y los filtros de US5/US15; no modifica la lógica de US1-US15 y se implementa como incremento aislado en la Fase 19.
+- **US17-US20 (P2)**: dependen del motor declarativo de la Fase 2, de la lista/filtros de US1/US14 y de los permisos de US16; comparten el mismo contrato de gráficos y se implementan juntas en la Fase 20.
 
 ### Dentro de cada historia
 
@@ -383,6 +418,7 @@
 - **US14 y US15**: T072 y T075 comparten `tests/integration/document-list.test.js`, por lo que se ejecutan en secuencia; T073 y T076 pueden ejecutarse en paralelo.
 - **Fase 18**: T077-T081 y T083-T084 en paralelo; T082, T085 y T086 al final.
 - **Fase 19**: T087, T088, T089, T090 y T099 en paralelo (archivos de prueba distintos); T091 → T092 → T093 secuenciales (esquema → motor → sesión); T094, T095 y T096 pueden prepararse en paralelo tras T091 (vista, componente y declaración de roles contra el contrato); T097 depende de T093, T094, T095 y T096; T098 depende de T092 y T093; T100 depende de T097, T098 y T090; T101 al final.
+- **Fase 20**: T102, T103, T104 y T105 en paralelo (archivos de prueba distintos); T106 → T107 → T108 secuenciales (esquema → motor → componente); T109, T111 y T112 pueden prepararse en paralelo tras T106; T110 depende de T108, T109 y T112; T113 tras T110; T114 al final.
 
 ### Ejemplo de paralelización: Historia de Usuario 1
 
@@ -421,6 +457,7 @@ Tarea: "Añadir estilos en src/styles.css"
 7. US14 y US15 → T072 y T075 completadas → validar filtros.
 8. Fase 18 → seguridad, E2E, rendimiento, documentación y puerta de calidad T086 (línea base verde actual).
 9. Fase 19 (US16) → T087-T101 completadas → acceso, permisos y cierre de sesión validados sin regresiones.
+10. Fase 20 (US17-US20) → T102-T114 completadas → gráficos visuales, filtrables y restringidos por cargo validados sin regresiones.
 
 ### Estrategia de equipo en paralelo
 
@@ -442,7 +479,9 @@ Tarea: "Añadir estilos en src/styles.css"
 - La barra lateral mantiene cuatro módulos; la lista/detalle de órdenes vive dentro de Documentos.
 - Los valores ausentes nunca se convierten en cero: se muestran como "sin dato" o se omiten según la regla.
 - La documentación y las pruebas se actualizan junto con el comportamiento, conforme a la constitución.
-- US14, US15 y T086 están completadas: T072 y T075 pasan dentro de las 294 pruebas de `npm test`.
+- US14, US15 y T086 están completadas: T072 y T075 pasan dentro de las 310 pruebas actuales de `npm test`.
 - US16 está implementada y verificada: Fase 19 (T087-T101) completada con TDD (rojo confirmado antes de T091), puerta T101 en verde y sin regresiones en US1-US15.
 - La identificación de la US16 es ficticia y se valida en el cliente; los roles, claves y permisos se declaran solo en `src/module-config.js` (XR-007). No añadir roles, claves ni reglas de manufactura a `app.js`, `storage.js`, `shell.js`, `session.js`, `access.js` ni a los componentes.
 - El cierre de sesión descarta solo la sesión: no borrar entidades ni documentos (SC-015).
+- Las US17-US20 están implementadas y verificadas: Fase 20 (T102-T114), con las declaraciones de gráficos y sus permisos solo en `src/module-config.js` (XR-008). El motor `src/domain/charts.js` y el componente `src/components/charts.js` son genéricos y no contienen términos de manufactura.
+- Puerta T114 en verde el 2026-11-18: 43 archivos / 310 pruebas, 15/15 E2E, lint, formato y build, sin regresiones en US1-US16.

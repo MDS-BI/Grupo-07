@@ -421,6 +421,68 @@ export const manufacturingConfig = {
         label: 'Merma sobre producción'
       }
     ],
+    charts: [
+      {
+        id: 'orders-by-status',
+        type: 'countByField',
+        display: 'donut',
+        source: 'document',
+        field: 'status',
+        label: 'Órdenes por estado',
+        description: 'Distribución de las órdenes visibles según su estado actual.',
+        emptyLabel: 'No hay órdenes para mostrar la distribución por estado.',
+        valueLabels: {
+          planificada: 'Planificada',
+          liberada: 'Liberada',
+          'en producción': 'En producción',
+          'en control de calidad': 'En control de calidad',
+          terminada: 'Terminada',
+          cancelada: 'Cancelada'
+        }
+      },
+      {
+        id: 'orders-by-priority',
+        type: 'countByField',
+        display: 'bars',
+        source: 'document',
+        field: 'priority',
+        label: 'Órdenes por prioridad',
+        description: 'Carga de trabajo visible agrupada por prioridad.',
+        emptyLabel: 'No hay órdenes para mostrar prioridades.',
+        valueLabels: {
+          Urgente: 'Urgente',
+          Alta: 'Alta',
+          Media: 'Media',
+          Baja: 'Baja'
+        }
+      },
+      {
+        id: 'stock-vs-minimum',
+        type: 'compareFields',
+        display: 'bars',
+        source: 'entity',
+        labelField: 'name',
+        label: 'Stock actual frente al mínimo',
+        description: 'Comparación por producto; «sin dato» indica que falta alguno de los dos valores.',
+        emptyLabel: 'No hay productos para comparar el stock.',
+        series: [
+          { key: 'currentStock', label: 'Stock actual' },
+          { key: 'minStock', label: 'Stock mínimo' }
+        ]
+      },
+      {
+        id: 'scrap-by-stage',
+        type: 'sumByField',
+        display: 'bars',
+        source: 'document',
+        field: 'processStage',
+        valueField: 'scrapQty',
+        label: 'Merma por etapa del proceso',
+        description: 'Merma acumulada de las órdenes visibles en cada etapa.',
+        emptyLabel: 'No hay merma registrada por etapa.',
+        unit: 'unidades'
+      }
+    ],
     costSummary: {
       groupBy: 'currency',
       fields: ['subtotal', 'discount', 'taxAmount', 'totalAmount']
@@ -614,6 +676,7 @@ export const manufacturingConfig = {
               ]
             },
             filters: ['status', 'priority', 'qualityResult', 'overdue'],
+            charts: ['orders-by-status', 'orders-by-priority', 'stock-vs-minimum', 'scrap-by-stage'],
             transitions: [
               { from: 'planificada', to: 'liberada' },
               { from: 'planificada', to: 'cancelada' },
@@ -651,6 +714,7 @@ export const manufacturingConfig = {
               document: []
             },
             filters: ['status', 'overdue'],
+            charts: ['orders-by-status', 'stock-vs-minimum'],
             transitions: []
           }
         },
@@ -682,6 +746,7 @@ export const manufacturingConfig = {
               ]
             },
             filters: ['status', 'priority', 'overdue'],
+            charts: ['orders-by-status', 'orders-by-priority', 'scrap-by-stage'],
             transitions: [
               { from: 'liberada', to: 'en producción' },
               { from: 'liberada', to: 'cancelada' },
@@ -703,6 +768,7 @@ export const manufacturingConfig = {
               document: ['producedQty', 'scrapQty', 'qualityResult', 'notes', 'status']
             },
             filters: ['status', 'qualityResult'],
+            charts: ['orders-by-status', 'scrap-by-stage'],
             transitions: [
               { from: 'en control de calidad', to: 'terminada' },
               { from: 'en control de calidad', to: 'en producción' },

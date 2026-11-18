@@ -347,6 +347,77 @@ Como usuario de la plataforma (jefe de planta, encargado de bodega y logística,
 
 ---
 
+### Historia de Usuario 17 - Visualizar la distribución de órdenes por estado (Prioridad: P2)
+
+Como jefe de planta, quiero ver un gráfico de anillo con la cantidad de órdenes en cada estado, para responder de un vistazo qué se está produciendo ahora y qué etapas concentran el trabajo.
+
+**Por qué esta prioridad**: los indicadores ya cuentan las órdenes por estado, pero una representación visual hace inmediata la comparación entre etapas y complementa la visión de la HU1 sin cambiar el flujo de trabajo.
+
+**Prueba Independiente**: Abrir Documentos con órdenes en varios estados, activar la pestaña Gráficos y comprobar que el anillo muestra un segmento por estado con su leyenda y su total; al confirmar una orden, el segmento se actualiza.
+
+**Escenarios de Aceptación**:
+
+1. **Dadas** órdenes en varios estados, **cuando** abro la pestaña Gráficos, **entonces** se muestra un anillo con un segmento por estado y una leyenda con el número de órdenes de cada uno.
+2. **Dado** un filtro activo en la lista de órdenes, **cuando** se actualiza la vista, **entonces** el gráfico se calcula solo con las órdenes visibles.
+3. **Dada** una orden sin estado, **cuando** se renderiza el gráfico, **entonces** esa orden no genera un segmento ni se cuenta como un estado «sin dato».
+4. **Dado** un cambio de estado permitido, **cuando** se guarda, **entonces** los segmentos y el total del gráfico reflejan el nuevo estado.
+5. **Dado** un cargo sin permiso para este gráfico, **cuando** abre Documentos, **entonces** la pestaña o el gráfico no le muestran información vedada para su rol.
+
+---
+
+### Historia de Usuario 18 - Visualizar la carga de trabajo por prioridad (Prioridad: P2)
+
+Como supervisor de producción, quiero un gráfico de barras con la cantidad de órdenes por prioridad, para identificar de inmediato cuántas órdenes urgentes compiten por los recursos del turno.
+
+**Por qué esta prioridad**: el filtro de la HU14 permite aislar las urgentes, pero el gráfico muestra la distribución completa sin necesidad de probar filtros uno por uno.
+
+**Prueba Independiente**: Registrar órdenes Urgente, Alta y Media, abrir la pestaña Gráficos y comprobar que las barras aparecen ordenadas de mayor a menor con sus etiquetas y valores.
+
+**Escenarios de Aceptación**:
+
+1. **Dadas** órdenes con distintas prioridades, **cuando** abro la pestaña Gráficos, **entonces** se muestran barras ordenadas de mayor a menor con la etiqueta y el conteo de cada prioridad.
+2. **Dado** que una prioridad no aparece en ninguna orden, **cuando** se renderiza el gráfico, **entonces** no se crea una barra vacía para esa prioridad.
+3. **Dado** un filtro de prioridad activo, **cuando** se aplica, **entonces** el gráfico muestra solo el grupo seleccionado sin perder la leyenda.
+4. **Dado** un resultado de búsqueda o filtro sin órdenes, **cuando** se abre el gráfico, **entonces** se muestra un estado vacío claro en lugar de barras en cero.
+
+---
+
+### Historia de Usuario 19 - Comparar el stock actual frente al mínimo por producto (Prioridad: P2)
+
+Como encargado de bodega y logística, quiero un gráfico de barras agrupadas que compare el stock actual y el stock mínimo de cada producto, para detectar visualmente qué artículos requieren reposición.
+
+**Por qué esta prioridad**: la insignia de la HU3 señala el stock bajo, pero la comparación visual aporta contexto sobre la magnitud de la diferencia y incluye los productos que están cerca del umbral.
+
+**Prueba Independiente**: Registrar dos productos, uno con stock 20 y mínimo 5 y otro con stock 3 y mínimo 10; al abrir Gráficos, comprobar que cada producto muestra dos barras identificadas y que el segundo evidencia la reposición pendiente.
+
+**Escenarios de Aceptación**:
+
+1. **Dados** productos con stock actual y mínimo registrados, **cuando** abro el gráfico de inventario, **entonces** cada producto muestra dos barras etiquetadas con sus valores.
+2. **Dado** un producto con stock actual pero sin stock mínimo, **cuando** se renderiza el gráfico, **entonces** la serie ausente se identifica como «sin dato» y nunca se dibuja como cero.
+3. **Dada** una edición de stock, **cuando** se guarda, **entonces** las barras de ese producto reflejan los nuevos valores sin recargar la página.
+4. **Dado** un cargo sin permiso para el gráfico de inventario, **cuando** abre Documentos, **entonces** no puede verlo ni acceder a él por otra vía.
+
+---
+
+### Historia de Usuario 20 - Visualizar la merma por etapa del proceso (Prioridad: P2)
+
+Como inspector de calidad, quiero un gráfico de barras con la merma acumulada por etapa del proceso, para dirigir las acciones correctivas a la etapa que más material pierde.
+
+**Por qué esta prioridad**: la HU5 registra la merma por orden y la HU1 calcula una razón global, pero solo la agregación por etapa revela dónde se concentra el desperdicio.
+
+**Prueba Independiente**: Registrar órdenes con merma en Corte y Ensamblaje, abrir Gráficos y comprobar que la barra de cada etapa muestra la suma correcta y que las etapas sin merma no aparecen.
+
+**Escenarios de Aceptación**:
+
+1. **Dadas** órdenes con merma en varias etapas, **cuando** abro el gráfico, **entonces** cada etapa muestra la suma de su merma con la unidad configurada.
+2. **Dadas** órdenes sin merma o con valores no numéricos, **cuando** se calcula el gráfico, **entonces** esos valores se omiten y no se representan como cero.
+3. **Dado** el registro de una nueva inspección, **cuando** se guarda, **entonces** el gráfico se recalcula con la merma incorporada.
+4. **Dado** que el número de etapas supera el límite configurado, **cuando** se renderiza, **entonces** se agrupan las restantes en una categoría «Otros» con la suma correspondiente.
+
+> **Nota de patrón común (US17-US20)**: las cuatro historias comparten un único motor declarativo de gráficos en `src/domain/charts.js`, validado en `src/domain/config-schema.js` y renderizado en `src/components/charts.js`. Cada perfil solo declara `id`, `tipo`, `fuente`, `campo`, `display`, etiquetas y permisos en `src/module-config.js`; el motor no conoce términos de manufactura (XR-008). Los gráficos respetan los filtros activos del documento y las capacidades `charts` del cargo (US16).
+
+---
+
 ### Casos Límite
 
 - ¿Qué ocurre cuando un usuario intenta guardar una entidad sin nombre o código obligatorio?
@@ -368,6 +439,11 @@ Como usuario de la plataforma (jefe de planta, encargado de bodega y logística,
 - ¿Qué ocurre si la configuración de accesos declara dos cargos con el mismo identificador, una clave vacía o una capacidad desconocida (US16)?
 - ¿Qué ocurre si se recarga la página con una sesión activa o se abre un enlace profundo sin sesión (US16)?
 - ¿Qué ocurre si un usuario cambia de cargo sin cerrar sesión o intenta una acción vedada para su rol desde el teclado o una llamada directa (US16)?
+- ¿Qué ocurre si no hay registros en la fuente de un gráfico o si todos sus valores están ausentes (US17-US20)?
+- ¿Qué ocurre cuando una etiqueta de categoría contiene HTML o caracteres especiales (US17-US20)?
+- ¿Qué ocurre si la configuración declara un tipo de gráfico, fuente o campo desconocido, identificadores duplicados o una serie inválida (US17-US20)?
+- ¿Qué ocurre cuando el número de categorías supera el límite configurado o cuando un valor numérico no es finito (US17-US20)?
+- ¿Qué ocurre si el cargo activo no tiene concedida ninguna capacidad `charts` (US16, US17-US20)?
 
 > **Alcance de los casos límite**: los casos de campos personalizados que dejan de estar declarados, el botón atrás del navegador y la navegación con cambios sin guarda se tratan como comportamiento heredado del marco base. No tienen una tarea dedicada en `tasks.md`; la decisión queda registrada en [data-model.md](data-model.md). Los casos de sesión, credenciales inválidas y permisos se cubren en la Fase 19 de `tasks.md`.
 
@@ -434,6 +510,11 @@ Estos requisitos describen el perfil de manufactura que se construye sobre el m�
 - **FR-052**: El perfil DEBE permitir filtrar la lista de órdenes por resultado de calidad y combinar este filtro con el filtro de estado y los demás filtros activos; al vaciar el filtro de resultado de calidad DEBE conservarse el resto de filtros.
 - **FR-054**: El perfil DEBE presentar una pantalla de inicio de sesión previa al panel general que exija seleccionar un cargo operativo e introducir su clave de verificación ficticia correspondiente antes de acceder al espacio de trabajo (US16).
 - **FR-055**: El perfil DEBE restringir las acciones de creación, edición, eliminación y cambio de estado según el cargo con sesión activa, permitiendo a cada rol ver y modificar únicamente los apartados que le competen y ofreciendo una opción para cerrar o cambiar de sesión sin pérdida de datos (US16).
+- **FR-056**: El sistema DEBE renderizar los gráficos declarados en `domain.charts` usando construcciones SVG/CSS del propio navegador, sin introducir librerías de visualización externas (US17-US20).
+- **FR-057**: Los gráficos DEBEN calcularse a partir de entidades y documentos, respetar los filtros activos de la lista de documentos y actualizarse cuando se guarden los registros que los alimentan (US17-US20).
+- **FR-058**: Los gráficos DEBEN omitir los valores ausentes o no numéricos sin convertirlos en cero, y DEBEN mostrar un estado vacío claro cuando su fuente no tenga datos (US17-US20).
+- **FR-059**: Cada gráfico DEBE ofrecer una descripción accesible y una leyenda con sus valores; todo texto derivado de registros se insertará como texto seguro, nunca como HTML (US17-US20, FR-050).
+- **FR-060**: El sistema DEBE ocultar la pestaña y los gráficos no concedidos a la capacidad `charts` del cargo activo, y DEBE seguir ocultos aunque se intente acceder a la subventana por otro medio (US16, US17-US20).
 
 ### Requisitos Funcionales de Seguridad
 
@@ -450,12 +531,13 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **XR-005**: Remarcar el espacio de trabajo —nombre del módulo, logotipo derivado y color de acento— únicamente mediante configuración.
 - **XR-006**: Implementar la lógica de dominio de las Historias de Usuario 1-5 (evaluación de pedidos, inventario, ejecución y calidad) mediante configuración y puntos de extensión declarativos, sin modificar archivos fuente centrales.
 - **XR-007**: Declarar los cargos, las claves ficticias y los permisos de la US16 en la configuración del módulo e interpretarlos con un motor genérico, sin codificar roles, claves ni reglas de manufactura en los archivos fuente centrales.
+- **XR-008**: Declarar los gráficos de las Historias de Usuario 17-20 —incluidas sus fuentes, agregaciones, etiquetas y permisos— en la configuración del módulo e interpretarlos con un motor genérico, sin codificar términos de manufactura en `app.js`, `storage.js`, `shell.js` ni en los componentes.
 
 ### Entidades Clave *(incluir si la funcionalidad implica datos)*
 
 - **Entidad**: Un registro de datos maestros gestionado por el módulo, que incluye su nombre, código de negocio, detalles descriptivos, categoría de clasificación, una fecha objetivo opcional y un entity_id autogenerado. Los módulos personalizados definen qué representa una Entidad en el mundo real (p. ej., cliente, producto, activo).
 - **Documento**: Detalles transaccionales adjuntos a una entidad, vinculados a ella por el entity_id de la entidad. Los módulos personalizados definen qué representa un Documento (p. ej., pedido, factura, contrato).
-- **ModuleConfig**: El objeto de adaptación cargado al arrancar que define el nombre del módulo, las etiquetas de terminología, las definiciones de campos personalizados, el ciclo de vida de estados de documentos y los puntos de extensión declarativos para vistas, validaciones y reglas de dominio. Consulte data-model.md para su forma completa.
+- **ModuleConfig**: El objeto de adaptación cargado al arrancar que define el nombre del módulo, las etiquetas de terminología, las definiciones de campos personalizados, el ciclo de vida de estados de documentos y los puntos de extensión declarativos para vistas, indicadores, gráficos, validaciones y reglas de dominio. Consulte data-model.md para su forma completa.
 
 ## Criterios de Éxito *(obligatorio)*
 
@@ -476,6 +558,7 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **SC-013**: Un usuario puede localizar y corregir un producto con stock bajo el mínimo en menos de 2 minutos.
 - **SC-014**: Un inspector puede completar la inspección de calidad de una orden en menos de 5 minutos.
 - **SC-015**: Un usuario puede seleccionar su cargo, introducir la clave ficticia y acceder al panel en menos de 10 segundos; las pruebas de la Fase 19 verifican que cada rol ejecuta el 100 % de sus acciones permitidas y que el 100 % de las acciones, campos, secciones y transiciones ajenas a su cargo quedan bloqueados, y que el cierre de sesión conserva íntegros los productos y órdenes.
+- **SC-016**: Los valores mostrados en los cuatro gráficos coinciden con los registros almacenados y con los filtros activos; las pruebas de la Fase 20 verifican además que ningún gráfico concedido a un cargo aparece para otro y que los valores ausentes nunca se representan como cero.
 
 ## Suposiciones
 

@@ -252,7 +252,7 @@ Los nombres anteriores son ejemplos del perfil de manufactura y no aparecen en `
 }
 ```
 
-`grants` usa capacidades genéricas (`views`, `actions`, `sections`, `fields`, `filters`, `transitions`); `fields` se agrupa por destino (`entity`/`document`) y `transitions` por pares `{ from, to }` existentes en el ciclo de vida. Cualquier capacidad desconocida, identificador duplicado o clave vacía invalida `domain.access` y activa el aviso de FR-025. La validación de la forma tiene una única fuente (`src/domain/config-schema.js`); `access.js` la reutiliza y solo prepara las estructuras de consulta.
+`grants` usa capacidades genéricas (`views`, `actions`, `sections`, `fields`, `filters`, `charts`, `transitions`); `fields` se agrupa por destino (`entity`/`document`) y `transitions` por pares `{ from, to }` existentes en el ciclo de vida. Cualquier capacidad desconocida, identificador duplicado o clave vacía invalida `domain.access` y activa el aviso de FR-025. La validación de la forma tiene una única fuente (`src/domain/config-schema.js`); `access.js` la reutiliza y solo prepara las estructuras de consulta.
 
 ### Sesión
 
@@ -299,6 +299,7 @@ Todo está en `src/module-config.js`. El perfil está **activo**: `userConfig = 
 | `domain.documentList` | Columnas, filtros y secciones de detalle de la orden |
 | `domain.documentList.forms` | Formularios configurables de ejecución y calidad |
 | `domain.indicators` | Conteo por estado, retrasos y merma por orden |
+| `domain.charts` | Anillo de estados, barras de prioridad, comparación de stock y barras de merma por etapa (US17-US20) |
 | `domain.costSummary` | Agrupación por moneda |
 | `domain.badges` | Stock bajo y orden retrasada |
 | `domain.rules` | Guardas de calidad y transiciones |
@@ -317,6 +318,7 @@ Se rechazan además:
 - Operaciones de regla fuera de la lista blanca.
 - Referencias a campos que no existen en los campos base ni en `customFields`.
 - Indicadores o insignias con tipos desconocidos.
+- Gráficos con tipos, `display` o `source` desconocidos, identificadores duplicados, campos inexistentes o series inválidas (US17-US20).
 - Filtros que apunten a estados fuera del ciclo de vida configurado.
 - Vistas sin columnas o con secciones de detalle vacías.
 - `domain.access` con roles vacíos, identificadores duplicados, claves en blanco, capacidades desconocidas o transiciones que no existen en el ciclo de vida (US16).

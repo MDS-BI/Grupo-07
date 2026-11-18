@@ -80,6 +80,7 @@ The app presents itself as a coherent ERP workspace:
 
 - **Workspace shell** — every screen lives inside a branded chrome: a top bar with a logo (an SVG monogram derived from the module name) and module name, plus a persistent sidebar of module buttons (with the manufacturing profile: Panel, Productos, Órdenes de Producción, Búsqueda). The active module is highlighted (`aria-current="page"`), and the sidebar collapses to an icon rail on narrow viewports.
 - **Home dashboard** — the entry screen offers quick-action buttons for key ERP tasks (new entity, new document, open management areas, find records) and live statistic cards showing record counts.
+- **Visual charts** — the Documentos module includes a Gráficos tab with an order-status donut, priority bars, a stock-vs-minimum comparison and scrap-by-stage bars. They are computed in the browser from the same records and filters, with accessible legends and role-based visibility.
 - **Design tokens** — styling is driven by CSS custom properties in `src/styles.css`, so branding changes apply globally.
 
 ### Setup
@@ -104,6 +105,7 @@ Sin sesión, la aplicación muestra la pantalla **Acceso por cargo** antes del P
 | Supervisor de producción / Jefe de turno (`productionSupervisor`) | `PROD-2026` | Ejecución, envío a control de calidad y re-trabajo. / Execution, send to quality control and rework. |
 | Inspector de calidad (QA) (`qualityInspector`) | `QA-2026` | Campos y filtro de calidad; aprobar, devolver o rechazar lotes. / Quality fields and filter; approve, return or reject batches. |
 
+- Cada cargo declara qué gráficos puede ver en `grants.charts` (`orders-by-status`, `orders-by-priority`, `stock-vs-minimum`, `scrap-by-stage`); la pestaña Gráficos solo muestra esos gráficos. / Each role declares which charts it may see under `grants.charts`; the Gráficos tab only renders those charts.
 - Las claves son **ficticias** y la comprobación ocurre únicamente en el navegador: no hay backend ni credenciales reales. / The keys are **fictitious** and checked entirely in the browser: no backend and no real credentials.
 - Se declaran en `src/module-config.js`, en `manufacturingConfig.domain.access.roles[].secret`, junto a los permisos de cada cargo. / They are declared in `src/module-config.js`, under `manufacturingConfig.domain.access.roles[].secret`, alongside each role's grants.
 - La sesión se guarda en `localStorage` como `erp_base_module:session` y contiene solo el cargo y sus permisos, nunca la clave. Cerrar sesión no borra productos ni órdenes. / The session is stored in `localStorage` as `erp_base_module:session` and holds only the role and its grants, never the key. Signing out does not delete products or orders.
@@ -136,11 +138,12 @@ The shipped `userConfig` is `manufacturingConfig`, so the app runs the manufactu
 
 - **Products (Entidades)** — item type, unit of measure, current/minimum stock, storage location, supplier and replenishment lead time. Low stock is flagged only when both stock values exist and `currentStock < minStock`; otherwise the UI shows "sin dato" without a badge.
 - **Production orders (Documentos)** — the order list, filters, detail, indicators and cost summary live inside the Documentos module; the sidebar keeps exactly four modules.
-- **Order sub-windows** — the Documentos module is split into five tabs: Órdenes de Producción, Indicadores, Ejecución de planta, Control de calidad and Agregar / Editar Orden de Producción.
+- **Order sub-windows** — the Documentos module is split into six tabs: Órdenes de Producción, Indicadores, Gráficos, Ejecución de planta, Control de calidad and Agregar / Editar Orden de Producción.
 - **Order workflow** — confirm/reject with optional notes; the configured lifecycle drives which transitions are offered and reject unreachable ones.
 - **Execution** — released orders record stage, machine, batch, produced quantity, scrap, responsible and notes, then move to `en producción` and `en control de calidad`.
 - **Quality** — the inspection uses the labels "Cantidad QA", "Merma QA" and "Calidad QA" over the `producedQty`, `scrapQty` and `qualityResult` keys; approval closes the order, correction returns it to production and rejection cancels it.
 - **Indicators and costs** — order counts by status, overdue orders and scrap ratio, plus subtotal/discount/tax/total summaries grouped by currency (currencies are never mixed).
+- **Charts (US17-US20)** — the Gráficos tab shows a donut of orders by status, bars by priority, grouped bars of current vs minimum stock per product, and summed scrap by process stage. Charts follow the active document filters and the `charts` grants of the signed-in role; missing values are shown as "sin dato", never as zero.
 
 ### Building Custom Modules
 
@@ -163,11 +166,12 @@ The `domain` section of `src/module-config.js` is a **declarative** contract int
 | `documentList.detailSections` | Ordered detail sections with a title and fields resolved from the document and its linked product. |
 | `documentList.forms` | Config-driven execution and quality forms (`execution`, `quality`) with field lists and submit labels. |
 | `indicators` | `countByField`, `countWhere` and `ratio` cards computed in one pass. |
+| `charts` | Declarative visualizations (`countByField`, `sumByField`, `compareFields`) with `display` (`bars`/`donut`), `source` (`entity`/`document`), fields, value labels, unit, limit and per-role grants. |
 | `costSummary` | Cost fields and the `groupBy` dimension (currency in the manufacturing profile). |
 | `badges` | Conditional labels with `when` predicates and `tone` (`info`, `warning`, `danger`), scoped by `target`. |
 | `rules` | Validation rules enforced by `src/storage.js` before persisting. |
 | `transitionActions` / `transitionGuards` | Labels and guards for lifecycle transitions, including quality-result guards. |
-| `access` | Declarative roles, fictitious keys, labels and grants (`views`, `actions`, `sections`, `fields`, `filters`, `transitions`) enforced by `src/domain/access.js` and `src/session.js`. |
+| `access` | Declarative roles, fictitious keys, labels and grants (`views`, `actions`, `sections`, `fields`, `filters`, `charts`, `transitions`) enforced by `src/domain/access.js` and `src/session.js`. |
 
 Predicates support `eq`, `neq`, `in`, `notIn`, `lt`, `lte`, `gt`, `gte`, `exists` and `blank`, combined with `all`/`any`/`not`. Unknown operators, fields or lifecycle states fail configuration validation and are reported in the banner.
 

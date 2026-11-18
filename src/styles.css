@@ -1103,6 +1103,167 @@ form > button.primary {
   font-weight: 700;
 }
 
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.chart-card {
+  padding: 1.1rem 1.2rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, var(--surface), var(--surface-soft));
+}
+
+.chart-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.chart-description {
+  margin: 0.25rem 0 1rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.chart-donut {
+  width: 160px;
+  height: 160px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.chart-donut-track {
+  stroke: var(--border);
+}
+
+.chart-donut-value {
+  fill: var(--text);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.chart-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.chart-bar-row {
+  display: grid;
+  grid-template-columns: minmax(6.5rem, 9rem) 1fr;
+  gap: 0.3rem 0.75rem;
+  align-items: center;
+}
+
+.chart-bar-label {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.chart-bar-track {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--border) 55%, var(--surface));
+}
+
+.chart-bar-fill {
+  min-width: 2px;
+  height: 9px;
+  border-radius: 999px;
+}
+
+.chart-bar-value,
+.chart-bar-values {
+  grid-column: 2;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.chart-bar-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.9rem;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.9rem;
+  margin: 1rem 0 0;
+  padding: 0.75rem 0 0;
+  border-top: 1px solid var(--border);
+  font-size: 0.78rem;
+  list-style: none;
+}
+
+.chart-legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.chart-legend-label {
+  color: var(--text-secondary);
+}
+
+.chart-legend-value {
+  color: var(--text);
+}
+
+.chart-swatch {
+  flex: 0 0 auto;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 3px;
+}
+
+.chart-color-1,
+.chart-series-a {
+  color: var(--accent);
+  background: var(--accent);
+  stroke: var(--accent);
+}
+
+.chart-color-2 {
+  color: #0ea5e9;
+  background: #0ea5e9;
+  stroke: #0ea5e9;
+}
+
+.chart-color-3 {
+  color: #8b5cf6;
+  background: #8b5cf6;
+  stroke: #8b5cf6;
+}
+
+.chart-color-4,
+.chart-series-b {
+  color: #f59e0b;
+  background: #f59e0b;
+  stroke: #f59e0b;
+}
+
+.chart-color-5 {
+  color: #10b981;
+  background: #10b981;
+  stroke: #10b981;
+}
+
+.chart-color-6 {
+  color: #f43f5e;
+  background: #f43f5e;
+  stroke: #f43f5e;
+}
+
 .cost-summary {
   margin-top: 1.25rem;
 }
@@ -1360,7 +1521,8 @@ form > button.primary {
   .quick-actions,
   .stats,
   .results,
-  .indicator-grid {
+  .indicator-grid,
+  .chart-grid {
     grid-template-columns: 1fr;
   }
 

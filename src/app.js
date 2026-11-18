@@ -43,6 +43,7 @@ import {
   collectDomainForm
 } from './components/document-list.js';
 import { renderIndicators, renderCostSummary } from './components/indicators.js';
+import { renderCharts } from './components/charts.js';
 import { normalizeAccess, authenticate, authenticationError, can } from './domain/access.js';
 import { loadSession, saveSession, clearSession } from './session.js';
 import { renderLogin, setLoginError } from './components/login.js';
@@ -303,6 +304,13 @@ function setDocumentTab(name, focusTab = false) {
 }
 
 function applyDocumentTabLabels() {
+  const charts = domainConfig() && Array.isArray(domainConfig().charts) ? domainConfig().charts : [];
+  const chartsTab = $('document-tab-charts');
+  if (chartsTab) {
+    chartsTab.dataset.chartsMissing = String(charts.length === 0);
+    chartsTab.hidden = charts.length === 0;
+  }
+
   for (const name of ['execution', 'quality']) {
     const formSpec = resolveForm(currentConfig, name);
     setText(`document-tab-${name}-label`, formSpec ? formSpec.title : name);
@@ -650,8 +658,23 @@ function renderDocumentsDomain() {
     records: allDocuments
   });
 
+  const charts = Array.isArray(domain.charts) ? domain.charts : [];
+  const chartsAllowed = charts.some((chart) => granted('charts', chart.id));
+  const chartsTab = $('document-tab-charts');
+  if (chartsTab) {
+    chartsTab.hidden = charts.length === 0 || !chartsAllowed;
+  }
+  renderCharts($('document-charts'), {
+    charts,
+    records: { document: visibleDocuments, entity: entities },
+    allowed: (chart) => granted('charts', chart.id)
+  });
+
   if (!granted('views', 'documents')) {
     return;
+  }
+  if (activeDocumentTab === 'charts' && !chartsAllowed) {
+    activeDocumentTab = 'orders';
   }
   if (['execution', 'quality'].includes(activeDocumentTab) && !granted('sections', activeDocumentTab)) {
     activeDocumentTab = 'orders';

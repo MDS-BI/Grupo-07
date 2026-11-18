@@ -8,6 +8,7 @@ const VIEWS = {
 const DOCUMENT_TABS = {
   orders: 'document-tabpanel-orders',
   indicators: 'document-tabpanel-indicators',
+  charts: 'document-tabpanel-charts',
   execution: 'document-tabpanel-execution',
   quality: 'document-tabpanel-quality',
   form: 'document-tabpanel-form'

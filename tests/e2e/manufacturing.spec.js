@@ -93,3 +93,17 @@ test('blocks finishing an order until quality is approved', async ({ page }) => 
   await openDocumentTab(page, 'orders');
   await expect(approve).toBeEnabled();
 });
+
+test('shows visual charts for status, priority, stock and scrap', async ({ page }) => {
+  const product = makeProduct({ name: 'Mesa gráfica', code: 'SKU-CHART', currentStock: 4, minStock: 9 });
+  const order = makeOrder(product, { folio: 6004, status: 'planificada', priority: 'Urgente', scrapQty: 3 });
+  await seedApp(page, { products: [product], orders: [order] });
+
+  await openDocuments(page);
+  await openDocumentTab(page, 'charts');
+
+  await expect(page.locator('#document-charts .chart-card')).toHaveCount(4);
+  await expect(page.locator('[data-chart-id="orders-by-status"] svg.chart-donut')).toBeVisible();
+  await expect(page.locator('[data-chart-id="stock-vs-minimum"]')).toContainText('Stock mínimo: 9');
+  await expect(page.locator('[data-chart-id="scrap-by-stage"]')).toContainText('3 unidades');
+});

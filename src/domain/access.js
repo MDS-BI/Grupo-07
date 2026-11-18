@@ -25,7 +25,8 @@ export function normalizeAccess(access, statusLifecycle = null) {
       views: new Set(grants.views),
       actions: new Set(grants.actions),
       sections: new Set(grants.sections),
-      filters: new Set(grants.filters)
+      filters: new Set(grants.filters),
+      charts: new Set(grants.charts)
     });
     index.fields.set(role.id, {
       entity: new Set(grants.fields.entity),

@@ -7,8 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview --port 4173",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "vitest run --configLoader runner",
+    "test:watch": "vitest --configLoader runner",
     "test:e2e": "playwright test",
     "lint": "eslint src tests",
     "format": "prettier --write \"src/**/*.js\" \"tests/**/*.js\" \"index.html\" \"*.{js,json}\"",
@@ -21,7 +21,7 @@
     "globals": "^16.5.0",
     "jsdom": "^30.0.1",
     "prettier": "^3.9.10",
-    "vite": "^8.2.1",
+    "vite": "8.2.1",
     "vitest": "^4.1.10"
   }
 }
