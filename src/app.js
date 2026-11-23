@@ -1080,28 +1080,34 @@ function runSearch() {
 
 function wireBrandLogo() {
   const logo = $('brand-logo');
+  const frame = $('brand-logo-frame');
   const monogram = $('logo-mark');
-  if (!logo || !monogram) {
+  if (!logo || !frame || !monogram) {
     return;
   }
 
-  const showLogo = () => {
-    logo.hidden = false;
-    monogram.hidden = true;
-  };
   const showMonogram = () => {
-    logo.hidden = true;
+    frame.hidden = true;
     monogram.hidden = false;
   };
+
+  logo.addEventListener('error', showMonogram);
+  logo.addEventListener('load', () => {
+    frame.hidden = false;
+    monogram.hidden = true;
+  });
 
   if (logo.complete && logo.naturalWidth === 0) {
     showMonogram();
   }
-  logo.addEventListener('load', showLogo);
-  logo.addEventListener('error', showMonogram);
 }
 
 function wireNavigation() {
+  $('brand-home')?.addEventListener('click', (event) => {
+    event.preventDefault();
+    $(`nav-${firstAllowedView()}`)?.click();
+  });
+
   document.querySelectorAll('.nav-module').forEach((button) => {
     button.addEventListener('click', () => {
       const target = button.dataset.module;

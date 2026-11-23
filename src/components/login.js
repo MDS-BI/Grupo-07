@@ -41,7 +41,7 @@ export function renderLogin(container, access, onSubmit) {
 
   container.innerHTML = `
     <div class="login-card">
-    <p class="eyebrow">${escapeHtml(labels.loginTitle || 'Acceso por cargo')}</p>
+    <p class="eyebrow">ERP · Grupo 07</p>
     <h1 id="login-title">${escapeHtml(labels.loginTitle || 'Acceso por cargo')}</h1>
     <p class="view-subtitle">Seleccione su cargo e introduzca su clave de verificación.</p>
     <form id="login-form" class="login-form">

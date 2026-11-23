@@ -80,7 +80,9 @@ export function applyShell(config) {
   renderLogo(document.getElementById('logo-mark'), config.moduleName);
 
   if (document.documentElement && document.documentElement.style) {
-    document.documentElement.style.setProperty('--accent', config.theme.accentColor);
+    const accent = config.theme.accentColor;
+    const useManufacturingPalette = config.moduleName === 'Manufactura y Operaciones' && accent === '#0f766e';
+    document.documentElement.style.setProperty('--accent', useManufacturingPalette ? '#294765' : accent);
   }
 }
 

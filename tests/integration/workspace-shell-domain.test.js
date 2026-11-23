@@ -23,10 +23,18 @@ afterEach(() => {
 describe('User Story 13 - branded ERP workspace shell', () => {
   it('shows the configured brand, logo and accent color', () => {
     expect(qs('brand-name').textContent).toBe('Manufactura y Operaciones');
+    const brandImage = qs('brand-logo');
+    brandImage.dispatchEvent(new window.Event('load'));
+    expect(qs('brand-logo-frame').hidden).toBe(false);
+    expect(qs('logo-mark').hidden).toBe(true);
+
+    brandImage.dispatchEvent(new window.Event('error'));
+    expect(qs('brand-logo-frame').hidden).toBe(true);
+    expect(qs('logo-mark').hidden).toBe(false);
     const logo = qs('logo-mark').querySelector('svg');
     expect(logo).not.toBeNull();
     expect(logo.getAttribute('aria-label')).toBe('Manufactura y Operaciones');
-    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#0f766e');
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#294765');
     expect(document.title).toBe('Manufactura y Operaciones');
     expect(qs('config-banner').hidden).toBe(true);
     expect(qs('config-banner').textContent).toBe('');
@@ -45,6 +53,10 @@ describe('User Story 13 - branded ERP workspace shell', () => {
     expect(qs('nav-documents').getAttribute('aria-current')).toBe('page');
     expect(qs('nav-entities').hasAttribute('aria-current')).toBe(false);
     expect(qs('view-documents').hidden).toBe(false);
+
+    qs('brand-home').click();
+    expect(qs('nav-dashboard').getAttribute('aria-current')).toBe('page');
+    expect(qs('view-dashboard').hidden).toBe(false);
   });
 
   it('keeps the order list and detail inside the documents module', () => {
