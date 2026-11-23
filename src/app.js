@@ -1078,6 +1078,29 @@ function runSearch() {
   }
 }
 
+function wireBrandLogo() {
+  const logo = $('brand-logo');
+  const monogram = $('logo-mark');
+  if (!logo || !monogram) {
+    return;
+  }
+
+  const showLogo = () => {
+    logo.hidden = false;
+    monogram.hidden = true;
+  };
+  const showMonogram = () => {
+    logo.hidden = true;
+    monogram.hidden = false;
+  };
+
+  if (logo.complete && logo.naturalWidth === 0) {
+    showMonogram();
+  }
+  logo.addEventListener('load', showLogo);
+  logo.addEventListener('error', showMonogram);
+}
+
 function wireNavigation() {
   document.querySelectorAll('.nav-module').forEach((button) => {
     button.addEventListener('click', () => {
@@ -1579,6 +1602,7 @@ export async function initApp(result) {
 
   buildStatusControl(null);
 
+  wireBrandLogo();
   wireNavigation();
   wireDocumentTabs();
   wireQuickActions();

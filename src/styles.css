@@ -85,7 +85,16 @@ svg {
   align-items: center;
   gap: 0.8rem;
   min-width: 0;
+  color: inherit;
   font-weight: 700;
+  text-decoration: none;
+}
+
+.brand-logo {
+  display: block;
+  width: auto;
+  height: 48px;
+  flex-shrink: 0;
 }
 
 .logo-mark {

@@ -4,15 +4,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Módulo Base ERP</title>
+    <link rel="icon" type="image/webp" href="./assets/imagenlogo.webp" />
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
     <div id="app-shell" class="app-shell">
       <header class="topbar">
-        <div class="brand">
-          <span id="logo-mark" class="logo-mark" aria-hidden="true"></span>
+        <a class="brand" href="/" aria-label="Ir al inicio">
+          <img id="brand-logo" class="brand-logo" src="./assets/imagenlogo.webp" alt="" />
+          <span id="logo-mark" class="logo-mark" aria-hidden="true" hidden></span>
           <span id="brand-name" class="brand-name">Módulo Base ERP</span>
-        </div>
+        </a>
         <div id="config-banner" class="config-banner" hidden></div>
         <div id="session-indicator" class="session-indicator" hidden>
           <span id="active-role-label">Rol activo:</span>
